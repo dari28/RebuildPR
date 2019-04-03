@@ -1,0 +1,5 @@
+API_KEY = '886e070469344e0381be2fc5cdf24830'
+HISTORY_SOURCES_DIR = "../data/history_sources.txt"
+HISTORY_NEWS_DIR = "../data/history_news.txt"
+DAYS_TO_UPDATE_SOURCES = 30
+DAYS_TO_UPDATE_NEWS = 1
