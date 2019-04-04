@@ -4,7 +4,7 @@ import news_const
 import requests
 import json
 from datetime import datetime, timedelta
-
+import hashlib
 
 class NewsException(Exception):
     pass
@@ -68,6 +68,9 @@ class NewsCollector:
             self.history_sources = dict()
             self.history_sources['sources'] = []
             self.history_sources['date'] = "0000-00-00"
+        if not self.history_news:
+            self.history_news = list()
+            #self.history_news =
 
     def filter_sources(self, country=None, language=None):
         """
@@ -100,9 +103,34 @@ class NewsCollector:
         return self.filter_sources(country=country, language=language)
         #shared_items = {k: x[k] for k in x if k in y and x[k] == y[k]}
 
-    def get_articles(self):
-        #TO_DO: Add
-        raise EnvironmentError
+    def get_articles(self, q):
+        articles, errors = get_everything(q)
+        if errors:
+            print(errors)
+            return
+        now = datetime.today().strftime("%Y-%m-%d")
+        #Found the article and get md5 hash
+        #TO_DO: Add this as key
+        hasher = hashlib.md5()
+        hasher.update(articles)
+        result = hasher.hexdigest()
+        isFound = False
+        for new in self.history_news:
+            if result == hasher.hexdigest(new['articles']):
+                new['articles'] = articles
+                isFound = True
+        if not isFound:
+            self.history_news['articles'] = articles
+            self.history_news['date'] = now
+            self.history_news['q'] = q
+        #if
+        articles_dict = dict()
+        articles_dict['articles'] = articles
+        articles_dict['date'] = now
+        articles_dict['q'] = q
+        return articles
+
+    #def get filtered_article()
 
 
 def get_top_headliners(q):
@@ -129,15 +157,15 @@ def get_top_headliners(q):
     headline_list = []
     errors = []
     try:
-        #url = ('{}?category={}&apiKey={}').format(const.TOP_HEADLINES_URL, category, API_KEY)
-        url = ('{}?q={}&apiKey={}').format(const.TOP_HEADLINES_URL, q, API_KEY)
+        #url = ('{}?category={}&apiKey={}').format(const.TOP_HEADLINES_URL, category, new_const.API_KEY)
+        url = ('{}?q={}&apiKey={}').format(const.TOP_HEADLINES_URL, q, news_const.API_KEY)
         response = requests.get(url)
         json = response.json()
         status = json["status"]
         if status == 'ok':
             headline_list.extend(json["articles"])
         else:
-            errors.extend(json["message"])
+            errors.append(json["message"])
     except Exception as ex:
         print("Error occurs in get_top_headliners: {}".format(ex))
         raise NewsException
@@ -168,14 +196,14 @@ def get_everything(q):
     everything_list = []
     errors = []
     try:
-        url = ('{}?q={}&apiKey={}').format(const.EVERYTHING_URL, q, API_KEY)
+        url = ('{}?q={}&apiKey={}').format(const.EVERYTHING_URL, q, news_const.API_KEY)
         response = requests.get(url)
         json = response.json()
         status = json["status"]
         if status == 'ok':
             everything_list.extend(json["articles"])
         else:
-            errors.extend(json["message"])
+            errors.append(json["message"])
     except Exception as ex:
         print("Error occurs in get_everything: {}".format(ex))
         raise NewsException
@@ -202,14 +230,14 @@ def get_sources(q):
     sources = []
     errors = []
     try:
-        url = ('{}?q={}&apiKey={}').format(const.SOURCES_URL, q, API_KEY)
+        url = ('{}?q={}&apiKey={}').format(const.SOURCES_URL, q, news_const.API_KEY)
         response = requests.get(url)
         json = response.json()
         status = json["status"]
         if status == 'ok':
             sources.extend(json["sources"])
         else:
-            errors.extend(json["message"])
+            errors.append(json["message"])
     except Exception as ex:
         print("Error occurs in get_sources: {}".format(ex))
         raise NewsException
@@ -231,7 +259,7 @@ def search_news(q, sources, languages, country, category):
     :param category:
     :return:
     """
-    get_sources(q)
+
     result, errors = get_everything(q)
     if errors:
         print(errors)
@@ -241,8 +269,16 @@ def search_news(q, sources, languages, country, category):
 if __name__ == "__main__":
     # headliners, errors = get_top_headliners()
     #search_news("Port")
-    nc = NewsCollector()
-    print(nc.get_available_sources(language=None))
+    #nc = NewsCollector()
+    # a = get_sources("")
+    # b = get_sources("Rus")
+    # c = get_sources("Android")
+    # d = get_sources("My own name lang")
+    a = get_everything("")
+    b = get_everything(" ")
+    print(a)
+    print(b)
+    #print(nc.get_available_sources(language=None))
     # headliners_without_empties = [x for x in headliners if x]
 
 
