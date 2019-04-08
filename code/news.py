@@ -1,10 +1,9 @@
-from newsapi import NewsApiClient
-from newsapi import const
-import news_const
+from news_const import HISTORY_SOURCES_DIR, HISTORY_NEWS_DIR, DAYS_TO_UPDATE_SOURCES, API_KEY, TOP_HEADLINES_URL, EVERYTHING_URL, SOURCES_URL
 import requests
 import json
 from datetime import datetime, timedelta
 import hashlib
+from pymongo import MongoClient
 
 class NewsException(Exception):
     pass
@@ -12,11 +11,11 @@ class NewsException(Exception):
 
 # TO_DO: save results to file in "data" directory
 def write_sources_to_history(data):
-    write_to_history(data, news_const.HISTORY_SOURCES_DIR)
+    write_to_history(data, HISTORY_SOURCES_DIR)
 
 
 def write_news_to_history(data):
-    write_to_history(data, news_const.HISTORY_NEWS_DIR)
+    write_to_history(data, HISTORY_NEWS_DIR)
 
 
 def write_to_history(data, filename):
@@ -29,11 +28,11 @@ def write_to_history(data, filename):
 
 
 def read_history_sources():
-    return read_history(news_const.HISTORY_SOURCES_DIR)
+    return read_history(HISTORY_SOURCES_DIR)
 
 
 def read_history_news():
-    return read_history(news_const.HISTORY_NEWS_DIR)
+    return read_history(HISTORY_NEWS_DIR)
 
 
 def read_history(filename):
@@ -45,6 +44,17 @@ def read_history(filename):
         data = []
         pass
     return data
+
+
+def read_history_new_from_db():
+    return nc.db['news'].find({})
+
+
+def read_history_sources_from_db():
+    return nc.db['sources'].find({})
+
+
+#TO_DO: Add write_to_db functions
 
 
 class NewsCollector:
@@ -63,7 +73,10 @@ class NewsCollector:
     """
     def __init__(self):
         self.history_sources = read_history_sources()
+        self.db_history_news = read_history_new_from_db()
+        self.db_history_sources = read_history_sources_from_db()
         self.history_news = read_history_news()
+        self.db = MongoClient('mongodb://149.28.85.111:27017')
         if not self.history_sources:
             self.history_sources = dict()
             self.history_sources['sources'] = []
@@ -93,7 +106,7 @@ class NewsCollector:
         Return available_sources from history_data or request(when data is not actual).
         """
         #If date older than a week we update history_data
-        now_week_ago = (datetime.today() - timedelta(days=news_const.DAYS_TO_UPDATE_SOURCES)).strftime("%Y-%m-%d")#.strftime("%Y-%m-%d %H:%M:%S")
+        now_week_ago = (datetime.today() - timedelta(days=DAYS_TO_UPDATE_SOURCES)).strftime("%Y-%m-%d")#.strftime("%Y-%m-%d %H:%M:%S")
 
         if now_week_ago >= self.history_sources['date']:
             self.history_sources['sources'] = get_sources("")
@@ -158,7 +171,7 @@ def get_top_headliners(q):
     errors = []
     try:
         #url = ('{}?category={}&apiKey={}').format(const.TOP_HEADLINES_URL, category, new_const.API_KEY)
-        url = ('{}?q={}&apiKey={}').format(const.TOP_HEADLINES_URL, q, news_const.API_KEY)
+        url = ('{}?q={}&apiKey={}').format(TOP_HEADLINES_URL, q, API_KEY)
         response = requests.get(url)
         json = response.json()
         status = json["status"]
@@ -196,7 +209,7 @@ def get_everything(q):
     everything_list = []
     errors = []
     try:
-        url = ('{}?q={}&apiKey={}').format(const.EVERYTHING_URL, q, news_const.API_KEY)
+        url = ('{}?q={}&apiKey={}').format(EVERYTHING_URL, q, API_KEY)
         response = requests.get(url)
         json = response.json()
         status = json["status"]
@@ -230,7 +243,7 @@ def get_sources(q):
     sources = []
     errors = []
     try:
-        url = ('{}?q={}&apiKey={}').format(const.SOURCES_URL, q, news_const.API_KEY)
+        url = ('{}?q={}&apiKey={}').format(SOURCES_URL, q, API_KEY)
         response = requests.get(url)
         json = response.json()
         status = json["status"]
@@ -269,15 +282,20 @@ def search_news(q, sources, languages, country, category):
 if __name__ == "__main__":
     # headliners, errors = get_top_headliners()
     #search_news("Port")
-    #nc = NewsCollector()
+    nc = NewsCollector()
     # a = get_sources("")
     # b = get_sources("Rus")
     # c = get_sources("Android")
     # d = get_sources("My own name lang")
-    a = get_everything(q="Rico")
-    b = get_everything(q=" porte")
+    #a = get_everything(q="Rico")
+    #b = get_everything(q=" porte")
+    #print(a)
+    #print(b)
+    #Create MongoConnection
+
+
+    a = nc.db['testDB']
     print(a)
-    print(b)
     #print(nc.get_available_sources(language=None))
     # headliners_without_empties = [x for x in headliners if x]
 
