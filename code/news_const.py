@@ -3,6 +3,7 @@ HISTORY_SOURCES_DIR = "../data/history_sources.txt"
 HISTORY_NEWS_DIR = "../data/history_news.txt"
 DAYS_TO_UPDATE_SOURCES = 30
 DAYS_TO_UPDATE_NEWS = 1
+MONGO_URL = 'mongodb://149.28.85.111:27017'
 
 TOP_HEADLINES_URL = 'https://newsapi.org/v2/top-headlines'
 EVERYTHING_URL = 'https://newsapi.org/v2/everything'

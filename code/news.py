@@ -1,4 +1,4 @@
-from news_const import HISTORY_SOURCES_DIR, HISTORY_NEWS_DIR, DAYS_TO_UPDATE_SOURCES, API_KEY, TOP_HEADLINES_URL, EVERYTHING_URL, SOURCES_URL
+from news_const import HISTORY_SOURCES_DIR, HISTORY_NEWS_DIR, DAYS_TO_UPDATE_SOURCES, API_KEY, TOP_HEADLINES_URL, EVERYTHING_URL, SOURCES_URL, MONGO_URL
 import requests
 import json
 from datetime import datetime, timedelta
@@ -46,43 +46,45 @@ def read_history(filename):
     return data
 
 
-def read_history_new_from_db():
-    return nc.db['news'].find({})
-
-
-def read_history_sources_from_db():
-    return nc.db['sources'].find({})
-
-
-#TO_DO: Add write_to_db functions
-
-
 class NewsCollector:
     """
     Class for collecting news from news sources
     Structure of elements:
     date(str)
     sources(list)
-        ----category(str)
-        ----country(str)
-        ----description(str)
-        ----id(str)
-        ----language(str)
-        ----name(str)
-        ----url(str)
+    ----category(str)
+    ----country(str)
+    ----description(str)
+    ----id(str)
+    ----language(str)
+    ----name(str)
+    ----url(str)
     """
     def __init__(self):
-        self.history_sources = read_history_sources()
-        self.db_history_news = read_history_new_from_db()
-        self.db_history_sources = read_history_sources_from_db()
-        self.history_news = read_history_news()
-        self.db = MongoClient('mongodb://149.28.85.111:27017')
-        if not self.history_sources:
-            self.history_sources = dict()
-            self.history_sources['sources'] = []
-            self.history_sources['date'] = "0000-00-00"
-        if not self.history_news:
-            self.history_news = list()
+        #self.history_sources = read_history_sources()
+        self.db = MongoClient(MONGO_URL).news_collector
+        #if ("news" in self.db.list_collection_names()):
+        self.db_history_news = self.read_history_news_from_db()
+        self.db_history_sources = self.read_history_sources_from_db()
+        if not self.db_history_sources:
+            self.db_history_sources = dict()
+            self.db_history_sources['sources'] = {}
+            self.db_history_sources['date'] = "0000-00-00"
+
+        if not self.db_history_news:
+            self.db_history_news = list()
+
+        #self.history_news = read_history_news()
+        #self.history_sources = read_history_sources()
+        #self.history_news = read_history_news()
+
+        #if not self.history_sources:
+        #    self.history_sources = dict()
+        #    self.history_sources['sources'] = []
+        #    self.history_sources['date'] = "0000-00-00"
+
+        #if not self.history_news:
+            #self.history_news = list()
             #self.history_news =
 
     def filter_sources(self, country=None, language=None):
@@ -92,7 +94,7 @@ class NewsCollector:
         :param languages: Can be list, str, None
         :return: sources(list)
         """
-        sources = self.history_sources['sources']
+        sources = self.db_history_sources['sources']
         if not country and not language:
             return sources
         countries = list(country) if isinstance(country, str) else country
@@ -108,15 +110,27 @@ class NewsCollector:
         #If date older than a week we update history_data
         now_week_ago = (datetime.today() - timedelta(days=DAYS_TO_UPDATE_SOURCES)).strftime("%Y-%m-%d")#.strftime("%Y-%m-%d %H:%M:%S")
 
-        if now_week_ago >= self.history_sources['date']:
-            self.history_sources['sources'] = get_sources("")
-            self.history_sources['date'] = datetime.today().strftime("%Y-%m-%d")
-            write_to_history(self.history_sources)
+        #if now_week_ago >= self.history_sources['date']:
+        if now_week_ago >= self.db_history_sources['date']:
+            #self.history_sources['sources'] = get_sources("")
+            #self.history_sources['date'] = datetime.today().strftime("%Y-%m-%d")
+            self.db_history_sources['sources'], _ = get_sources("")
+            self.db_history_sources['date'] = datetime.today().strftime("%Y-%m-%d")
+            #write_sources_to_history(self.history_sources)
+            self.write_history_sources_from_db(self.db_history_sources)
+        else:
+            #self.history_sources = self.read_history_sources_from_db()
+            self.db_history_sources = self.read_history_sources_from_db()
         #filter by language and country
         return self.filter_sources(country=country, language=language)
         #shared_items = {k: x[k] for k in x if k in y and x[k] == y[k]}
 
+    # def get_available_news(self, q):
+    #     self.db_history_news['sources'], _ = get_everything(q)
+    #     self.db_history_news['date'] = datetime.today().strftime("%Y-%m-%d")
+
     def get_articles(self, q):
+        #TO_DO: make link with sources
         articles, errors = get_everything(q)
         if errors:
             print(errors)
@@ -125,25 +139,75 @@ class NewsCollector:
         #Found the article and get md5 hash
         #TO_DO: Add this as key
         hasher = hashlib.md5()
-        hasher.update(articles)
-        result = hasher.hexdigest()
+        hasher.update(json.dumps(articles).encode('utf-8'))
+        hash_hex = hasher.hexdigest()
         isFound = False
-        for new in self.history_news:
-            if result == hasher.hexdigest(new['articles']):
-                new['articles'] = articles
+        for new in self.db_history_news:
+            if hash_hex == new['hash']:
                 isFound = True
+
         if not isFound:
-            self.history_news['articles'] = articles
-            self.history_news['date'] = now
-            self.history_news['q'] = q
-        #if
-        articles_dict = dict()
-        articles_dict['articles'] = articles
-        articles_dict['date'] = now
-        articles_dict['q'] = q
-        return articles
+            articles_dict = dict()
+            articles_dict['articles'] = articles
+            articles_dict['date'] = now
+            articles_dict['q'] = q
+            articles_dict['hash'] = hash_hex
+            self.db_history_news.append(articles_dict)
+            self.write_history_news_from_db(articles_dict)          #insert_one
+            #self.write_history_news_from_db(self.db_history_news)  #insert_many
+
+        return self.db_history_news
+
+    # def get_articles(self, q):
+    #     articles, errors = get_everything(q)
+    #     if errors:
+    #         print(errors)
+    #         return
+    #     now = datetime.today().strftime("%Y-%m-%d")
+    #     #Found the article and get md5 hash
+    #     #TO_DO: Add this as key
+    #     hasher = hashlib.md5()
+    #     hasher.update(articles)
+    #     result = hasher.hexdigest()
+    #     isFound = False
+    #     for new in self.history_news:
+    #         if result == hasher.hexdigest(new['articles']):
+    #             new['articles'] = articles
+    #             isFound = True
+    #     if not isFound:
+    #         self.history_news['articles'] = articles
+    #         self.history_news['date'] = now
+    #         self.history_news['q'] = q
+    #     #if
+    #     articles_dict = dict()
+    #     articles_dict['articles'] = articles
+    #     articles_dict['date'] = now
+    #     articles_dict['q'] = q
+    #     return articles
 
     #def get filtered_article()
+    def read_history_news_from_db(self):
+        cursor = self.db['articles'].find()
+        ret_list = list()
+        for c in cursor:
+            ret_list.append(c)
+        return ret_list
+
+    def read_history_sources_from_db(self):
+        return self.db['sources'].find_one()
+        # ret_list = list()
+        # for c in cursor:
+        #     ret_list.append(c)
+        # return ret_list
+
+    def write_history_news_from_db(self, data):
+        #self.db['articles'].update_many({}, {"$set":data}, upsert=True)
+        # for d in data:
+        #     self.db['articles'].insert_one(d)
+        self.db['articles'].insert_one(data)
+
+    def write_history_sources_from_db(self, data):
+        self.db['sources'].insert_one(data)
 
 
 def get_top_headliners(q):
@@ -293,9 +357,12 @@ if __name__ == "__main__":
     #print(b)
     #Create MongoConnection
 
-
-    a = nc.db['testDB']
-    print(a)
+    #nc.read_history_sources_from_db()
+    #print(a)
+    nc.get_available_sources()
+    nc.get_articles("Poerto")
+    print(nc.db_history_sources)
+    print(nc.db_history_news)
     #print(nc.get_available_sources(language=None))
     # headliners_without_empties = [x for x in headliners if x]
 
