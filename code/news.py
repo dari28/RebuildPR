@@ -4,9 +4,12 @@ import json
 from datetime import datetime, timedelta
 import hashlib
 from pymongo import MongoClient
+#from polyglot.text import Text, Word
 from install_polyglot import install
+from lib import tools, text
 class NewsException(Exception):
     pass
+
 
 
 # TO_DO: save results to file in "data" directory
@@ -343,6 +346,10 @@ def search_news(q, sources, languages, country, category):
 
     print(result)
 
+
+set_polyglot_entity = set(['I-LOC', 'I-PER', 'I-ORG'])
+
+
 if __name__ == "__main__":
     # headliners, errors = get_top_headliners()
     #search_news("Port")
@@ -359,9 +366,30 @@ if __name__ == "__main__":
 
     #nc.read_history_sources_from_db()
     #print(a)
-    install()
+    install() #Already do this
+    matches = []
     nc.get_available_sources()
-    nc.get_articles("Poerto")
+    articles = nc.get_articles("puerto rico")
+
+
+
+    for article in articles:
+        for art in article['articles']:
+            #art_text = text.Text()
+            polyglot_text = text.Text(art['content'], hint_language_code='es', split_apostrophe=True)
+            print("****ARTICLE*****")
+            print(polyglot_text.entities)
+            print("**************************")
+            # tag_entities = set_polyglot_entity#.intersection('I-LOC')
+            # if len(tag_entities) > 0:
+            #     parser_iter = tools.ParsePolyglot(polyglot_text.entities, tag_entities, art['content'], polyglot_text)
+            #     for match in parser_iter:
+            #         matches.append(match)
+            for sent in polyglot_text.sentences:
+                print(sent, "\n")
+                for entity in sent.entities:
+                    print(entity.tag, entity)
+
     print(nc.db_history_sources)
     print(nc.db_history_news)
     #print(nc.get_available_sources(language=None))

@@ -55,11 +55,11 @@ STANDFORD_PACKAGE = {
 def get_abs_path(path):
     """"""
     path = path if os.path.isabs(path) else \
-        os.path.abspath(
-            os.path.join(
-                os.path.dirname(os.path.dirname(sys.modules['nlp.config'].__file__)),
-                path
-            )
+        os.path.abspath(path
+            # os.path.join(
+            #     os.path.dirname(os.path.dirname(sys.modules['nlp.config'].__file__)),
+            #     path
+            # )
         )
     return path
 
@@ -93,34 +93,23 @@ def install():
 
         downloader = Downloader(download_dir=polyglot_path)
 
-        # for language in SERVER['language']:
-        #     if language in get_supported_languages('embeddings2'):
-        #             #if not downloader.is_installed(unicode('embeddings2.' + language)):
-        #             if not downloader.is_installed('embeddings2.' + language):
-        #                 downloader.download('embeddings2.' + language)
-        #     if language in get_supported_languages('ner2'):
-        #             #if not downloader.is_installed(unicode('ner2.' + language)):
-        #             if not downloader.is_installed('ner2.' + language):
-        #                 downloader.download('ner2.' + language)
-        #     if language in get_supported_languages('sentiment2'):
-        #             #if not downloader.is_installed(unicode('sentiment2.' + language)):
-        #             if not downloader.is_installed('sentiment2.' + language):
-        #                 downloader.download('sentiment2.' + language)
-        #     if language in get_supported_languages('morph2'):
-        #             #if not downloader.is_installed(unicode('morph2.' + language)):
-        #             if not downloader.is_installed('morph2.' + language):
-        #                 downloader.download('morph2.' + language)
-        #     if language in get_supported_languages('pos2'):
-        #             #if not downloader.is_installed(unicode('pos2.' + language)):
-        #             if not downloader.is_installed('pos2.' + language):
-        #                 downloader.download('pos2.' + language)
-        #     if language in get_supported_languages('transliteration2'):
-        #             #if not downloader.is_installed(unicode('transliteration2.' + language)):
-        #             if not downloader.is_installed('transliteration2.' + language):
-        #                 downloader.download('transliteration2.' + language)
-        downloader.download('embeddings2.es')
-        downloader.download('pos2.es')
-        downloader.download('ner2.es')
+        for language in ['es', 'fr', 'de', 'ru', 'en']:
+            if not downloader.is_installed('embeddings2.' + language):
+                downloader.download('embeddings2.' + language)
+            if not downloader.is_installed('ner2.' + language):
+                downloader.download('ner2.' + language)
+            if not downloader.is_installed('sentiment2.' + language):
+                downloader.download('sentiment2.' + language)
+            if not downloader.is_installed('morph2.' + language):
+                downloader.download('morph2.' + language)
+            # if not downloader.is_installed('pos2.' + language):
+            #     downloader.download('pos2.' + language)
+            print(language)
+            # if not downloader.is_installed('transliteration2.' + language):
+            #     downloader.download('transliteration2.' + language)
+        # downloader.download('embeddings2.es')
+        # downloader.download('pos2.es')
+        # downloader.download('ner2.es')
     except:
         ex_type, ex, tb = sys.exc_info()
         #tools.message_box(str(ex) + 'TracebackError'+''.join(traceback.format_exc()),

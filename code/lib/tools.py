@@ -1,21 +1,21 @@
 # """useful features"""
 #
-# import re
-# import os
-# import sys
-# import traceback
-#
-# import iso639
-# import requests
-# import json
-# import numpy
-# import difflib
-#
-# import string
-# import ctypes
-#
-# from itertools import permutations, product
-# from lib.text import Text
+import re
+import os
+import sys
+import traceback
+
+import iso639
+import requests
+import json
+import numpy
+import difflib
+
+import string
+import ctypes
+
+from itertools import permutations, product
+from lib.text import Text
 #
 # # from lib.mongo_connection import MongoConnection
 #
@@ -115,41 +115,41 @@
 #     return re.sub('[\n\r\f]+', '.', text)
 #
 #
-# def adaptiv_remove_tab(origin_text):
-#     punctuation_sign = '[!"#$%&\'()*+,-\./:;<=>?@[\\]^_`{|}~]'
-#     tab = '[\n\r\f]'
-#
-#     end = 0
-#     new_text = ''
-#     for match in re.finditer('{0}{1}+'.format(punctuation_sign, tab), origin_text):
-#         b = match.regs[0]
-#         new_text += origin_text[end:(b[0] + 1)] + ' '*(b[1] - b[0] - 1)
-#         end = b[1]
-#     new_text += origin_text[end:]
-#     fixed_text = new_text
-#
-#     end = 0
-#     new_text = ''
-#     for match in re.finditer('{1}+(?={0})'.format(punctuation_sign, tab), fixed_text):# ' '
-#         b = match.regs[0]
-#         new_text += fixed_text[end:(b[0])] + ' ' * (b[1] - b[0] - 1)
-#         end = b[1]
-#     new_text += fixed_text[end:]
-#     fixed_text = new_text
-#
-#     end = 0
-#     new_text = ''
-#     for match in re.finditer('{1}+(?!{0})'.format(punctuation_sign, tab), fixed_text):# '.'
-#         b = match.regs[0]
-#         new_text += fixed_text[end:(b[0])] + '.' + ' ' * (b[1] - b[0] - 1)
-#         end = b[1]
-#     new_text += fixed_text[end:]
-#     fixed_text = new_text
-#
-#     new_text = re.sub(' +', ' ', fixed_text)
-#     skip_map = check_skip_string(new_text, fixed_text)
-#     back_map = numpy.where(numpy.array(skip_map) == 0)[0]
-#     return new_text, back_map
+def adaptiv_remove_tab(origin_text):
+    punctuation_sign = '[!"#$%&\'()*+,-\./:;<=>?@[\\]^_`{|}~]'
+    tab = '[\n\r\f]'
+
+    end = 0
+    new_text = ''
+    for match in re.finditer('{0}{1}+'.format(punctuation_sign, tab), origin_text):
+        b = match.regs[0]
+        new_text += origin_text[end:(b[0] + 1)] + ' '*(b[1] - b[0] - 1)
+        end = b[1]
+    new_text += origin_text[end:]
+    fixed_text = new_text
+
+    end = 0
+    new_text = ''
+    for match in re.finditer('{1}+(?={0})'.format(punctuation_sign, tab), fixed_text):# ' '
+        b = match.regs[0]
+        new_text += fixed_text[end:(b[0])] + ' ' * (b[1] - b[0] - 1)
+        end = b[1]
+    new_text += fixed_text[end:]
+    fixed_text = new_text
+
+    end = 0
+    new_text = ''
+    for match in re.finditer('{1}+(?!{0})'.format(punctuation_sign, tab), fixed_text):# '.'
+        b = match.regs[0]
+        new_text += fixed_text[end:(b[0])] + '.' + ' ' * (b[1] - b[0] - 1)
+        end = b[1]
+    new_text += fixed_text[end:]
+    fixed_text = new_text
+
+    new_text = re.sub(' +', ' ', fixed_text)
+    skip_map = check_skip_string(new_text, fixed_text)
+    back_map = numpy.where(numpy.array(skip_map) == 0)[0]
+    return new_text, back_map
 #
 #
 # def remove_tab(origin_text):
@@ -298,33 +298,34 @@
 #                 pass
 #
 #
-# class ParsePolyglot(object):
-#     """Converts and filters the polyglot entities"""
-#     def __init__(self, classification, set_tags, origin_text, text_class):
-#         self.classification = classification
-#         self.set_tags = set_tags
-#         self.origin_text = origin_text
-#         self.text_class = text_class
-#
-#     def __iter__(self):
-#         end_pos = 0
-#         for word_class in self.classification:
-#             try:
-#                 if word_class.tag in self.set_tags:
-#                     for i in range(word_class.start, word_class.end):
-#                         utf8_units = self.text_class.words[i] if isinstance(self.text_class.words[i], unicode) \
-#                             else self.text_class.words[i].decode('utf8')
-#                         if i == word_class.start:
-#                             start_pos = self.origin_text.find(utf8_units, end_pos)
-#                         end_pos = self.origin_text.find(utf8_units, end_pos) + len(utf8_units)
-#
-#                     yield {'match': {'start_match': start_pos,
-#                                      'length_match': len(self.origin_text[start_pos: end_pos]),
-#                                      'word': self.origin_text[start_pos: end_pos]},
-#                            'tag': word_class.tag}
-#             except:
-#                 pass
-#
+class ParsePolyglot(object):
+    """Converts and filters the polyglot entities"""
+    def __init__(self, classification, set_tags, origin_text, text_class):
+        self.classification = classification
+        self.set_tags = set_tags
+        self.origin_text = origin_text
+        self.text_class = text_class
+
+    def __iter__(self):
+        end_pos = 0
+        for word_class in self.classification:
+            try:
+                if word_class.tag in self.set_tags:
+                    for i in range(word_class.start, word_class.end):
+                        # utf8_units = self.text_class.words[i] if isinstance(self.text_class.words[i], unicode) \
+                        #     else self.text_class.words[i].decode('utf8')
+                        utf8_units = self.text_class.words[i]
+                        if i == word_class.start:
+                            start_pos = self.origin_text.find(utf8_units, end_pos)
+                        end_pos = self.origin_text.find(utf8_units, end_pos) + len(utf8_units)
+
+                    yield {'match': {'start_match': start_pos,
+                                     'length_match': len(self.origin_text[start_pos: end_pos]),
+                                     'word': self.origin_text[start_pos: end_pos]},
+                           'tag': word_class.tag}
+            except:
+                pass
+
 #
 # class ParsePolyglotPolarity(object):
 #     """Converts and filters the polyglot entities"""
@@ -623,24 +624,24 @@
 #     return dif_map
 #
 #
-# def check_skip_string(text, origin_text):
-#     text = text if isinstance(text, unicode) else text.decode('utf8')
-#     origin_text = origin_text if isinstance(origin_text, unicode) else origin_text.decode('utf8')
-#     dif_map = [1]*len(origin_text)
-#     diff = difflib.SequenceMatcher(None, text, origin_text)
-#     last_match = {'a': -1, 'b': -1}
-#     matches = diff.get_matching_blocks()
-#     for match in diff.get_matching_blocks():
-#         if match.size == 0:
-#             break
-#         f = last_match['b'] + 1
-#         ff = match.a - last_match['a'] - 1
-#         key = range(last_match['b'] + 1, last_match['b'] + 1 + match.a - last_match['a'] - 1)
-#         dif_map[last_match['b'] + 1: last_match['b'] + match.a - last_match['a']] = [0 for i in key]
-#         key = range(match.b, match.b + match.size)
-#         dif_map[match.b: match.b + match.size] = [0 for i in key]
-#         last_match = {'a': match.a + match.size - 1, 'b': match.b + match.size - 1}
-#     return dif_map
+def check_skip_string(text, origin_text):
+    text = text #if isinstance(text, unicode) else text.decode('utf8')
+    origin_text = origin_text #if isinstance(origin_text, unicode) else origin_text.decode('utf8')
+    dif_map = [1]*len(origin_text)
+    diff = difflib.SequenceMatcher(None, text, origin_text)
+    last_match = {'a': -1, 'b': -1}
+    matches = diff.get_matching_blocks()
+    for match in diff.get_matching_blocks():
+        if match.size == 0:
+            break
+        f = last_match['b'] + 1
+        ff = match.a - last_match['a'] - 1
+        key = range(last_match['b'] + 1, last_match['b'] + 1 + match.a - last_match['a'] - 1)
+        dif_map[last_match['b'] + 1: last_match['b'] + match.a - last_match['a']] = [0 for i in key]
+        key = range(match.b, match.b + match.size)
+        dif_map[match.b: match.b + match.size] = [0 for i in key]
+        last_match = {'a': match.a + match.size - 1, 'b': match.b + match.size - 1}
+    return dif_map
 #
 #
 # def check_intersection_range(range1, range2):
@@ -778,7 +779,6 @@
 #     # entity_standford = list(mongo.entity.find({'type': 'default_stanford'}))
 #     # set_id = [entity['_id'] for entity in entity_standford]
 #     # result = export_data(entities=set_id)
-#     # import_data(result, {'_id': '59e0d17756f8ab2f44b97cbf'})
 #     # print result
 #     #a = check_skip_string('124', '1234')
 #     #print a

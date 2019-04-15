@@ -250,14 +250,6 @@
 #     f.write('started at {}\n'.format(datetime.datetime.now()))
 #     f.close()
 #     ####################################
-#     os.path.sep = '/'
-#     # host_main = 'http://174.129.126.138/'
-#     host_main = 'http://127.0.0.1:8000/'
-#
-#     # Proxy from https://hidemy.name/ru/proxy-list/
-#     proxy = {
-#         "http": "http//62.32.75.82:8080"
-#     }
 #     translate_desription = True
 #     ###################################
 #     add_polyglot_default()
