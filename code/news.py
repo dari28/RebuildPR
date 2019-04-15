@@ -4,7 +4,7 @@ import json
 from datetime import datetime, timedelta
 import hashlib
 from pymongo import MongoClient
-
+from install_polyglot import install
 class NewsException(Exception):
     pass
 
@@ -359,6 +359,7 @@ if __name__ == "__main__":
 
     #nc.read_history_sources_from_db()
     #print(a)
+    install()
     nc.get_available_sources()
     nc.get_articles("Poerto")
     print(nc.db_history_sources)
