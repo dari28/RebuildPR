@@ -6,6 +6,7 @@ import hashlib
 from pymongo import MongoClient
 #from polyglot.text import Text, Word
 from install_polyglot import install
+from install_stanford import predict_entity_stanford_default, predict_entity_stanford
 from lib import tools, text
 class NewsException(Exception):
     pass
@@ -368,28 +369,54 @@ if __name__ == "__main__":
     #print(a)
     install() #Already do this
     matches = []
-    nc.get_available_sources()
-    articles = nc.get_articles("puerto rico")
+   # nc.get_available_sources()
+   # articles = nc.get_articles("puerto rico")
 
+    test_article = "Puerto mocha Rico"
+    #
+    # for article in articles:
+    #     for art in article['articles']:
+    #         #art_text = text.Text()
+    #         if not art['content']:
+    #             continue
+    #         print(art['content'])
+    #         polyglot_text = text.Text(art['content'], hint_language_code='es', split_apostrophe=True)
+    #         print("****ARTICLE*****")
+    #         print(polyglot_text.entities)
+    #         print("**************************")
+    #         # tag_entities = set_polyglot_entity#.intersection('I-LOC')
+    #         # if len(tag_entities) > 0:
+    #         #     parser_iter = tools.ParsePolyglot(polyglot_text.entities, tag_entities, art['content'], polyglot_text)
+    #         #     for match in parser_iter:
+    #         #         matches.append(match)
+    #         for sent in polyglot_text.sentences:
+    #             print(sent, "\n")
+    #             for entity in sent.entities:
+    #                 print(entity.tag, entity)
+    #         print("*************END**********")
+    #predict_entity_stanford_default({
+    predict_entity_stanford(
+        # {
+        # "language":"en",
+        # "type":"stanford_crf",
+        # "name":"example entity",
+        # "model_settings":{},
+        # "description":"Example for creating an entity "
+        #             },
 
-
-    for article in articles:
-        for art in article['articles']:
-            #art_text = text.Text()
-            polyglot_text = text.Text(art['content'], hint_language_code='es', split_apostrophe=True)
-            print("****ARTICLE*****")
-            print(polyglot_text.entities)
-            print("**************************")
-            # tag_entities = set_polyglot_entity#.intersection('I-LOC')
-            # if len(tag_entities) > 0:
-            #     parser_iter = tools.ParsePolyglot(polyglot_text.entities, tag_entities, art['content'], polyglot_text)
-            #     for match in parser_iter:
-            #         matches.append(match)
-            for sent in polyglot_text.sentences:
-                print(sent, "\n")
-                for entity in sent.entities:
-                    print(entity.tag, entity)
-
+            [
+                {
+                    "_id": "5aaa494edf790d0d3cb45036", "available": True, "training": "finished", "user": "303030303030303030307a68",
+                 "language": "zh", "description": "Trained model of CRF, defining places", "model": "crf_chinese_7class", "model_settings": {"tag": "LOCATION"},
+                 "type": "default_stanford", "name": " location"
+                },
+                {
+                    "_id": "5aaa494edf790d0d3cb45038", "available": True, "training": "finished", "user":"303030303030303030307a68",
+                 "language": "zh", "description": "Trained model of CRF, defining objects", "model": "crf_chinese_7class", "model_settings": {"tag": "FACILITY"},
+                 "type": "default_stanford", "name": " facility"
+                }
+            ],
+        test_article, 'es')
     print(nc.db_history_sources)
     print(nc.db_history_news)
     #print(nc.get_available_sources(language=None))

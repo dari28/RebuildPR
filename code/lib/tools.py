@@ -115,6 +115,7 @@ from lib.text import Text
 #     return re.sub('[\n\r\f]+', '.', text)
 #
 #
+
 def adaptiv_remove_tab(origin_text):
     punctuation_sign = '[!"#$%&\'()*+,-\./:;<=>?@[\\]^_`{|}~]'
     tab = '[\n\r\f]'
@@ -198,16 +199,16 @@ def adaptiv_remove_tab(origin_text):
 #     return result_set
 #
 #
-# def get_abs_path(path):
-#     """"""
-#     path = path if os.path.isabs(path) else \
-#         os.path.abspath(
-#             os.path.join(
-#                 os.path.dirname(os.path.dirname(sys.modules['nlp.config'].__file__)),
-#                 path
-#             )
-#         )
-#     return path
+def get_abs_path(path):
+    """"""
+    # path = path if os.path.isabs(path) else \
+    #     os.path.abspath(
+    #         os.path.join(
+    #             os.path.dirname(os.path.dirname(sys.modules['nlp.config'].__file__)),
+    #             path
+    #         )
+    #     )
+    return path
 #
 #
 # def find_nth_overlapping(haystack, needle, n):

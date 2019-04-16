@@ -24,33 +24,6 @@ POLIGLOT = dict(
     path_polyglot_data='../polyglot_data',
 )
 
-STANFORD = dict(
-    # languages=['en', 'zh', 'de', 'es', 'fr', 'ar'],
-    # # languages=[],
-    # crf_english_3class='./stanford_corenlp/classifiers/english.all.3class.distsim.crf.ser.gz',
-    # crf_english_4class='./stanford_corenlp/classifiers/english.conll.4class.distsim.crf.ser.gz',
-    # crf_english_7class='./stanford_corenlp/classifiers/english.muc.7class.distsim.crf.ser.gz',
-    # crf_chinese_7class='./stanford_corenlp/classifiers/chinese.misc.distsim.crf.ser.gz',
-    # crf_german_7class='./stanford_corenlp/classifiers/german.conll.hgc_175m_600.crf.ser.gz',
-    # crf_spanish_4class='./stanford_corenlp/classifiers/spanish.ancora.distsim.s512.crf.ser.gz',
-    # crf_france_3class='./stanford_corenlp/classifiers/france.3class.crf.ser.gz',
-    # # path_stanford_ner='./stanford_corenlp/stanford-corenlp-3.8.0.jar',
-    # path_stanford_ner='./stanford_corenlp/stanford_update.jar',
-)
-
-STANDFORD_PACKAGE = {
-    # 'en': [
-    #     'crf_english_3class',
-    #     'crf_english_4class',
-    #     'crf_english_7class'
-    # ],
-    'es': ['crf_spanish_4class'],
-    # 'zh': ['crf_chinese_7class'],
-    # 'de': ['crf_german_7class'],
-    # 'fr': ['crf_france_3class'],
-    # 'ar': []
-}
-
 
 def get_abs_path(path):
     """"""
