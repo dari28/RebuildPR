@@ -1,6 +1,6 @@
 #
 #
-# import os
+import os
 #
 # from lib.mongo_connection import MongoConnection
 # from lib.linguistic_functions import get_supported_languages
@@ -11,15 +11,19 @@
 # from install_tts_models import install_tts
 #
 from lib import stanford_module as stanford
+from nlp.config import description_tag, STANFORD, stanford_models
+from lib import tools
+import jnius
+
 
 def predict_entity_stanford_default(entities, data, language=None):
     """"""
     #"data" MUST BE str type(utf-8 encoding).
-    entity_dict = entities  #tools.sort_model(entities, 'model')
+    entity_dict = entities  #tools.sort_model(entities, 'model')  #SIDE
 
     data = data if isinstance(data, str) else data.encode('utf8')
     #data_predict, back_map = tools.adaptiv_remove_tab(data)
-    data_predict = data
+    data_predict = data #SIDE
 
     annotation = stanford.Annotation(data_predict)
     stanford.getTokenizerAnnotator(language).annotate(annotation)
@@ -85,10 +89,12 @@ def predict_entity_stanford_default(entities, data, language=None):
 def predict_entity_stanford(entities, data, language=None):
     """"""
     #"data" MUST BE str type(utf-8 encoding).
-    result = {}
+    #result = {}
+    result = []
     data = data if isinstance(data, str) else data.encode('utf8')
-
+    classifier_dict = dict()
     for entity in entities:
+    #for entity in stanford_models:
         if 'model_settings' in entity:
             settings = entity['model_settings']
         else:
@@ -101,12 +107,19 @@ def predict_entity_stanford(entities, data, language=None):
         #     data_predict, back_map = tools.adaptiv_remove_tab(data_predict)
         # else:
         #     data_predict, back_map = tools.remove_tab(data_predict)
-
+        #settings = entity['tags']
+        data_predict = data
         annotation = stanford.annotation(data_predict, language, settings)
         #document = annotation.get(stanford.getClassAnnotation('TokensAnnotation'))
-        #classifier = stanford.CRFClassifier.getClassifier(entity['model'].encode('utf-8'))
-        classifier = stanford.CRFClassifier.getClassifier("crf_chinese_7class")
+        model = tools.get_abs_path(STANFORD[entity['model']])
+        model = model if isinstance(model, str) else model.encode('utf8')
+
+        if model not in classifier_dict:
+            classifier_dict[model] = stanford.CRFClassifier.getClassifier(stanford.jString(model))
+        classifier = classifier_dict[model]
+
         sentences = annotation.get(stanford.getClassAnnotation('SentencesAnnotation'))
+
         matches = []
         for i in range(sentences.size()):
             jSentence = sentences.get(i)
@@ -122,7 +135,8 @@ def predict_entity_stanford(entities, data, language=None):
                 jTokken = document.get(i)
                 tag = jTokken.get(stanford.getClassAnnotation('AnswerAnnotation'))
                 # word = jTokken.get(stanford.getClassAnnotation('TextAnnotation'))
-                if tag in ['A']:
+                if tag in list(description_tag.keys()):#['A', 'LOCATION', ]:
+                #if tag in ['A']:
                     word = jTokken.get(stanford.getClassAnnotation('OriginalTextAnnotation'))
                     start_pos = jTokken.get(stanford.getClassAnnotation('CharacterOffsetBeginAnnotation'))
                     if start_pos == previous_end_pos + 1 and tag == previous_tag:
@@ -138,11 +152,14 @@ def predict_entity_stanford(entities, data, language=None):
                     match = {
                         'start_match': start_pos,
                         'length_match': end_pos - start_pos,
-                        'word': word
+                        'word': word,
+                        'tag': tag
                     }
                     matches.append(match)
         #matches = tools.sample_update_matches(back_map, data, matches)
-        result[entity['_id']] = matches
+        #result[entity['_id']] = matches
+        if matches:
+            result.append(matches)
 
     return result
 
@@ -150,51 +167,7 @@ def add_standford_default():
     """"""
     #mongodb = MongoConnection()
 
-    stanford_models = [
-        {
-            'model': 'crf_english_3class',
-            'tags': ['ORGANIZATION', 'LOCATION', 'PERSON'],
-            'language': 'en',
-            'name': 'Detects'
-        },
-        {
-            'model': 'crf_english_4class',
-            'tags': ['ORGANIZATION', 'LOCATION', 'PERSON', 'MISC'],
-            'language': 'en',
-            'name': 'Detects'
-        },
-        {
-            'model': 'crf_english_7class',
-            'tags': ['ORGANIZATION', 'LOCATION', 'PERSON', 'DATE', 'MONEY', 'PERCENT', 'TIME'],
-            'language': 'en',
-            'name': 'Detects'
-        },
-        {
-            'model': 'crf_chinese_7class',
-            'tags': ['ORGANIZATION', 'LOCATION', 'PERSON', 'FACILITY', 'DEMONYM', 'MISC', 'GPE'],
-            'language': 'zh',
-            'name': ''
-        },
-        {
-            'model': 'crf_german_7class',
-            'tags': ['I-MISC', 'B-LOC', 'I-PER', 'I-LOC', 'B-MISC', 'I-ORG', 'B-ORG', 'B-PER'],
-            'language': 'de',
-            'name': 'Erkennt'
-        },
-        {
-            'model': 'crf_spanish_4class',
-            'tags': ['OTROS', 'PERS', 'ORG', 'LUG'],
-            'language': 'es',
-            'name': 'Detecta'
-        },
-        {
-            'model': 'crf_france_3class',
-            'tags': ['I-ORG', 'I-PERS', 'I-LIEU'],
-            'language': 'fr',
-            'name': '\x44\xC3\xA9\x74\x65\x72\x6D\x69\x6E\x65\x20\x6C\x65\x73'
-        }
-    ]
-
+    entities = []
     count_tag = {}
     step_tag = {}
     for model in stanford_models:
@@ -232,6 +205,7 @@ def add_standford_default():
                     entity['description'] += \
                         ' (different models were trained on different data, so their results can vary)'
 
+                entities.append(entity)
                 # find_entity = entity.copy()
                 # del find_entity['description']
                 # check_exist = mongodb.entity.find_one(find_entity)
@@ -248,137 +222,7 @@ def add_standford_default():
                     #     {'$addToSet': {'entity': model_id}},
                     #     upsert=True
                     # )
-#
-# def add_polyglot_default():
-#     """Defining default polyglot models"""
-#     polyglot_model = [
-#         {
-#             'model_settings': {
-#                 'tag': 'I-LOC',
-#                 'polyglot_model': 'ner2',
-#                 'case_sensitive': True
-#             },
-#             'training': 'finished',
-#             'available': True,
-#             'type': 'default_polyglot',
-#             'description': 'Trained model based on a neural network, detected locations',
-#             'name': 'Detects locations'
-#         },
-#         {
-#             'model_settings': {
-#                 'tag': 'I-PER',
-#                 'polyglot_model': 'ner2',
-#                 'case_sensitive': True
-#             },
-#             'training': 'finished',
-#             'available': True,
-#             'type': 'default_polyglot',
-#             'description': 'Trained model based on a neural network, detected personality',
-#             'name': 'Detects persons'
-#         },
-#         {
-#             'model_settings': {
-#                 'tag': 'I-ORG',
-#                 'polyglot_model': 'ner2',
-#             },
-#             'training': 'finished',
-#             'available': True,
-#             'type': 'default_polyglot',
-#             'description': 'Trained model based on a neural network, detected organizations',
-#             'name': 'Detects organizations'
-#         },
-#         {
-#             'model_settings': {
-#                 'tag': 'negative_word',
-#                 'polyglot_model': 'sentiment2',
-#                 'case_sensitive': False
-#             },
-#             'training': 'finished',
-#             'available': True,
-#             'type': 'default_polyglot',
-#             'description': 'Trained model based on a neural network, detected negative words',
-#             'name': 'negative words'
-#         },
-#         {
-#             'model_settings': {
-#                 'tag': 'positive_word',
-#                 'polyglot_model': 'sentiment2',
-#                 'case_sensitive': False
-#             },
-#             'training': 'finished',
-#             'available': True,
-#             'type': 'default_polyglot',
-#             'description': 'Trained model based on a neural network, detected positive words',
-#             'name': 'positive words'
-#         },
-#         # {'model_settings': {'tag': 'polarity_sentence', 'polyglot_model': 'sentiment2'},
-#         #  'status': 'train', 'available': True, 'type': 'default_polyglot',
-#         #  'name': 'Polyglot default detected polarity of sentence'},
-#         # {'model_settings': {'tag': 'polarity_text', 'polyglot_model': 'sentiment2'},
-#         #  'status': 'train', 'available': True, 'type': 'default_polyglot',
-#         #  'name': 'Polyglot default detected polarity of document'},
-#     ]
-#
-#     mongo = MongoConnection()
-#     for language in SERVER['language']:
-#         # Adding Entities
-#         for model in polyglot_model:
-#             #full_name = Language.from_code(language).name
-#             #if full_name in tools.list_decode(
-#             #        downloader.supported_languages(model['model_settings']['polyglot_model'])
-#             #):
-#             if language in get_supported_languages(model['model_settings']['polyglot_model']):
-#                 model['language'] = language
-#                 model['training'] = 'finished'
-#                 model['available'] = True
-#                 model['user'] = DEFAULT_USER[language]
-#                 find_entity = model.copy()
-#                 del find_entity['description']
-#                 find_model = mongo.entity.find_one(find_entity)
-#                 if find_model is None:
-#                     if '_id' in model:
-#                         del model['_id']
-#                     try:
-#                         model_id = mongo.entity.insert(model)
-#                     except Exception:
-#                         print model
-#                         raise
-#                     mongo.users.update_one(
-#                         {'_id': DEFAULT_USER[language]},
-#                         {'$addToSet': {'entity': model_id}},
-#                         upsert=True
-#                     )
-#
-#
-description_tag = {
-    'ORGANIZATION': 'Trained model of CRF, defining organizations',
-    'LOCATION': 'Trained model of CRF, defining places',
-    'PERSON': 'Trained model of CRF, defining personality',
-    'DATE': 'Trained model of CRF, defining the dates',
-    'MONEY': 'Trained model of CRF, defining finances',
-    'PERCENT': 'Trained model of CRF, defining personality',
-    'TIME': 'Trained model of CRF, defining dates',
-    'MISC': 'Trained model of CRF, defining misc data',
-    'FACILITY': 'Trained model of CRF, defining objects',
-    'DEMONYM': 'Trained model of CRF, defining ethnicity',
-    'GPE': 'Trained model of CRF, defining geographical and political entity, a location which has a government, like U.S.A. or New York',
-    'I-MISC': 'Trained model of CRF, defining misc data (inside entity)',
-    'B-LOC': 'Trained model of CRF, defining places (begin entity)',
-    'I-PER': 'Trained model of CRF, defining personality (inside entity)',
-    'B-PER': 'Trained model of CRF, defining personality (begin entity)',
-    'I-LOC': 'Trained model of CRF, defining places(inside entity)',
-    'B-MISC': 'Trained model of CRF, defining misc data (begin entity)',
-    'I-ORG': 'Trained model of CRF, defining organizations (inside entity)',
-    'B-ORG': 'Trained model of CRF, defining organizations (begin entity)',
-    'OTROS': 'Trained model of CRF, defining misc data',
-    'PERS': 'Trained model of CRF, defining personality',
-    'ORG': 'Trained model of CRF, defining organizations',
-    'LUG': 'Trained model of CRF, defining places',
-    'I-PERS': 'Trained model of CRF, defining personality',
-    'I-LIEU': 'Trained model of CRF, defining places'
-}
-#
-#
+    return entities
 # if __name__ == '__main__':
 #     try:
 #         f = open('install_default_log', 'a')
@@ -392,17 +236,4 @@ description_tag = {
 #     ###################################
 #     add_polyglot_default()
 #     add_standford_default()
-#     try:
-#         upload_stoplists(host_main)
-#     except:
-#         print("Failed load stoplist")
-#     update_decsription(host_main, proxy, translate_desription)
-#     try:
-#         install_stt(proxy)
-#     except:
-#         print "Failed load Sphinx"
-#     try:
-#         install_tts(proxy)
-#     except:
-#         print "Failed load MARYTTS"
 #

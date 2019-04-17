@@ -151,15 +151,15 @@ def adaptiv_remove_tab(origin_text):
     skip_map = check_skip_string(new_text, fixed_text)
     back_map = numpy.where(numpy.array(skip_map) == 0)[0]
     return new_text, back_map
-#
-#
-# def remove_tab(origin_text):
-#     tab = '\s'
-#     fixed_text = re.sub(tab, ' ', origin_text)
-#     new_text = re.sub(' +', ' ', fixed_text)
-#     skip_map = check_skip_string(new_text, fixed_text)
-#     back_map = numpy.where(numpy.array(skip_map) == 0)[0]
-#     return new_text, back_map
+
+
+def remove_tab(origin_text):
+    tab = '\s'
+    fixed_text = re.sub(tab, ' ', origin_text)
+    new_text = re.sub(' +', ' ', fixed_text)
+    skip_map = check_skip_string(new_text, fixed_text)
+    back_map = numpy.where(numpy.array(skip_map) == 0)[0]
+    return new_text, back_map
 #
 #
 # def fixe_samples_match(skip_map, origin_matches):
@@ -201,13 +201,13 @@ def adaptiv_remove_tab(origin_text):
 #
 def get_abs_path(path):
     """"""
-    # path = path if os.path.isabs(path) else \
-    #     os.path.abspath(
-    #         os.path.join(
-    #             os.path.dirname(os.path.dirname(sys.modules['nlp.config'].__file__)),
-    #             path
-    #         )
-    #     )
+    path = path if os.path.isabs(path) else \
+        os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.dirname(sys.modules['nlp.config'].__file__)),
+                path
+            )
+        )
     return path
 #
 #
@@ -263,18 +263,18 @@ def get_abs_path(path):
 #     return start, end
 #
 #
-# def message_box(text='', head='', type_box=0):
-#     """Universal message box"""
-#     if sys.platform == "linux" or sys.platform == "linux2":
-#         # linux
-#         pass
-#     elif sys.platform == "darwin":
-#         # OS X
-#         pass
-#     elif sys.platform == "win32":
-#         # Windows...
-#         ctypes.windll.user32.MessageBoxA(None, text, head, type_box)
-#
+def message_box(text='', head='', type_box=0):
+    """Universal message box"""
+    if sys.platform == "linux" or sys.platform == "linux2":
+        # linux
+        pass
+    elif sys.platform == "darwin":
+        # OS X
+        pass
+    elif sys.platform == "win32":
+        # Windows...
+        ctypes.windll.user32.MessageBoxA(None, text, head, type_box)
+
 #
 # class ParseStanfordTSV(object):
 #     """Converts and filters the stanford NER classification results"""

@@ -4,140 +4,21 @@ import os
 from polyglot.decorators import memoize
 
 
-#from nlp.config import STANFORD, JAVA_CONFIG, STANFORD_PREPOSSESSING, MARY_TTS
-#import tools
+from nlp.config import STANFORD, JAVA_CONFIG, STANFORD_PREPOSSESSING
 from lib import tools
 from lib.text import Text
 from lib.linguistic_functions import get_base_form_for_word, pattern_language, tag
-#from speech_to_text.config import SPHINX
 
 import jnius_config
 
-STANFORD = dict(
-    # languages=['en', 'zh', 'de', 'es', 'fr', 'ar'],
-    # # languages=[],
-    crf_english_3class='../stanford_corenlp/classifiers/english.all.3class.distsim.crf.ser.gz',
-    crf_english_4class='../stanford_corenlp/classifiers/english.conll.4class.distsim.crf.ser.gz',
-    crf_english_7class='../stanford_corenlp/classifiers/english.muc.7class.distsim.crf.ser.gz',
-    crf_chinese_7class='../stanford_corenlp/classifiers/chinese.misc.distsim.crf.ser.gz',
-    crf_german_7class='../stanford_corenlp/classifiers/german.conll.hgc_175m_600.crf.ser.gz',
-    crf_spanish_4class='../stanford_corenlp/classifiers/spanish.ancora.distsim.s512.crf.ser.gz',
-    crf_france_3class='../stanford_corenlp/classifiers/france.3class.crf.ser.gz',
-    # path_stanford_ner='./stanford_corenlp/stanford-corenlp-3.8.0.jar',
-    path_stanford_ner='../stanford_corenlp/stanford_update.jar',
-)
-
-STANDFORD_PACKAGE = {
-    'en': [
-        'crf_english_3class',
-        'crf_english_4class',
-        'crf_english_7class'
-    ],
-    'es': ['crf_spanish_4class'],
-    'zh': ['crf_chinese_7class'],
-    'de': ['crf_german_7class'],
-    'fr': ['crf_france_3class'],
-    'ar': []
-}
-
-STANFORD_PREPOSSESSING = dict(
-    en={
-        'pos.model': '../stanford_corenlp/pos-tagger/english-left3words-distsim.tagger',
-        'tokenize.language': 'en',
-        'tokenize.options': 'untokenizable=allKeep, invertible=true'
-    },
-    fr={
-        'pos.model': '../stanford_corenlp/pos-tagger/french.tagger',
-        'tokenize.language': 'fr',
-        'tokenize.options': 'untokenizable=allKeep, invertible=true'
-    },
-    zh={
-        'pos.model': '../stanford_corenlp/pos-tagger/chinese-distsim.tagger',
-        'tokenize.language': 'zh',
-        'ssplit.boundaryTokenRegex': '\x5B\x2E\xE3\x80\x82\x5D\x7C\x5B\x21\x3F\xEF\xBC\x81\xEF\xBC\x9F\x5D\x2B',
-        'ner.language': 'chinese',
-        'ner.applyNumericClassifiers': 'true',
-        'segment.sighanPostProcessing': 'true',
-        'segment.sighanCorporaDict': '../stanford_corenlp/ch_model/segmenter/chinese',
-        'segment.serDictionary': '../stanford_corenlp/ch_model/segmenter/chinese/dict-chris6.ser.gz',
-        'segment.model': '../stanford_corenlp/ch_model/segmenter/chinese/ctb.gz',
-    },
-    de={
-        'pos.model': '../stanford_corenlp/pos-tagger/german-hgc.tagger',
-        'tokenize.language': 'de',
-        'ner.applyNumericClassifiers': 'false',
-        'tokenize.options': 'untokenizable=allKeep, invertible=true'
-    },
-    es={
-        'pos.model': '../stanford_corenlp/pos-tagger/spanish-distsim.tagger',
-        'tokenize.language': 'es',
-        'tokenize.options': 'untokenizable=allKeep, invertible=true'
-    },
-    ar={
-        'tokenize.language': 'ar',
-        'segment.model': '../stanford_corenlp/ar_model/segmenter/arabic/arabic-segmenter-atb+bn+arztrain.ser.gz',
-        'ssplit.boundaryTokenRegex': '[.]|[!?]+|[!\u061F]+',
-        'pos.model': '../stanford_corenlp/ar_model/pos-tagger/arabic/arabic.tagger'
-    }
-)
-
-JAVA_CONFIG = dict(
-    #max_size='300000m',
-    max_size='4096m',
-    default_config_crf=dict(
-        useClassFeature='true',
-        useWord='true',
-        useNGrams='true',
-        noMidNGrams='true',
-        maxNGramLeng=6,
-        usePrev='true',
-        useNext='true',
-        useSequences='true',
-        usePrevSequences='true',
-        useTypeSeqs='true',
-        useTypeSeqs2='true',
-        useTypeySequences='true',
-        wordShape='chris2useLC',
-        useDisjunctive='true'
-    ),
-    fixed_config_crf=dict(
-        map='word=0,answer=1',
-        qnSize=10,
-        saveFeatureIndexToDisk='true',
-        maxLeft=1,
-        featureDiffThresh=0.05
-    ),
-    default_config_cdc={
-        "1.minNGramLeng": 1,
-        "intern": "true",
-        "1.binnedLengths": "10, 20, 30",
-        "QNsize": 15,
-        "useQN": "true",
-        "useClassFeature": "true",
-        "1.maxNGramLeng": 4,
-        "sigma": 3,
-        "printClassifierParam": 200,
-        "1.usePrefixSuffixNGrams": "true",
-        "1.seNGrams": "true",
-        "tolerance": 0.0001,
-    },
-    fixed_config_cdc={
-        "goldAnswerColumn": 0,
-        "displayedColumn": 1,
-    }
-)
-
-
 jnius_config.add_options('-Xrs', '-Xmx{0}'.format(JAVA_CONFIG['max_size']))
 #jnius_config.add_classpath(tools.get_abs_path(SPHINX['path_sphinx']))
-#jnius_config.add_classpath(tools.get_abs_path(STANFORD['path_stanford_ner']))
-jnius_config.add_classpath(STANFORD['path_stanford_ner'])
+jnius_config.add_classpath(tools.get_abs_path(STANFORD['path_stanford_ner']))
 #jnius_config.add_classpath(tools.get_abs_path(MARY_TTS['path_mary_tts']))
 
 @memoize
 def GetJavaClass(name_class):
-    #os.environ['CLASSPATH'] = tools.get_abs_path(STANFORD['path_stanford_ner'])
-    os.environ['CLASSPATH'] = STANFORD['path_stanford_ner']
+    os.environ['CLASSPATH'] = tools.get_abs_path(STANFORD['path_stanford_ner'])
     from jnius import autoclass
     return autoclass(name_class)
 
@@ -364,7 +245,8 @@ def annotation_stanford(data, language, settings={}):
     map_setting = {
         'part_of_speech': getPOSTaggerAnnotator,
     }
-    annotation = Annotation(data)
+    #annotation = Annotation(data)
+    annotation = Annotation(jString(data))  #SIDE
     getTokenizerAnnotator(language).annotate(annotation)
     getWordsToSentencesAnnotator(language).annotate(annotation)
     # getPOSTaggerAnnotator(language).annotate(annotation)

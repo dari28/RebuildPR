@@ -6,7 +6,7 @@ import hashlib
 from pymongo import MongoClient
 #from polyglot.text import Text, Word
 from install_polyglot import install
-from install_stanford import predict_entity_stanford_default, predict_entity_stanford
+from install_stanford import predict_entity_stanford_default, predict_entity_stanford, add_standford_default
 from lib import tools, text
 class NewsException(Exception):
     pass
@@ -372,8 +372,16 @@ if __name__ == "__main__":
    # nc.get_available_sources()
    # articles = nc.get_articles("puerto rico")
 
-    test_article = "Puerto mocha Rico"
+    test_article = "Puerto mocha Rico. Eddie Rosario, the Minnesota Twins left fielder, can’t remember the exact year, but he was a youth baseball player in his native Puerto Rico when he was given the choice of two jerseys: No. 21 or another number. \
+    “I’m not Roberto Clemente,” said Rosario, 27, who now wears one of the next-closest options, No. 20. “I can’t wear that.”\
+    No. 21 is sacred in baseball, particularly to Puerto Ricans, because it was the longtime number of Clemente, the iconic player who hailed from the island. Even as a youngster in Guayama, Rosario knew of Clemente’s importance, which led him to join the majority of Puerto Rican major leaguers in doing something that Major League Baseball hasn’t: decline the use of No. 21 in an effort to essentially retire it.\
+    Of the 235 Puerto Rico-born players who have appeared in the major leagues since Clemente’s death 47 years ago, only 16 have used No. 21 — and none in the past five seasons, according to Baseball Reference.\
+    Advertisement\
+    “That’s very powerful,” said Luis Clemente, 52, one of Roberto Clemente’s sons.\
+    In addition to Roberto Clemente’s accomplishments on the field — a 15-time All-Star, 12-time Gold Glove Award winner, two-time World Series champion with the Pittsburgh Pirates and member of the 3,000-hit club — he was a fierce advocate for Latino players and against Jim Crow segregation. A year after he died in a plane crash on Dec. 31, 1972, while escorting earthquake relief from Puerto Rico to Nicaragua, Clemente became the first player from Latin America inducted into the Baseball Hall of Fame.\
+    On Monday and Tuesday, Major League Baseball celebrated Jackie Robinson, who broke the color barrier in baseball on April 15, 1947, by having every player wear his No. 42 jersey, which was retired in 1997 and remains the only one to receive that special honor by all 30 teams. Many Puerto Ricans believe the same M.L.B.-wide retirement should also go to Clemente, who also made his major league debut this week, on April 17, 1955."
     #
+
     # for article in articles:
     #     for art in article['articles']:
     #         #art_text = text.Text()
@@ -395,7 +403,8 @@ if __name__ == "__main__":
     #                 print(entity.tag, entity)
     #         print("*************END**********")
     #predict_entity_stanford_default({
-    predict_entity_stanford(
+    entities = add_standford_default()
+    result = predict_entity_stanford(
         # {
         # "language":"en",
         # "type":"stanford_crf",
@@ -404,19 +413,80 @@ if __name__ == "__main__":
         # "description":"Example for creating an entity "
         #             },
 
-            [
-                {
-                    "_id": "5aaa494edf790d0d3cb45036", "available": True, "training": "finished", "user": "303030303030303030307a68",
-                 "language": "zh", "description": "Trained model of CRF, defining places", "model": "crf_chinese_7class", "model_settings": {"tag": "LOCATION"},
-                 "type": "default_stanford", "name": " location"
-                },
-                {
-                    "_id": "5aaa494edf790d0d3cb45038", "available": True, "training": "finished", "user":"303030303030303030307a68",
-                 "language": "zh", "description": "Trained model of CRF, defining objects", "model": "crf_chinese_7class", "model_settings": {"tag": "FACILITY"},
-                 "type": "default_stanford", "name": " facility"
-                }
-            ],
+            # [
+            #     {"_id": "5aaa494edf790d0d3cb45044", "available": True, "training": "finished", "user": "303030303030303030306573",
+            #      "language": "es", "description": "Trained model of CRF, defining misc data", "model": "crf_spanish_4class", "model_settings": {"tag": "OTROS"},
+            #      "type": "default_stanford", "name": "Detecta otros"},
+            #     {"_id": "5aaa494edf790d0d3cb45045", "available": True, "training": "finished", "user": "303030303030303030306573",
+            #      "language": "es", "description": "Trained model of CRF, defining personality", "model": "crf_spanish_4class",
+            #      "model_settings": {"tag": "PERS"}, "type": "default_stanford", "name": "Detecta pers"},
+            #     {"_id": "5aaa494edf790d0d3cb45046", "available": True, "training": "finished", "user": "303030303030303030306573",
+            #      "language": "es", "description": "Trained model of CRF, defining organizations", "model": "crf_spanish_4class",
+            #      "model_settings": {"tag": "ORG"}, "type": "default_stanford", "name": "Detecta org"},
+            #     {"_id": "5aaa494edf790d0d3cb45047", "available": True, "training": "finished", "user": "303030303030303030306573",
+            #      "language": "es", "description": "Trained model of CRF, defining places", "model": "crf_spanish_4class", "model_settings": {"tag": "LUG"},
+            #      "type": "default_stanford", "name": "Detecta lug"},
+            #     {"_id": "5aaa494edf790d0d3cb45027", "available": True, "training": "finished", "user": "30303030303030303030656e",
+            #      "language": "en",
+            #      "description": "Trained model of CRF, defining organizations (different models were trained on different data, so their results can vary)\nExample:\n\tText: The United Nations (UN) is an intergovernmental organization tasked to promote international cooperation and to create and maintain international order.\n\tFound matches: United Nations, UN",
+            #      "model": "crf_english_3class", "model_settings": {"tag": "ORGANIZATION"}, "type": "default_stanford", "name": "Detects organization (model 1)"},
+            #     {"_id": "5aaa494edf790d0d3cb45028", "available": True, "training": "finished", "user": "30303030303030303030656e",
+            #      "language": "en",
+            #      "description": "Trained model of CRF, defining places (different models were trained on different data, so their results can vary)\nExample:\n\tText: Australia' s insolation greatly exceeds the average values in Europe, Russia, and most of North America.\n\tFound matches: Australia, Europe, Russia, North America",
+            #      "model": "crf_english_3class", "model_settings": {"tag": "LOCATION"}, "type": "default_stanford", "name": "Detects location (model 1)"},
+            #     {"_id": "5aaa494edf790d0d3cb45029", "available": True, "training": "finished", "user": "30303030303030303030656e",
+            #      "language": "en",
+            #      "description": "Trained model of CRF, defining personality (different models were trained on different data, so their results can vary)\nExample:\n\tText: In 1905, Albert Einstein published a special theory of relativity.\n\tFound matches: Albert Einstein",
+            #      "model": "crf_english_3class", "model_settings": {"tag": "PERSON"}, "type": "default_stanford", "name": "Detects person (model 1)"},
+            #     {"_id": "5aaa494edf790d0d3cb4502a", "available": True, "training": "finished", "user": "30303030303030303030656e",
+            #      "language": "en",
+            #      "description": "Trained model of CRF, defining organizations (different models were trained on different data, so their results can vary)\nExample:\n\tText: The United Nations (UN) is an intergovernmental organization tasked to promote international cooperation and to create and maintain international order.\n\tFound matches: United Nations, UN",
+            #      "model": "crf_english_4class", "model_settings": {"tag": "ORGANIZATION"}, "type": "default_stanford", "name": "Detects organization (model 2)"},
+            #     {"_id": "5aaa494edf790d0d3cb4502b", "available": True, "training": "finished", "user": "30303030303030303030656e",
+            #      "language": "en",
+            #      "description": "Trained model of CRF, defining places (different models were trained on different data, so their results can vary)\nExample:\n\tText: Australia' s insolation greatly exceeds the average values in Europe, Russia, and most of North America.\n\tFound matches: Australia, Europe, Russia, North America",
+            #      "model": "crf_english_4class", "model_settings": {"tag": "LOCATION"}, "type": "default_stanford", "name": "Detects location (model 2)"},
+            #     {"_id": "5aaa494edf790d0d3cb4502c", "available": True, "training": "finished", "user": "30303030303030303030656e",
+            #      "language": "en",
+            #      "description": "Trained model of CRF, defining personality (different models were trained on different data, so their results can vary)\nExample:\n\tText: In 1905, Albert Einstein published a special theory of relativity.\n\tFound matches: Albert Einstein",
+            #      "model": "crf_english_4class", "model_settings": {"tag": "PERSON"}, "type": "default_stanford", "name": "Detects person (model 2)"},
+            #     {"_id": "5aaa494edf790d0d3cb4502d", "available": True, "training": "finished", "user": "30303030303030303030656e",
+            #      "language": "en",
+            #      "description": "Trained model of CRF, defining misc data\nExample:\n\tText: President Xi Jinping of China, on his first state visit to the United States, showed off his familiarity with American history and pop culture on Tuesday night.\n\tFound matches: American",
+            #      "model": "crf_english_4class", "model_settings": {"tag": "MISC"}, "type": "default_stanford", "name": "Detects misc"},
+            #     {"_id": "5aaa494edf790d0d3cb4502e", "available": True, "training": "finished", "user": "30303030303030303030656e",
+            #      "language": "en",
+            #      "description": "Trained model of CRF, defining organizations (different models were trained on different data, so their results can vary)\nExample:\n\tText: The United Nations (UN) is an intergovernmental organization tasked to promote international cooperation and to create and maintain international order.\n\tFound matches: United Nations",
+            #      "model": "crf_english_7class", "model_settings": {"tag": "ORGANIZATION"}, "type": "default_stanford", "name": "Detects organization (model 3)"},
+            #     {"_id": "5aaa494edf790d0d3cb4502f", "available": True, "training": "finished", "user": "30303030303030303030656e",
+            #      "language": "en",
+            #      "description": "Trained model of CRF, defining places (different models were trained on different data, so their results can vary)\nExample:\n\tText: Australia' s insolation greatly exceeds the average values in Europe, Russia, and most of North America.\n\tFound matches: Australia, Europe, Russia, North America",
+            #      "model": "crf_english_7class", "model_settings": {"tag": "LOCATION"}, "type": "default_stanford", "name": "Detects location (model 3)"},
+            #     {"_id": "5aaa494edf790d0d3cb45030", "available": True, "training": "finished", "user": "30303030303030303030656e",
+            #      "language": "en",
+            #      "description": "Trained model of CRF, defining personality (different models were trained on different data, so their results can vary)\nExample:\n\tText: In 1905, Albert Einstein published a special theory of relativity.\n\tFound matches: Albert Einstein",
+            #      "model": "crf_english_7class", "model_settings": {"tag": "PERSON"}, "type": "default_stanford", "name": "Detects person (model 3)"},
+            #     {"_id": "5aaa494edf790d0d3cb45031", "available": True, "training": "finished", "user": "30303030303030303030656e",
+            #      "language": "en",
+            #      "description": "Trained model of CRF, defining the dates\nExample:\n\tText: President Xi Jinping of China, on his first state visit to the United States, showed off his familiarity with American history and pop culture on Tuesday night.\n\tFound matches: Tuesday",
+            #      "model": "crf_english_7class", "model_settings": {"tag": "DATE"}, "type": "default_stanford", "name": "Detects date"},
+            #     {"_id": "5aaa494edf790d0d3cb45032", "available": True, "training": "finished", "user": "30303030303030303030656e",
+            #      "language": "en",
+            #      "description": "Trained model of CRF, defining finances\nExample:\n\tText: Venezuela president offers pregnant women $3.83 a month.\n\tFound matches: $3.83",
+            #      "model": "crf_english_7class", "model_settings": {"tag": "MONEY"}, "type": "default_stanford", "name": "Detects money"},
+            #     {"_id": "5aaa494edf790d0d3cb45033", "available": True, "training": "finished", "user": "30303030303030303030656e",
+            #      "language": "en",
+            #      "description": "Trained model of CRF, defining percent\nExample:\n\tText: The budget of our city has grown by 20 percent.\n\tFound matches: 20 percent",
+            #      "model": "crf_english_7class", "model_settings": {"tag": "PERCENT"}, "type": "default_stanford", "name": "Detects percent"},
+            #     {"_id": "5aaa494edf790d0d3cb45034", "available": True, "training": "finished", "user": "30303030303030303030656e",
+            #      "language": "en",
+            #      "description": "Trained model of CRF, defining time\nExample:\n\tText: President Xi Jinping of China, on his first state visit to the United States, showed off his familiarity with American history and pop culture on Tuesday night.\n\tFound matches: night",
+            #      "model": "crf_english_7class", "model_settings": {"tag": "TIME"}, "type": "default_stanford", "name": "Detects time"}
+            #
+            # ],
+        entities,
         test_article, 'es')
+    print(result)
     print(nc.db_history_sources)
     print(nc.db_history_news)
     #print(nc.get_available_sources(language=None))
