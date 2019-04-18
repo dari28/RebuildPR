@@ -189,3 +189,10 @@ description_tag = {
     'I-PERS': 'Trained model of CRF, defining personality',
     'I-LIEU': 'Trained model of CRF, defining places'
 }
+
+
+MONGO = dict(
+    mongo_host='mongodb://localhost',
+    database='newsAPI',
+    article_collection='article',
+)
