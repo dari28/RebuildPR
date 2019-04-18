@@ -487,6 +487,30 @@ if __name__ == "__main__":
         entities,
         test_article, 'es')
     print(result)
+    #########ADD struct for matching########
+    result2 = list()
+    for elems in result:
+        for elem in elems:
+            word = elem['word']
+            tag = elem['tag']
+            if not (word in [x['word'] for x in result2] and tag in [x['tag'] for x in result2]):
+                result2.append({'word': word, 'tag': tag, 'matches': []})
+            match = {
+                'start_match': elem['start_match'],
+                'length_match': elem['length_match']
+            }
+            for x in result2:
+                if x['tag'] == tag and x['word'] == word:
+                    if match in x['matches']:
+                        continue
+                    else:
+                        x['matches'].append(match)
+    print(result2)
+    ######ADD filter#########################
+    result_filter = list()
+    for x in result2:
+        if x['tag'] == 'PERSON':
+            result_filter.append(x)
     print(nc.db_history_sources)
     print(nc.db_history_news)
     #print(nc.get_available_sources(language=None))
