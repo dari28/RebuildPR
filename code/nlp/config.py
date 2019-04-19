@@ -195,4 +195,8 @@ MONGO = dict(
     mongo_host='mongodb://localhost',
     database='newsAPI',
     article_collection='article',
+    phrase_collection='phrase',
+    source_collection='source',
+    # entity_collection='entity',
+    # intent_collection='intent',
 )

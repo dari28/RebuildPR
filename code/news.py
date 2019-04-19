@@ -91,6 +91,12 @@ class NewsCollector:
             #self.history_news = list()
             #self.history_news =
 
+    def get_phrases(self):
+        return self.read_history_phrases_from_db()
+
+    def update_phrases(self):
+        return self._history_phrases_from_db()
+
     def filter_sources(self, country=None, language=None):
         """
         Return sources from history_date filtered by arguments
@@ -162,6 +168,14 @@ class NewsCollector:
 
         return self.db_history_news
 
+    def get_tags(self, text, language):
+        entities = add_standford_default()
+        result = predict_entity_stanford(
+            entities,
+            text,
+            language)
+        return result
+
     # def get_articles(self, q):
     #     articles, errors = get_everything(q)
     #     if errors:
@@ -190,6 +204,26 @@ class NewsCollector:
     #     return articles
 
     #def get filtered_article()
+    def read_phrases_from_db(self):
+        cursor = self.db['phrares'].find()
+        ret_list = list()
+        for c in cursor:
+            ret_list.append(c)
+        return ret_list
+
+    def update_phrases_from_db(self):
+        cursor = self.db['phrares'].updateOne(
+            {"item": "paper"},
+            {
+                "$set": {"size.uom": "cm", "status": "P"},
+                "$currentDate": {"lastModified": True}
+            }
+        )
+        ret_list = list()
+        for c in cursor:
+            ret_list.append(c)
+        return ret_list
+
     def read_history_news_from_db(self):
         cursor = self.db['articles'].find()
         ret_list = list()
@@ -403,89 +437,7 @@ if __name__ == "__main__":
     #                 print(entity.tag, entity)
     #         print("*************END**********")
     #predict_entity_stanford_default({
-    entities = add_standford_default()
-    result = predict_entity_stanford(
-        # {
-        # "language":"en",
-        # "type":"stanford_crf",
-        # "name":"example entity",
-        # "model_settings":{},
-        # "description":"Example for creating an entity "
-        #             },
-
-            # [
-            #     {"_id": "5aaa494edf790d0d3cb45044", "available": True, "training": "finished", "user": "303030303030303030306573",
-            #      "language": "es", "description": "Trained model of CRF, defining misc data", "model": "crf_spanish_4class", "model_settings": {"tag": "OTROS"},
-            #      "type": "default_stanford", "name": "Detecta otros"},
-            #     {"_id": "5aaa494edf790d0d3cb45045", "available": True, "training": "finished", "user": "303030303030303030306573",
-            #      "language": "es", "description": "Trained model of CRF, defining personality", "model": "crf_spanish_4class",
-            #      "model_settings": {"tag": "PERS"}, "type": "default_stanford", "name": "Detecta pers"},
-            #     {"_id": "5aaa494edf790d0d3cb45046", "available": True, "training": "finished", "user": "303030303030303030306573",
-            #      "language": "es", "description": "Trained model of CRF, defining organizations", "model": "crf_spanish_4class",
-            #      "model_settings": {"tag": "ORG"}, "type": "default_stanford", "name": "Detecta org"},
-            #     {"_id": "5aaa494edf790d0d3cb45047", "available": True, "training": "finished", "user": "303030303030303030306573",
-            #      "language": "es", "description": "Trained model of CRF, defining places", "model": "crf_spanish_4class", "model_settings": {"tag": "LUG"},
-            #      "type": "default_stanford", "name": "Detecta lug"},
-            #     {"_id": "5aaa494edf790d0d3cb45027", "available": True, "training": "finished", "user": "30303030303030303030656e",
-            #      "language": "en",
-            #      "description": "Trained model of CRF, defining organizations (different models were trained on different data, so their results can vary)\nExample:\n\tText: The United Nations (UN) is an intergovernmental organization tasked to promote international cooperation and to create and maintain international order.\n\tFound matches: United Nations, UN",
-            #      "model": "crf_english_3class", "model_settings": {"tag": "ORGANIZATION"}, "type": "default_stanford", "name": "Detects organization (model 1)"},
-            #     {"_id": "5aaa494edf790d0d3cb45028", "available": True, "training": "finished", "user": "30303030303030303030656e",
-            #      "language": "en",
-            #      "description": "Trained model of CRF, defining places (different models were trained on different data, so their results can vary)\nExample:\n\tText: Australia' s insolation greatly exceeds the average values in Europe, Russia, and most of North America.\n\tFound matches: Australia, Europe, Russia, North America",
-            #      "model": "crf_english_3class", "model_settings": {"tag": "LOCATION"}, "type": "default_stanford", "name": "Detects location (model 1)"},
-            #     {"_id": "5aaa494edf790d0d3cb45029", "available": True, "training": "finished", "user": "30303030303030303030656e",
-            #      "language": "en",
-            #      "description": "Trained model of CRF, defining personality (different models were trained on different data, so their results can vary)\nExample:\n\tText: In 1905, Albert Einstein published a special theory of relativity.\n\tFound matches: Albert Einstein",
-            #      "model": "crf_english_3class", "model_settings": {"tag": "PERSON"}, "type": "default_stanford", "name": "Detects person (model 1)"},
-            #     {"_id": "5aaa494edf790d0d3cb4502a", "available": True, "training": "finished", "user": "30303030303030303030656e",
-            #      "language": "en",
-            #      "description": "Trained model of CRF, defining organizations (different models were trained on different data, so their results can vary)\nExample:\n\tText: The United Nations (UN) is an intergovernmental organization tasked to promote international cooperation and to create and maintain international order.\n\tFound matches: United Nations, UN",
-            #      "model": "crf_english_4class", "model_settings": {"tag": "ORGANIZATION"}, "type": "default_stanford", "name": "Detects organization (model 2)"},
-            #     {"_id": "5aaa494edf790d0d3cb4502b", "available": True, "training": "finished", "user": "30303030303030303030656e",
-            #      "language": "en",
-            #      "description": "Trained model of CRF, defining places (different models were trained on different data, so their results can vary)\nExample:\n\tText: Australia' s insolation greatly exceeds the average values in Europe, Russia, and most of North America.\n\tFound matches: Australia, Europe, Russia, North America",
-            #      "model": "crf_english_4class", "model_settings": {"tag": "LOCATION"}, "type": "default_stanford", "name": "Detects location (model 2)"},
-            #     {"_id": "5aaa494edf790d0d3cb4502c", "available": True, "training": "finished", "user": "30303030303030303030656e",
-            #      "language": "en",
-            #      "description": "Trained model of CRF, defining personality (different models were trained on different data, so their results can vary)\nExample:\n\tText: In 1905, Albert Einstein published a special theory of relativity.\n\tFound matches: Albert Einstein",
-            #      "model": "crf_english_4class", "model_settings": {"tag": "PERSON"}, "type": "default_stanford", "name": "Detects person (model 2)"},
-            #     {"_id": "5aaa494edf790d0d3cb4502d", "available": True, "training": "finished", "user": "30303030303030303030656e",
-            #      "language": "en",
-            #      "description": "Trained model of CRF, defining misc data\nExample:\n\tText: President Xi Jinping of China, on his first state visit to the United States, showed off his familiarity with American history and pop culture on Tuesday night.\n\tFound matches: American",
-            #      "model": "crf_english_4class", "model_settings": {"tag": "MISC"}, "type": "default_stanford", "name": "Detects misc"},
-            #     {"_id": "5aaa494edf790d0d3cb4502e", "available": True, "training": "finished", "user": "30303030303030303030656e",
-            #      "language": "en",
-            #      "description": "Trained model of CRF, defining organizations (different models were trained on different data, so their results can vary)\nExample:\n\tText: The United Nations (UN) is an intergovernmental organization tasked to promote international cooperation and to create and maintain international order.\n\tFound matches: United Nations",
-            #      "model": "crf_english_7class", "model_settings": {"tag": "ORGANIZATION"}, "type": "default_stanford", "name": "Detects organization (model 3)"},
-            #     {"_id": "5aaa494edf790d0d3cb4502f", "available": True, "training": "finished", "user": "30303030303030303030656e",
-            #      "language": "en",
-            #      "description": "Trained model of CRF, defining places (different models were trained on different data, so their results can vary)\nExample:\n\tText: Australia' s insolation greatly exceeds the average values in Europe, Russia, and most of North America.\n\tFound matches: Australia, Europe, Russia, North America",
-            #      "model": "crf_english_7class", "model_settings": {"tag": "LOCATION"}, "type": "default_stanford", "name": "Detects location (model 3)"},
-            #     {"_id": "5aaa494edf790d0d3cb45030", "available": True, "training": "finished", "user": "30303030303030303030656e",
-            #      "language": "en",
-            #      "description": "Trained model of CRF, defining personality (different models were trained on different data, so their results can vary)\nExample:\n\tText: In 1905, Albert Einstein published a special theory of relativity.\n\tFound matches: Albert Einstein",
-            #      "model": "crf_english_7class", "model_settings": {"tag": "PERSON"}, "type": "default_stanford", "name": "Detects person (model 3)"},
-            #     {"_id": "5aaa494edf790d0d3cb45031", "available": True, "training": "finished", "user": "30303030303030303030656e",
-            #      "language": "en",
-            #      "description": "Trained model of CRF, defining the dates\nExample:\n\tText: President Xi Jinping of China, on his first state visit to the United States, showed off his familiarity with American history and pop culture on Tuesday night.\n\tFound matches: Tuesday",
-            #      "model": "crf_english_7class", "model_settings": {"tag": "DATE"}, "type": "default_stanford", "name": "Detects date"},
-            #     {"_id": "5aaa494edf790d0d3cb45032", "available": True, "training": "finished", "user": "30303030303030303030656e",
-            #      "language": "en",
-            #      "description": "Trained model of CRF, defining finances\nExample:\n\tText: Venezuela president offers pregnant women $3.83 a month.\n\tFound matches: $3.83",
-            #      "model": "crf_english_7class", "model_settings": {"tag": "MONEY"}, "type": "default_stanford", "name": "Detects money"},
-            #     {"_id": "5aaa494edf790d0d3cb45033", "available": True, "training": "finished", "user": "30303030303030303030656e",
-            #      "language": "en",
-            #      "description": "Trained model of CRF, defining percent\nExample:\n\tText: The budget of our city has grown by 20 percent.\n\tFound matches: 20 percent",
-            #      "model": "crf_english_7class", "model_settings": {"tag": "PERCENT"}, "type": "default_stanford", "name": "Detects percent"},
-            #     {"_id": "5aaa494edf790d0d3cb45034", "available": True, "training": "finished", "user": "30303030303030303030656e",
-            #      "language": "en",
-            #      "description": "Trained model of CRF, defining time\nExample:\n\tText: President Xi Jinping of China, on his first state visit to the United States, showed off his familiarity with American history and pop culture on Tuesday night.\n\tFound matches: night",
-            #      "model": "crf_english_7class", "model_settings": {"tag": "TIME"}, "type": "default_stanford", "name": "Detects time"}
-            #
-            # ],
-        entities,
-        test_article, 'es')
+    result = nc.get_tags(test_article, 'es')
     print(result)
     #########ADD struct for matching########
     result2 = list()
