@@ -1,3 +1,4 @@
+cython
 jnius
 num2words
 psutil
@@ -25,7 +26,6 @@ futures
 iso-639
 mongoengine
 Morfessor
-numpy
 polyglot
 pycld2
 Pygments

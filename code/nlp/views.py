@@ -47,8 +47,15 @@ def test_work(request):
 
 @api_view(['POST'])
 def get_source_list(request):
+    filter = json.loads(request.data['_content'])
+    language = None
+    if language in filter:
+        language = filter['language']
+    country = None
+    if country in filter:
+        country = filter['country']
     nc = NewsCollector()
-    sources = nc.get_available_sources()
+    sources = nc.get_available_sources(language=language, country=country)
     results = {'status': True, 'response': sources, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
