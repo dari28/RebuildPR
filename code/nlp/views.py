@@ -62,7 +62,8 @@ def get_source_list(request):
 
 @api_view(['POST'])
 def get_article_list(request):
-    data = json.loads(request.data['_content'])['q']
+    #data = json.loads(request.data['_content'])['q']
+    data = request.data['q']
     ans = []
     nc = NewsCollector()
     for q in data:
@@ -74,10 +75,11 @@ def get_article_list(request):
 
 @api_view(['POST'])
 def get_tag_list(request):
-    data = json.loads(request.data['_content'])['text']
+    #data = json.loads(request.data['_content'])['text']
+    data = request.data['text']
     nc = NewsCollector()
-    sources = nc.get_tags(data)
-    results = {'status': True, 'response': sources, 'error': {}}
+    tags = nc.get_tags(data, 'en')
+    results = {'status': True, 'response': tags, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
@@ -85,7 +87,8 @@ def get_tag_list(request):
 def get_phrase_list(request):
     params = None
     try:
-        params = json.loads(request.data['_content'])
+        #params = json.loads(request.data['_content'])
+        params = request.data
     except:
         pass
     #nc = NewsCollector()
@@ -98,7 +101,8 @@ def get_phrase_list(request):
 
 @api_view(['POST'])
 def update_phrase_list(request):
-    phrases = json.loads(request.data['_content'])
+    #phrases = json.loads(request.data['_content'])
+    phrases = request.data
     #nc = NewsCollector()
     #sources = nc.update_phrases()
     mongodb = mongo.MongoConnection()
@@ -109,7 +113,11 @@ def update_phrase_list(request):
 
 @api_view(['POST'])
 def add_phrase_list(request):
-    phrases = json.loads(request.data['_content'])
+    #phrases = json.loads(request.data['_content'])
+    try:
+        phrases = request.data['phrases']
+    except Exception as ex:
+        return JsonResponse({'status': False, 'response': [], 'error': ex}, encoder=JSONEncoderHttp)
    # nc = NewsCollector()
    # sources = nc.update_phrases()
     mongodb = mongo.MongoConnection()

@@ -37,6 +37,9 @@ class MongoConnection(object):
 
     def delete_permanent_phrases(self, phrases):
         """Adding phrase to the database"""
+        if not isinstance(phrases['_id'], ObjectId):
+            phrases['_id'] = ObjectId(phrases['_id'])
+
         self.phrase.delete_one(
             {'_id': phrases['_id']},
             #upsert=True
@@ -54,10 +57,21 @@ class MongoConnection(object):
 
     def update_phrases(self, phrases):
         """Adding phrase to the database"""
+        if not isinstance(phrases['_id'], ObjectId):
+            phrases['_id'] = ObjectId(phrases['_id'])
+
+        phrases1 = self.phrase.find(
+            {'_id': phrases['_id']}
+            # upsert=True
+        )
+        ret_list = []
+        for c in phrases1:
+            ret_list.append(c)
+
         self.phrase.update_one({'_id': phrases['_id']},
-                               {'$set': {'deleted': phrases['deleted'],'phrases': phrases['phrases']}},
+                               {'$set': {'phrases': phrases['phrases'],'deleted': phrases['deleted']}},
                                upsert=True)
-        return phrases
+        return phrases['_id']
 
     def get_phrases(self, params):
         """Adding phrase to the database"""
