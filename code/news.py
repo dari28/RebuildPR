@@ -107,8 +107,8 @@ class NewsCollector:
         sources = self.db_history_sources['sources']
         if not country and not language:
             return sources
-        countries = list(country) if isinstance(country, str) else country
-        languages = list(language) if isinstance(language, str) else language
+        countries = [country] if isinstance(country, str) else country
+        languages = [language] if isinstance(language, str) else language
         sources = [x for x in sources
                    if (not countries or x['country'] in countries) and (not languages or x['language'] in languages)]
         return sources

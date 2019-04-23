@@ -49,10 +49,10 @@ def test_work(request):
 def get_source_list(request):
     filter = json.loads(request.data['_content'])
     language = None
-    if language in filter:
+    if 'language' in filter:
         language = filter['language']
     country = None
-    if country in filter:
+    if 'country' in filter:
         country = filter['country']
     nc = NewsCollector()
     sources = nc.get_available_sources(language=language, country=country)
