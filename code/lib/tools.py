@@ -664,34 +664,34 @@ def check_skip_string(text, origin_text):
 #     return [x.decode(codec) for x in data]
 #
 #
-# def get_error():
-#     ex_type, ex, tb = sys.exc_info()
-#     results = {'TypeError': str(ex_type),
-#                'MessageError': str(ex),
-#                'TracebackError': "".join(traceback.format_exc())
-#                }
-#     return results
-#
-#
-# def send_post(url, data, cls=None):
-#     try:
-#         req = requests.post(url, json=data)
-#         print "Status: {0}. Url: {2}. Response: {1} ".format(req.status_code, req.text, url)
-#     except requests.RequestException:
-#         print "Status: {0}. Url: {2}. Response: {1} ".format(404, None, url)
-#     except Exception:
-#         error = get_error()
-#         print error
-#
-#
-#
-# def send_many_post(urls, data, cls=None):
-#     if not isinstance(urls, list):
-#         urls = [urls]
-#     for url in urls:
-#         send_post(url, data)
-#
-#
+def get_error():
+    ex_type, ex, tb = sys.exc_info()
+    results = {'TypeError': str(ex_type),
+               'MessageError': str(ex),
+               'TracebackError': "".join(traceback.format_exc())
+               }
+    return results
+
+
+def send_post(url, data, cls=None):
+    try:
+        req = requests.post(url, json=data)
+        print("Status: {0}. Url: {2}. Response: {1} ").format(req.status_code, req.text, url)
+    except requests.RequestException:
+        print("Status: {0}. Url: {2}. Response: {1} ").format(404, None, url)
+    except Exception:
+        error = get_error()
+        print(error)
+
+
+
+def send_many_post(urls, data, cls=None):
+    if not isinstance(urls, list):
+        urls = [urls]
+    for url in urls:
+        send_post(url, data)
+
+
 # def create_tmp_file():
 #     from nlp.config import TEMP_FILES_DIRECTORY
 #     path = get_abs_path(TEMP_FILES_DIRECTORY)

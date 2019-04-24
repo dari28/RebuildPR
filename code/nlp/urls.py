@@ -4,8 +4,15 @@ from lib.server_tuning import execution_at_startup
 
 urlpatterns = [
     url(r'^test_work/?$', views.test_work),
+
+    url(r'^get_county_list/?$', views.get_county_list),
+    url(r'^get_language_list/?$', views.get_language_list),
+
     url(r'^get_source_list/?$', views.get_source_list),
+    url(r'^update_source_list_from_server/?$', views.update_source_list_from_server),
+
     url(r'^get_article_list/?$', views.get_article_list),
+
     url(r'^get_tag_list/?$', views.get_tag_list),
 
     url(r'^get_phrase_list/?$', views.get_phrase_list),

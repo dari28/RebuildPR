@@ -31,7 +31,8 @@ DEBUG = False
 
 
 # ALLOWED_HOSTS = [gethostname(), gethostbyname(gethostname()), '127.0.0.1', 'localhost', '174.129.126.138']
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', gethostname()] + gethostbyname_ex(gethostname())[2]
+# ALLOWED_HOSTS = ['localhost', '127.0.0.1', gethostname()] + gethostbyname_ex(gethostname())[2]
+ALLOWED_HOSTS = ['*', ]
 
 # Application definition
 
@@ -55,7 +56,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    #'nlp.middleware.LoggingMiddleware',
+    'nlp.middleware.LoggingMiddleware',
 ]
 
 ROOT_URLCONF = 'newsAPI.urls'
@@ -76,7 +77,7 @@ TEMPLATES = [
     },
 ]
 
-#WSGI_APPLICATION = 'newsAPI.wsgi.application'
+WSGI_APPLICATION = 'newsAPI.wsgi.application'
 
 
 # Database

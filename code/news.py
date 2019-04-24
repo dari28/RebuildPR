@@ -11,8 +11,6 @@ from lib import tools, text
 class NewsException(Exception):
     pass
 
-
-
 # TO_DO: save results to file in "data" directory
 def write_sources_to_history(data):
     write_to_history(data, HISTORY_SOURCES_DIR)
@@ -120,24 +118,14 @@ class NewsCollector:
         #If date older than a week we update history_data
         now_week_ago = (datetime.today() - timedelta(days=DAYS_TO_UPDATE_SOURCES)).strftime("%Y-%m-%d")#.strftime("%Y-%m-%d %H:%M:%S")
 
-        #if now_week_ago >= self.history_sources['date']:
         if now_week_ago >= self.db_history_sources['date']:
-            #self.history_sources['sources'] = get_sources("")
-            #self.history_sources['date'] = datetime.today().strftime("%Y-%m-%d")
             self.db_history_sources['sources'], _ = get_sources("")
             self.db_history_sources['date'] = datetime.today().strftime("%Y-%m-%d")
-            #write_sources_to_history(self.history_sources)
             self.write_history_sources_from_db(self.db_history_sources)
         else:
-            #self.history_sources = self.read_history_sources_from_db()
             self.db_history_sources = self.read_history_sources_from_db()
         #filter by language and country
         return self.filter_sources(country=country, language=language)
-        #shared_items = {k: x[k] for k in x if k in y and x[k] == y[k]}
-
-    # def get_available_news(self, q):
-    #     self.db_history_news['sources'], _ = get_everything(q)
-    #     self.db_history_news['date'] = datetime.today().strftime("%Y-%m-%d")
 
     def get_articles(self, q):
         #TO_DO: make link with sources

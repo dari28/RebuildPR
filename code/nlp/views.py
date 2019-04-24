@@ -40,37 +40,72 @@ def test_work(request):
     # if not isinstance(data, list):
     #     raise EnvironmentError(
     #         'Invalid input format! An example of how it should be: ["Sample1", "Sample2", ...]'.format())
-
+    raise EnvironmentError("My error")
     results = {'status': True, 'response': "IT Works", 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
 @api_view(['POST'])
-def get_source_list(request):
-    filter = json.loads(request.data['_content'])
-    language = None
-    if 'language' in filter:
-        language = filter['language']
-    country = None
-    if 'country' in filter:
-        country = filter['country']
-    nc = NewsCollector()
-    sources = nc.get_available_sources(language=language, country=country)
-    results = {'status': True, 'response': sources, 'error': {}}
+def get_county_list(request):
+    mongodb = mongo.MongoConnection()
+    countries = mongodb.get_country_list()
+    results = {'status': True, 'response': {'countries': countries}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def get_language_list(request):
+    mongodb = mongo.MongoConnection()
+    languages = mongodb.get_language_list()
+    results = {'status': True, 'response': {'languages': languages}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+#                            SOURCES                                 #
+
+
+@api_view(['POST'])
+def get_source_list(request):
+    try:
+        params = request.data
+        mongodb = mongo.MongoConnection()
+        sources = mongodb.get_sources(params=params)
+    except:
+        raise EnvironmentError("Error in get_source_list")
+    results = {'status': True, 'response': {'sources': sources}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def update_source_list_from_server(request):
+    mongodb = mongo.MongoConnection()
+    inserted_ids, deleted_ids = mongodb.update_source_list_from_server()
+    results = {'status': True, 'response': {'inserted_ids': inserted_ids, 'deleted_ids': deleted_ids}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+#                            ARTICLES                                 #
 
 
 @api_view(['POST'])
 def get_article_list(request):
     #data = json.loads(request.data['_content'])['q']
-    data = request.data['q']
+    params = request.data
+    data = params['q']
+    #start = request.data['start']
+    #end = request.data['start']
+    case_sensitive = True
+    if 'case_sensitive' in request.data:
+        case_sensitive = params['case_sensitive']
+
     ans = []
     nc = NewsCollector()
     for q in data:
+        if not case_sensitive:
+            q = str.lower(q)
         sources = nc.get_articles(q)
         ans.append({'q': q, 'sources': sources})
-    results = {'status': True, 'response': ans, 'error': {}}
+    results = {'status': True, 'response': {'articles': ans}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
+
+#                            TAGS                                 #
 
 
 @api_view(['POST'])
@@ -79,8 +114,10 @@ def get_tag_list(request):
     data = request.data['text']
     nc = NewsCollector()
     tags = nc.get_tags(data, 'en')
-    results = {'status': True, 'response': tags, 'error': {}}
+    results = {'status': True, 'response': {'tags': tags}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
+
+#                            PHRASE                                 #
 
 
 @api_view(['POST'])
@@ -127,7 +164,8 @@ def add_phrase_list(request):
 
 @api_view(['POST'])
 def delete_phrase_list(request):
-    phrases = json.loads(request.data['_content'])
+    #phrases = json.loads(request.data['_content'])
+    phrases = request.data
    # nc = NewsCollector()
    # sources = nc.update_phrases()
     mongodb = mongo.MongoConnection()

@@ -20,3 +20,8 @@ from background_task.models_completed import CompletedTask
 def func():
     print("Background task started")
 
+
+@background(schedule=1)
+def update_articles():
+    print("Background task started")
+
