@@ -837,3 +837,9 @@ def send_many_post(urls, data, cls=None):
 #     # zeros_right = len_string - len(string.rstrip())
 #     # print(len(string))
 #     ###################################################
+def country_code():
+    import csv
+    with open('/home/vnc/Desktop/RebuildPR/data/country_code_alpha2.csv', mode='r') as infile:
+        reader = csv.reader(infile)
+        my_dict = {rows[1].lower(): rows[0] for rows in reader}
+    return my_dict

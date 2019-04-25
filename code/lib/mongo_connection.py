@@ -25,9 +25,15 @@ class MongoConnection(object):
     def get_country_list(self):
         country_list = []
         for source in self.source.find({'deleted': False}):
-            country_list.append(source['country'])
+            country = source['country']
+            country_list.append(country)
         country_list = list(set(country_list))
-        return country_list
+        dict_country_list = []
+        for country in country_list:
+            my_dict = tools.country_code()
+            dict_country_list.append({'code': country, 'description': my_dict[country]})
+
+        return dict_country_list
 
     def get_language_list(self):
         language_list = []

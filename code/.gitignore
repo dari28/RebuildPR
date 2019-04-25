@@ -1,0 +1,8 @@
+../polyglot_data
+../stanford_corenlp
+*.log
+newsAPI/loggins/*
+.idea/
+../background_task.sqlite3
+loggins/
+
