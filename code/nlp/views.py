@@ -85,6 +85,15 @@ def update_source_list_from_server(request):
 
 
 @api_view(['POST'])
+def update_article_list_from_server(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    inserted_ids, deleted_ids = mongodb.update_article_list_from_server(params)
+    results = {'status': True, 'response': {'inserted_ids': inserted_ids, 'deleted_ids': deleted_ids}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
 def get_article_list(request):
     #data = json.loads(request.data['_content'])['q']
     params = request.data

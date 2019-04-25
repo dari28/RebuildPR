@@ -4,11 +4,12 @@ import os
 import shutil
 import pymongo
 from bson import ObjectId, errors
-from news import get_sources
+from news import get_sources, get_everything
 from nlp.config import MONGO#, TYPE_WITHOUT_FILE, SEND_POST_URL, ADMIN_USER, DEFAULT_USER
 #from lib.dictionary import fix_name_field
 from lib import tools
-
+import hashlib
+import json
 
 class MongoConnection(object):
     """Connection class to mongoDB"""
@@ -40,52 +41,73 @@ class MongoConnection(object):
         ''' parameters may be list or str '''
         search_param = dict()
         search_param['deleted'] = False
+        search_fields = ['deleted', 'language', 'country', 'name', 'id', 'category']
         if params:
-            if 'deleted' in params:
-                search_param['deleted'] = params['deleted']
+            for field in search_fields:
+                if field in params:
+                    search_param[field] = params[field]
 
-            if 'language' in params:
-                search_param['language'] = params['language']
-
-            if 'country' in params:
-                search_param['country'] = params['country']
-
-        sources = self.source.find(search_param)
-        ret_list = []
-        for c in sources:
-            ret_list.append(c)
-        return ret_list
+        sources = list(self.source.find(search_param))
+        # ret_list = []
+        # for c in sources:
+        #     ret_list.append(c)
+        return sources
 
     def update_source_list_from_server(self):
-        #TO_DO: Refactor
+        # TO_DO: Refactor
         new_sources, _ = get_sources("")
+        new_sources_hash = new_sources.copy()
+        new_hash_list = []
+        for ns in new_sources_hash:
+            hasher = hashlib.md5()
+            hasher.update(json.dumps(ns).encode('utf-8'))
+            ns['hash'] = hasher.hexdigest()
+            ns['deleted'] = False
+            new_hash_list.append(ns['hash'])
 
-        old_sources = []
-        old_sources_without_ids = []
-        for source in self.source.find({'deleted': False}):
-            #del source['_id']
-            old_sources.append(source)
-            temp = source.copy()
-            del temp['_id']
-            del temp['deleted']
-            old_sources_without_ids.append(temp)
-
-        adding_sources = [value for value in new_sources if value not in old_sources_without_ids]
+        old_sources = list(self.source.find({'deleted': False}))
+        old_sources_hashes = [x['hash'] for x in old_sources]
+        adding_sources = [new_s for new_s in new_sources_hash if new_s['hash'] not in old_sources_hashes]
         inserted_ids = []
         for source in adding_sources:
-            source['deleted'] = False
             inserted_ids.append(self.source.insert_one(source).inserted_id)
 
-       # deleted_ids = [value['_id'] for value in old_sources if value not in new_sources]
-        deleted_ids = []
-        for value in old_sources:
-            _id = value.pop('_id')
-            value.pop('deleted')
-            if value not in new_sources:
-                deleted_ids.append(_id)
+        deleted_ids = [x['_id'] for x in list(self.source.find({"hash": {"$nin": new_hash_list}}))]
         self.delete_source_list_by_ids(deleted_ids)
 
         return inserted_ids, deleted_ids
+
+
+    # def update_source_list_from_server(self):
+    #     #TO_DO: Refactor
+    #     new_sources, _ = get_sources("")
+    #
+    #     old_sources = []
+    #     old_sources_without_ids = []
+    #     for source in self.source.find({'deleted': False}):
+    #         #del source['_id']
+    #         old_sources.append(source)
+    #         temp = source.copy()
+    #         del temp['_id']
+    #         del temp['deleted']
+    #         old_sources_without_ids.append(temp)
+    #
+    #     adding_sources = [value for value in new_sources if value not in old_sources_without_ids]
+    #     inserted_ids = []
+    #     for source in adding_sources:
+    #         source['deleted'] = False
+    #         inserted_ids.append(self.source.insert_one(source).inserted_id)
+    #
+    #    # deleted_ids = [value['_id'] for value in old_sources if value not in new_sources]
+    #     deleted_ids = []
+    #     for value in old_sources:
+    #         _id = value.pop('_id')
+    #         value.pop('deleted')
+    #         if value not in new_sources:
+    #             deleted_ids.append(_id)
+    #     self.delete_source_list_by_ids(deleted_ids)
+    #
+    #     return inserted_ids, deleted_ids
 
     def delete_source_list_by_ids(self, ids):
         """Delete sources by the database"""
@@ -96,10 +118,37 @@ class MongoConnection(object):
                 upsert=True
             )
         return ids
+# ***************************** ARTILES ******************************** #
 
     def get_articles(self):
         """Adding a user to the database"""
         return self.article.find({})
+
+    def update_article_list_from_server(self, params):
+        if 'q' not in params:
+            raise EnvironmentError('Request must contain \'q\' field')
+        q = params['q']
+        new_articles, _ = get_everything(q)
+        new_articles_hash = new_articles.copy()
+        new_hash_list = []
+        for ns in new_articles_hash:
+            hasher = hashlib.md5()
+            hasher.update(json.dumps(ns).encode('utf-8'))
+            ns['hash'] = hasher.hexdigest()
+            ns['deleted'] = False
+            new_hash_list.append(ns['hash'])
+
+        old_sources = list(self.article.find({'deleted': False}))
+        old_sources_hashes = [x['hash'] for x in old_sources]
+        adding_sources = [new_s for new_s in new_articles_hash if new_s['hash'] not in old_sources_hashes]
+        inserted_ids = []
+        for source in adding_sources:
+            inserted_ids.append(self.article.insert_one(source).inserted_id)
+
+        deleted_ids = [x['_id'] for x in list(self.article.find({"hash": {"$nin": new_hash_list}}))]
+        self.delete_source_list_by_ids(deleted_ids)
+
+        return inserted_ids, deleted_ids
 
     def add_phrases(self, phrases):
         """Adding phrase to the database"""

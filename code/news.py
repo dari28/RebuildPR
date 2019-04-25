@@ -308,8 +308,8 @@ def get_everything(q):
         else:
             errors.append(json["message"])
     except Exception as ex:
-        print("Error occurs in get_everything: {}".format(ex))
-        raise NewsException
+       # print("Error occurs in get_everything: {}".format(ex))
+        raise EnvironmentError("Error occurs in get_everything: {}".format(ex))
     return everything_list, errors
 
 
