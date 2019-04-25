@@ -24,14 +24,14 @@ class MongoConnection(object):
 
     def get_country_list(self):
         country_list = []
-        for source in self.source.find({'deleted': 0}):
+        for source in self.source.find({'deleted': False}):
             country_list.append(source['country'])
         country_list = list(set(country_list))
         return country_list
 
     def get_language_list(self):
         language_list = []
-        for source in self.source.find({'deleted': 0}):
+        for source in self.source.find({'deleted': False}):
             language_list.append(source['language'])
         language_list = list(set(language_list))
         return language_list
@@ -39,7 +39,7 @@ class MongoConnection(object):
     def get_sources(self, params):
         ''' parameters may be list or str '''
         search_param = dict()
-        search_param['deleted'] = 0
+        search_param['deleted'] = False
         if params:
             if 'deleted' in params:
                 search_param['deleted'] = params['deleted']
@@ -62,7 +62,7 @@ class MongoConnection(object):
 
         old_sources = []
         old_sources_without_ids = []
-        for source in self.source.find({'deleted': 0}):
+        for source in self.source.find({'deleted': False}):
             #del source['_id']
             old_sources.append(source)
             temp = source.copy()
@@ -73,7 +73,7 @@ class MongoConnection(object):
         adding_sources = [value for value in new_sources if value not in old_sources_without_ids]
         inserted_ids = []
         for source in adding_sources:
-            source['deleted'] = 0
+            source['deleted'] = False
             inserted_ids.append(self.source.insert_one(source).inserted_id)
 
        # deleted_ids = [value['_id'] for value in old_sources if value not in new_sources]
@@ -92,7 +92,7 @@ class MongoConnection(object):
         for id in ids:
             self.source.update_one(
                 {'_id': ObjectId(id)},
-                {'$set': {'deleted': 1}},
+                {'$set': {'deleted': True}},
                 upsert=True
             )
         return ids
@@ -106,7 +106,7 @@ class MongoConnection(object):
         inserted_id = self.phrase.insert_one(
             {
                 'phrases': phrases,
-                'deleted': '0'
+                'deleted': False
             },
             #upsert=True
         ).inserted_id
@@ -127,7 +127,7 @@ class MongoConnection(object):
         """Delete phrase by the database"""
         self.phrase.update_one(
             {'_id': ObjectId(phrases['_id'])},
-            {'$set': {'deleted': '1'}},
+            {'$set': {'deleted': True}},
             upsert=True
         )
         return phrases
@@ -137,6 +137,9 @@ class MongoConnection(object):
         if not isinstance(phrases['_id'], ObjectId):
             phrases['_id'] = ObjectId(phrases['_id'])
 
+        if 'deleted' not in phrases:
+            phrases['deleted'] = False
+
         self.phrase.update_one({'_id': phrases['_id']},
                                {'$set': {'phrases': phrases['phrases'],'deleted': phrases['deleted']}},
                                upsert=True)
@@ -144,7 +147,7 @@ class MongoConnection(object):
 
     def get_phrases(self, params):
         """Getting phrase to the database"""
-        deleted = '0'
+        deleted = False
         if params and 'deleted' in params:
             deleted = params['deleted']
 
