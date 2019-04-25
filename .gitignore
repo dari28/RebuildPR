@@ -1,4 +1,3 @@
-code/newsAPI/__pycache__/
 polyglot_data/
 stanford_corenlp/
 code/*.log
@@ -7,3 +6,8 @@ code/.idea/
 background_task.sqlite3
 code/loggins/
 code/__pycache__/
+code/lib/__pycache__/
+code/nlp/__pycache__/
+code/newsAPI/__pycache__/
+*.pyc
+*.log
