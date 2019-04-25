@@ -1,1 +1,9 @@
+code/newsAPI/__pycache__/
+polyglot_data/
 stanford_corenlp/
+code/*.log
+code/newsAPI/loggins/
+code/.idea/
+background_task.sqlite3
+code/loggins/
+code/__pycache__/
