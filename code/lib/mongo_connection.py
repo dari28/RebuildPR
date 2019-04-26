@@ -3,6 +3,7 @@
 import os
 import shutil
 import pymongo
+import pycountry
 from bson import ObjectId, errors
 from news import get_sources, get_everything
 from nlp.config import MONGO#, TYPE_WITHOUT_FILE, SEND_POST_URL, ADMIN_USER, DEFAULT_USER
@@ -10,6 +11,7 @@ from nlp.config import MONGO#, TYPE_WITHOUT_FILE, SEND_POST_URL, ADMIN_USER, DEF
 from lib import tools
 import hashlib
 import json
+
 
 class MongoConnection(object):
     """Connection class to mongoDB"""
@@ -27,13 +29,12 @@ class MongoConnection(object):
     def get_country_list(self):
         country_list = []
         for source in self.source.find({'deleted': False}):
-            country = source['country']
-            country_list.append(country)
+            country_list.append(source['country'])
         country_list = list(set(country_list))
         dict_country_list = []
         for country in country_list:
-            my_dict = tools.country_code()
-            dict_country_list.append({'code': country, 'description': my_dict[country]})
+            country_name = pycountry.countries.get(alpha_2=country.upper())
+            dict_country_list.append({'code': country, 'description': country_name.name if country_name else "Unknown country"})
 
         return dict_country_list
 
@@ -42,7 +43,11 @@ class MongoConnection(object):
         for source in self.source.find({'deleted': False}):
             language_list.append(source['language'])
         language_list = list(set(language_list))
-        return language_list
+        dict_language_list = []
+        for lang in language_list:
+            language = pycountry.languages.get(alpha_2=lang)
+            dict_language_list.append({'code': lang, 'description': language.name if language else "Unknown language"})
+        return dict_language_list
 
     def get_sources(self, params):
         ''' parameters may be list or str '''
