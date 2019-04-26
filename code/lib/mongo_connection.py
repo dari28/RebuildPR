@@ -60,9 +60,6 @@ class MongoConnection(object):
                     search_param[field] = params[field]
 
         sources = list(self.source.find(search_param))
-        # ret_list = []
-        # for c in sources:
-        #     ret_list.append(c)
         return sources
 
     def update_source_list_from_server(self):
@@ -89,37 +86,6 @@ class MongoConnection(object):
 
         return inserted_ids, deleted_ids
 
-
-    # def update_source_list_from_server(self):
-    #     #TO_DO: Refactor
-    #     new_sources, _ = get_sources("")
-    #
-    #     old_sources = []
-    #     old_sources_without_ids = []
-    #     for source in self.source.find({'deleted': False}):
-    #         #del source['_id']
-    #         old_sources.append(source)
-    #         temp = source.copy()
-    #         del temp['_id']
-    #         del temp['deleted']
-    #         old_sources_without_ids.append(temp)
-    #
-    #     adding_sources = [value for value in new_sources if value not in old_sources_without_ids]
-    #     inserted_ids = []
-    #     for source in adding_sources:
-    #         source['deleted'] = False
-    #         inserted_ids.append(self.source.insert_one(source).inserted_id)
-    #
-    #    # deleted_ids = [value['_id'] for value in old_sources if value not in new_sources]
-    #     deleted_ids = []
-    #     for value in old_sources:
-    #         _id = value.pop('_id')
-    #         value.pop('deleted')
-    #         if value not in new_sources:
-    #             deleted_ids.append(_id)
-    #     self.delete_source_list_by_ids(deleted_ids)
-    #
-    #     return inserted_ids, deleted_ids
 
     def delete_source_list_by_ids(self, ids):
         """Delete sources by the database"""
@@ -150,7 +116,6 @@ class MongoConnection(object):
             hasher.update(json.dumps(ns).encode('utf-8'))
             ns['hash'] = hasher.hexdigest()
             ns['deleted'] = False
-            #ns['q'] = q
             new_hash_list.append(ns['hash'])
 
         old_articles = list(self.article.find({'deleted': False}))
@@ -169,7 +134,6 @@ class MongoConnection(object):
         deleted_ids = [x['_id'] for x in list(self.article.find({"hash": {"$nin": new_hash_list}}))]
         self.delete_source_list_by_ids(deleted_ids)
 
-        # TO_DO add to q_article
         existing_article_ids = [x['_id'] for x in list(self.article.find({"hash": {"$in": new_hash_list}}))]
         self.q_article.update_one({'q': q},
                                  {'$set': {'articles': existing_article_ids},
@@ -181,16 +145,34 @@ class MongoConnection(object):
     def get_article_list(self, params):
         if 'q' not in params:
             raise EnvironmentError('Request must contain \'q\' field')
-        q = params['q']
-        return list(self.article.find({'q': q}))
+        search_param = dict()
+        search_param['q'] = params['q']
+        search_fields = ['id', 'name', 'language', 'country', 'category']
+        if params:
+            for field in search_fields:
+                if field in params:
+                    search_param['source'][field] = params[field]
+
+        return list(self.article.find(search_param))
 
     def get_q_article_list(self, params):
         if 'q' not in params:
             raise EnvironmentError('Request must contain \'q\' field')
+
         q = params['q']
         articles = self.q_article.find_one({'q': q})
 
-        full_artilces = list(self.article.find({'_id': {"$in": articles['articles']}}))
+        search_param = dict()
+        search_fields = ['id', 'name', 'language', 'country', 'category']
+        search_param['_id'] = {"$in": articles['articles']}
+        #search_param['source'] = dict()
+        if params:
+            for field in search_fields:
+                if field in params:
+                    search_param['source.'+field] = params[field]
+
+        #full_artilces = list(self.article.find({'_id': {"$in": articles['articles']}}))
+        full_artilces = list(self.article.find(search_param))
         articles['articles'] = full_artilces
         return articles
     # ***************************** Phrases ******************************** #

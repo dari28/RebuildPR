@@ -195,7 +195,7 @@ def getPOSTaggerAnnotator(language):
         if 'pos.model' not in prop:
             return None
         prop_an = to_prop(prop)
-        return POSTaggerAnnotator('pos', prop_an)
+        return POSTaggerAnnotator(jString('pos'), prop_an)
     else:
         return None
 

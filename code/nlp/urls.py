@@ -23,4 +23,4 @@ urlpatterns = [
     url(r'^delete_permanent_phrase_list/?$', views.delete_permanent_phrase_list),
 ]
 
-execution_at_startup()
+#execution_at_startup()

@@ -3,7 +3,8 @@ POLIGLOT = dict(
 )
 
 STANFORD = dict(
-    # languages=['en', 'zh', 'de', 'es', 'fr', 'ar'],
+    languages=['en', 'zh', 'de', 'es', 'fr', 'ar'],
+    #languages=['en'],
     # # languages=[],
     crf_english_3class='../stanford_corenlp/classifiers/english.all.3class.distsim.crf.ser.gz',
     crf_english_4class='../stanford_corenlp/classifiers/english.conll.4class.distsim.crf.ser.gz',
@@ -13,7 +14,9 @@ STANFORD = dict(
     crf_spanish_4class='../stanford_corenlp/classifiers/spanish.ancora.distsim.s512.crf.ser.gz',
     crf_france_3class='../stanford_corenlp/classifiers/france.3class.crf.ser.gz',
     # path_stanford_ner='./stanford_corenlp/stanford-corenlp-3.8.0.jar',
-    path_stanford_ner='../stanford_corenlp/stanford_update.jar',
+    path_stanford_ner='../stanford_corenlp/stanford-corenlp-3.9.2.jar',
+
+    #path_stanford_ner='../stanford_corenlp/stanford_update.jar',
 )
 
 STANDFORD_PACKAGE = {
@@ -190,6 +193,18 @@ description_tag = {
     'I-LIEU': 'Trained model of CRF, defining places'
 }
 
+SERVER = dict(
+    # language=['en', 'ru', 'de']
+    language=['en','ru']
+    # language=['pms', 'lmo', 'gan', 'scn', 'sco', 'ky', 'ps', 'ku', 'pt', 'kn', 'ko', 'km', 'kk', 'ilo', 'pl', 'pa',
+    #          'ka', 'cv', 'als', 'cs', 'cy', 'ce', 'ca', 'se', 'sa', 'sl', 'jv', 'sk', 'sh', 'bar', 'sv', 'sw', 'su',
+    #          'sr', 'sq', 'ja', 'fy', 'fr', 'fi', 'hsb', 'fo', 'fa', 'si', 'it', 'am', 'an', 'vo', 'is', 'sah', 'af',
+    #          'id', 'ia', 'az', 'io', 'ar', 'as', 'yo', 'yi', 'war', 'hr', 'hu', 'ht', 'qu', 'hy', 'he', 'szl', 'hi',
+    #          'dv', 'de', 'da', 'oc', 'tl', 'tk', 'th', 'tg', 'ast', 'te', 'ta', 'or', 'os', 'tt', 'tr', 'pam', 'vec',
+    #          'gv', 'gu', 'gl', 'ga', 'gd', 'ne', 'ceb', 'diq', 'wa', 'nl', 'no', 'nn', 'vls', 'zh', 'bs', 'br', 'be',
+    #          'bg', 'ba', 'arz', 'bo', 'bn', 'my', 'rm', 'mr', 'ms', 'mt', 'ru', 'mk', 'ml', 'mn', 'mg', 'vi', 'es',
+    #          'et', 'eu', 'bpy', 'el', 'en', 'eo', 'lb', 'la', 'ug', 'uk', 'li', 'lv', 'ur', 'lt', 'hif', 'uz', 'ro']
+)
 
 MONGO = dict(
     mongo_host='mongodb://localhost', #149.28.85.111:27017
