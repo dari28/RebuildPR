@@ -35,3 +35,5 @@ pytz
 six
 pattern==3.6
 requests
+pycountry
+
