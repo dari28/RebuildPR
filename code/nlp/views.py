@@ -46,7 +46,7 @@ def test_work(request):
 
 
 @api_view(['POST'])
-def get_county_list(request):
+def get_country_list(request):
     mongodb = mongo.MongoConnection()
     countries = mongodb.get_country_list()
     results = {'status': True, 'response': {'countries': countries}, 'error': {}}
@@ -97,7 +97,7 @@ def update_article_list_from_server(request):
 def get_article_list(request):
     #data = json.loads(request.data['_content'])['q']
     params = request.data
-    data = params['q']
+    #data = params['q']
     #start = request.data['start']
     #end = request.data['start']
     case_sensitive = True
@@ -105,13 +105,16 @@ def get_article_list(request):
         case_sensitive = params['case_sensitive']
 
     ans = []
-    nc = NewsCollector()
-    for q in data:
-        if not case_sensitive:
-            q = str.lower(q)
-        sources = nc.get_articles(q)
-        ans.append({'q': q, 'sources': sources})
-    results = {'status': True, 'response': {'articles': ans}, 'error': {}}
+   # nc = NewsCollector()
+   #  for q in data:
+   #      if not case_sensitive:
+   #          q = str.lower(q)
+   #      sources = nc.get_articles(q)
+   #      ans.append({'q': q, 'sources': sources})
+    mongodb = mongo.MongoConnection()
+    inserted_ids, deleted_ids = mongodb.update_article_list_from_server(params)
+    articles = mongodb.get_article_list(params=params)
+    results = {'status': True, 'response': {'articles': articles}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 #                            TAGS                                 #

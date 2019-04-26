@@ -22,6 +22,7 @@ class MongoConnection(object):
         self.phrase = self.mongo_db[config['phrase_collection']]
         self.source = self.mongo_db[config['source_collection']]
         self.article = self.mongo_db[config['article_collection']]
+        self.q_article = self.mongo_db[config['q_article_collection']]
 
     def get_country_list(self):
         country_list = []
@@ -131,9 +132,11 @@ class MongoConnection(object):
         return self.article.find({})
 
     def update_article_list_from_server(self, params):
+        #TO_DO: Make two collection. article_q should keep only ids of articles
         if 'q' not in params:
             raise EnvironmentError('Request must contain \'q\' field')
         q = params['q']
+
         new_articles, _ = get_everything(q)
         new_articles_hash = new_articles.copy()
         new_hash_list = []
@@ -142,19 +145,44 @@ class MongoConnection(object):
             hasher.update(json.dumps(ns).encode('utf-8'))
             ns['hash'] = hasher.hexdigest()
             ns['deleted'] = False
+            ns['q'] = q
             new_hash_list.append(ns['hash'])
 
-        old_sources = list(self.article.find({'deleted': False}))
-        old_sources_hashes = [x['hash'] for x in old_sources]
-        adding_sources = [new_s for new_s in new_articles_hash if new_s['hash'] not in old_sources_hashes]
+        old_articles = list(self.article.find({'deleted': False}))
+        old_sources_hashes = [x['hash'] for x in old_articles]
+        adding_articles = [new_s for new_s in new_articles_hash if new_s['hash'] not in old_sources_hashes]
+
+        #TO_DO add to q_article
+        # existing_articles = [new_s['_id'] for new_s in new_articles_hash if new_s['hash'] in old_sources_hashes]
+        #
+        # q_article = self.q_article.find_one({'q': q})
+        # #extended_existing_articles
+        # if q_article:
+        #     self.q_article.update_one({'q': q},
+        #                               {"$set": {'articles': existing_articles}},
+        #                               upsert=True)
+
         inserted_ids = []
-        for source in adding_sources:
-            inserted_ids.append(self.article.insert_one(source).inserted_id)
+        for article in adding_articles:
+            source = self.source.find_one({'deleted': False, 'id': article['source']['id'], 'name': article['source']['name']})
+            if source:
+                article['source']['language'] = source['language']
+                article['source']['category'] = source['category']
+                article['source']['country'] = source['country']
+            inserted_ids.append(self.article.insert_one(article).inserted_id)
 
         deleted_ids = [x['_id'] for x in list(self.article.find({"hash": {"$nin": new_hash_list}}))]
         self.delete_source_list_by_ids(deleted_ids)
 
         return inserted_ids, deleted_ids
+
+    def get_article_list(self, params):
+        if 'q' not in params:
+            raise EnvironmentError('Request must contain \'q\' field')
+        q = params['q']
+        return list(self.article.find({'q': q}))
+
+    # ***************************** ARTILES ******************************** #
 
     def add_phrases(self, phrases):
         """Adding phrase to the database"""
@@ -206,14 +234,5 @@ class MongoConnection(object):
         if params and 'deleted' in params:
             deleted = params['deleted']
 
-        phrases = self.phrase.find(
-            {
-                'deleted': deleted,
-            }
-            #upsert=True
-        )
-        ret_list = []
-        for c in phrases:
-            ret_list.append(c)
-        return ret_list
+        return list(self.phrase.find({'deleted': deleted}))
 

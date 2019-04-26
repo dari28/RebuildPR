@@ -5,7 +5,7 @@ from lib.server_tuning import execution_at_startup
 urlpatterns = [
     url(r'^test_work/?$', views.test_work),
 
-    url(r'^get_county_list/?$', views.get_county_list),
+    url(r'^get_country_list/?$', views.get_country_list),
     url(r'^get_language_list/?$', views.get_language_list),
 
     url(r'^get_source_list/?$', views.get_source_list),

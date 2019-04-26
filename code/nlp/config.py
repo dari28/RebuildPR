@@ -192,9 +192,10 @@ description_tag = {
 
 
 MONGO = dict(
-    mongo_host='mongodb://localhost',
+    mongo_host='mongodb://localhost', #149.28.85.111:27017
     database='newsAPI',
     article_collection='article',
+    q_article_collection='q_article',
     phrase_collection='phrase',
     source_collection='source',
     # entity_collection='entity',
