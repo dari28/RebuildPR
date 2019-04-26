@@ -25,7 +25,7 @@ from lib.json_encoder import JSONEncoderHttp
 # from nlp.config import POLIGLOT, DEFAULT_USER, SERVER, ADMIN_USER
 # from speech_to_text import speech_to_text_module
 # from text_to_speech import text_to_speech_module
-
+from datetime import datetime, timedelta
 
 @api_view(['POST'])
 def test_work(request):
@@ -112,8 +112,12 @@ def get_article_list(request):
    #      sources = nc.get_articles(q)
    #      ans.append({'q': q, 'sources': sources})
     mongodb = mongo.MongoConnection()
-    inserted_ids, deleted_ids = mongodb.update_article_list_from_server(params)
-    articles = mongodb.get_article_list(params=params)
+    q_article = mongodb.q_article.find_one({'q': params['q']})
+    if not q_article or 'date' not in q_article or q_article['date'] < (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d"):
+        inserted_ids, deleted_ids = mongodb.update_article_list_from_server(params)
+    #articles = mongodb.get_article_list(params=params)
+    articles = mongodb.get_q_article_list(params=params)
+
     results = {'status': True, 'response': {'articles': articles}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 

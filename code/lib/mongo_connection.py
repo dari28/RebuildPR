@@ -141,7 +141,7 @@ class MongoConnection(object):
         if 'q' not in params:
             raise EnvironmentError('Request must contain \'q\' field')
         q = params['q']
-
+        #TO_DO: Add check for time
         new_articles, _ = get_everything(q)
         new_articles_hash = new_articles.copy()
         new_hash_list = []
@@ -150,22 +150,12 @@ class MongoConnection(object):
             hasher.update(json.dumps(ns).encode('utf-8'))
             ns['hash'] = hasher.hexdigest()
             ns['deleted'] = False
-            ns['q'] = q
+            #ns['q'] = q
             new_hash_list.append(ns['hash'])
 
         old_articles = list(self.article.find({'deleted': False}))
         old_sources_hashes = [x['hash'] for x in old_articles]
         adding_articles = [new_s for new_s in new_articles_hash if new_s['hash'] not in old_sources_hashes]
-
-        #TO_DO add to q_article
-        # existing_articles = [new_s['_id'] for new_s in new_articles_hash if new_s['hash'] in old_sources_hashes]
-        #
-        # q_article = self.q_article.find_one({'q': q})
-        # #extended_existing_articles
-        # if q_article:
-        #     self.q_article.update_one({'q': q},
-        #                               {"$set": {'articles': existing_articles}},
-        #                               upsert=True)
 
         inserted_ids = []
         for article in adding_articles:
@@ -179,6 +169,13 @@ class MongoConnection(object):
         deleted_ids = [x['_id'] for x in list(self.article.find({"hash": {"$nin": new_hash_list}}))]
         self.delete_source_list_by_ids(deleted_ids)
 
+        # TO_DO add to q_article
+        existing_article_ids = [x['_id'] for x in list(self.article.find({"hash": {"$in": new_hash_list}}))]
+        self.q_article.update_one({'q': q},
+                                 {'$set': {'articles': existing_article_ids},
+                                  "$currentDate": {"lastModified": True}},
+                                 upsert=True)
+
         return inserted_ids, deleted_ids
 
     def get_article_list(self, params):
@@ -187,7 +184,16 @@ class MongoConnection(object):
         q = params['q']
         return list(self.article.find({'q': q}))
 
-    # ***************************** ARTILES ******************************** #
+    def get_q_article_list(self, params):
+        if 'q' not in params:
+            raise EnvironmentError('Request must contain \'q\' field')
+        q = params['q']
+        articles = self.q_article.find_one({'q': q})
+
+        full_artilces = list(self.article.find({'_id': {"$in": articles['articles']}}))
+        articles['articles'] = full_artilces
+        return articles
+    # ***************************** Phrases ******************************** #
 
     def add_phrases(self, phrases):
         """Adding phrase to the database"""
