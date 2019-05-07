@@ -8,6 +8,8 @@ from pymongo import MongoClient
 from install_polyglot import install
 from install_stanford import predict_entity_stanford_default, predict_entity_stanford, add_standford_default
 from lib import tools, text
+from lib import stanford_module as stanford
+from nlp.config import STANFORD
 class NewsException(Exception):
     pass
 
@@ -15,6 +17,13 @@ class NewsException(Exception):
 def write_sources_to_history(data):
     write_to_history(data, HISTORY_SOURCES_DIR)
 
+# def load_models():
+#     models = ['crf_english_3class', 'crf_english_4class', 'crf_english_7class', 'crf_chinese_7class', 'crf_german_7class', 'crf_spanish_4class', 'crf_france_3class']
+#     classifier_dict = dict()
+#     for model in models:
+#         if model not in classifier_dict:
+#             classifier_dict[model] = stanford.CRFClassifier.getClassifier(stanford.jString(model))
+#         classifier = classifier_dict[model]
 
 def write_news_to_history(data):
     write_to_history(data, HISTORY_NEWS_DIR)
@@ -156,12 +165,12 @@ class NewsCollector:
 
         return self.db_history_news
 
-    def get_tags(self, text, language):
+    def get_tags(self, text, language, classifier_dict):
         entities = add_standford_default()
         result = predict_entity_stanford(
             entities,
             text,
-            language)
+            language, classifier_dict)
         return result
 
     # def get_articles(self, q):
@@ -390,6 +399,14 @@ if __name__ == "__main__":
     #nc.read_history_sources_from_db()
     #print(a)
     install() #Already do this
+    models = ['crf_english_3class', 'crf_english_4class', 'crf_english_7class', 'crf_chinese_7class', 'crf_german_7class', 'crf_spanish_4class', 'crf_france_3class']
+    classifier_dict = dict()
+    for model in models:
+        model = tools.get_abs_path(STANFORD[model])
+        model = model if isinstance(model, str) else model.encode('utf8')
+        if model not in classifier_dict:
+            classifier_dict[model] = stanford.CRFClassifier.getClassifier(stanford.jString(model))
+        classifier = classifier_dict[model]
     matches = []
    # nc.get_available_sources()
    # articles = nc.get_articles("puerto rico")
@@ -425,7 +442,7 @@ if __name__ == "__main__":
     #                 print(entity.tag, entity)
     #         print("*************END**********")
     #predict_entity_stanford_default({
-    result = nc.get_tags(test_article, 'es')
+    result = nc.get_tags(test_article, classifier_dict, 'es')
     print(result)
     #########ADD struct for matching########
     result2 = list()

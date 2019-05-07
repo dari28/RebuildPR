@@ -34,12 +34,16 @@ def install():
         for language in ['es', 'fr', 'de', 'ru', 'en']:
             if not downloader.is_installed('embeddings2.' + language):
                 downloader.download('embeddings2.' + language)
+                print('embeddings2.' + language + 'loaded')
             if not downloader.is_installed('ner2.' + language):
                 downloader.download('ner2.' + language)
+                print('ner2.' + language + 'loaded')
             if not downloader.is_installed('sentiment2.' + language):
                 downloader.download('sentiment2.' + language)
+                print('sentiment2.' + language + 'loaded')
             if not downloader.is_installed('morph2.' + language):
                 downloader.download('morph2.' + language)
+                print('morph2.' + language + 'loaded')
             # if not downloader.is_installed('pos2.' + language):
             #     downloader.download('pos2.' + language)
             print(language)

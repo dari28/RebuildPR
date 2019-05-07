@@ -86,13 +86,13 @@ def predict_entity_stanford_default(entities, data, language=None):
     return result
 
 
-def predict_entity_stanford(entities, data, language=None):
+def predict_entity_stanford(entities, data, classifier_dict, language=None):
     """"""
     #"data" MUST BE str type(utf-8 encoding).
     #result = {}
     result = []
     data = data if isinstance(data, str) else data.encode('utf8')
-    classifier_dict = dict()
+    # classifier_dict = dict()
     for cur_tag in list(description_tag.keys()):
         for entity in entities:
         #for entity in stanford_models:
