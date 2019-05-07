@@ -17,13 +17,17 @@ class NewsException(Exception):
 def write_sources_to_history(data):
     write_to_history(data, HISTORY_SOURCES_DIR)
 
-# def load_models():
-#     models = ['crf_english_3class', 'crf_english_4class', 'crf_english_7class', 'crf_chinese_7class', 'crf_german_7class', 'crf_spanish_4class', 'crf_france_3class']
-#     classifier_dict = dict()
-#     for model in models:
-#         if model not in classifier_dict:
-#             classifier_dict[model] = stanford.CRFClassifier.getClassifier(stanford.jString(model))
-#         classifier = classifier_dict[model]
+
+def load_models():
+    models = ['crf_english_3class', 'crf_english_4class', 'crf_english_7class', 'crf_chinese_7class', 'crf_german_7class', 'crf_spanish_4class', 'crf_france_3class']
+    classifier_dict = dict()
+    for model in models:
+        model = tools.get_abs_path(STANFORD[model])
+        model = model if isinstance(model, str) else model.encode('utf8')
+        if model not in classifier_dict:
+            classifier_dict[model] = stanford.CRFClassifier.getClassifier(stanford.jString(model))
+    return classifier_dict
+
 
 def write_news_to_history(data):
     write_to_history(data, HISTORY_NEWS_DIR)
@@ -399,14 +403,15 @@ if __name__ == "__main__":
     #nc.read_history_sources_from_db()
     #print(a)
     install() #Already do this
-    models = ['crf_english_3class', 'crf_english_4class', 'crf_english_7class', 'crf_chinese_7class', 'crf_german_7class', 'crf_spanish_4class', 'crf_france_3class']
-    classifier_dict = dict()
-    for model in models:
-        model = tools.get_abs_path(STANFORD[model])
-        model = model if isinstance(model, str) else model.encode('utf8')
-        if model not in classifier_dict:
-            classifier_dict[model] = stanford.CRFClassifier.getClassifier(stanford.jString(model))
-        classifier = classifier_dict[model]
+    # models = ['crf_english_3class', 'crf_english_4class', 'crf_english_7class', 'crf_chinese_7class', 'crf_german_7class', 'crf_spanish_4class',
+    #           'crf_france_3class']
+    # classifier_dict = dict()
+    # for model in models:
+    #     model = tools.get_abs_path(STANFORD[model])
+    #     model = model if isinstance(model, str) else model.encode('utf8')
+    #     if model not in classifier_dict:
+    #         classifier_dict[model] = stanford.CRFClassifier.getClassifier(stanford.jString(model))
+    #     classifier = classifier_dict[model]
     matches = []
    # nc.get_available_sources()
    # articles = nc.get_articles("puerto rico")

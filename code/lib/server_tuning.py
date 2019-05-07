@@ -15,6 +15,7 @@ from lib import stanford_module as stanford
 from nlp.config import POLIGLOT, STANFORD, STANDFORD_PACKAGE, SERVER#, DEFAULT_USER, , CONFIGURATION_FILES, REPEAT_FINAL_PROCESSING, ADMIN_USER
 #from nlp.tasks import final_processing
 from lib.linguistic_functions import get_supported_languages
+from news import load_models
 
 
 def polyglot_default_install():
@@ -143,10 +144,13 @@ def standford_default_install():
 #         mongo.users.insert_one({'_id': ADMIN_USER})
 
 
+
+
 def execution_at_startup():
     """Function that executes the necessary code at startup"""
-    polyglot_default_install()
-    standford_default_install()
+    # polyglot_default_install()
+    # standford_default_install()
+    #models_dict = load_models()
     #add_polyglot_default()
     #add_standford_default()
     #create_folder()
@@ -154,6 +158,7 @@ def execution_at_startup():
     #add_admin_user()
 
 
+models_dict = load_models()
 
 if __name__ == '__main__':
     # os.path.sep = '/'

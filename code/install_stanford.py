@@ -86,7 +86,7 @@ def predict_entity_stanford_default(entities, data, language=None):
     return result
 
 
-def predict_entity_stanford(entities, data, classifier_dict, language=None):
+def predict_entity_stanford(entities, data, language=None, classifier_dict = {}):
     """"""
     #"data" MUST BE str type(utf-8 encoding).
     #result = {}

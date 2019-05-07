@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import sys
+from news import load_models
 
 if __name__ == "__main__":
     #
@@ -20,6 +21,8 @@ if __name__ == "__main__":
                 "forget to activate a virtual environment?"
             )
         raise
+
+    # models_dict = load_models()
     execute_from_command_line(sys.argv)
 
 execute_from_command_line(sys.argv)
