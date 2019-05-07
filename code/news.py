@@ -171,10 +171,12 @@ class NewsCollector:
 
     def get_tags(self, text, language, classifier_dict):
         entities = add_standford_default()
-        result = predict_entity_stanford(
+        result = predict_entity_stanford_default(
+        #result = predict_entity_stanford(
             entities,
             text,
-            language, classifier_dict)
+            language,
+            classifier_dict)
         return result
 
     # def get_articles(self, q):

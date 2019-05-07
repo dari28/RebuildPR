@@ -16,6 +16,7 @@ from nlp.config import POLIGLOT, STANFORD, STANDFORD_PACKAGE, SERVER#, DEFAULT_U
 #from nlp.tasks import final_processing
 from lib.linguistic_functions import get_supported_languages
 from news import load_models
+from lib.stanford_module import jString
 
 
 def polyglot_default_install():
@@ -106,7 +107,7 @@ def standford_default_install():
                         )
                     # tools.message_box(text_error, 'Error', 0)
                     raise EnvironmentError(text_error)
-
+               # stanford.load_stanford_models(model_name)  #SIDE
             _ = stanford.getTokenizerAnnotator(language)
             _ = stanford.getWordsToSentencesAnnotator(language)
             _ = stanford.getPOSTaggerAnnotator(language)
@@ -149,7 +150,7 @@ def standford_default_install():
 def execution_at_startup():
     """Function that executes the necessary code at startup"""
     # polyglot_default_install()
-    # standford_default_install()
+    standford_default_install()
     #models_dict = load_models()
     #add_polyglot_default()
     #add_standford_default()

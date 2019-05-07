@@ -16,10 +16,10 @@ from lib import tools
 import jnius
 
 
-def predict_entity_stanford_default(entities, data, language=None):
+def predict_entity_stanford_default(entities, data, language=None, classifier_dict = {}):
     """"""
     #"data" MUST BE str type(utf-8 encoding).
-    entity_dict = entities  #tools.sort_model(entities, 'model')  #SIDE
+    entity_dict = tools.sort_model(entities, 'model')
 
     data = data if isinstance(data, str) else data.encode('utf8')
     #data_predict, back_map = tools.adaptiv_remove_tab(data)
@@ -28,7 +28,7 @@ def predict_entity_stanford_default(entities, data, language=None):
     annotation = stanford.Annotation(data_predict)
     stanford.getTokenizerAnnotator(language).annotate(annotation)
     stanford.getWordsToSentencesAnnotator(language).annotate(annotation)
-    stanford.getPOSTaggerAnnotator(language).annotate(annotation)
+    #stanford.getPOSTaggerAnnotator(language).annotate(annotation)  #SIDE DELETE
 
     result = {}
     for entity_model in entity_dict:
@@ -89,10 +89,9 @@ def predict_entity_stanford_default(entities, data, language=None):
 def predict_entity_stanford(entities, data, language=None, classifier_dict = {}):
     """"""
     #"data" MUST BE str type(utf-8 encoding).
-    #result = {}
-    result = []
+    result = {}
+    #result = []
     data = data if isinstance(data, str) else data.encode('utf8')
-    # classifier_dict = dict()
     for cur_tag in list(description_tag.keys()):
         for entity in entities:
         #for entity in stanford_models:
@@ -137,8 +136,9 @@ def predict_entity_stanford(entities, data, language=None, classifier_dict = {})
                     tag = jTokken.get(stanford.getClassAnnotation('AnswerAnnotation'))
                     # word = jTokken.get(stanford.getClassAnnotation('TextAnnotation'))
                     #if tag in list(description_tag.keys()):#['A', 'LOCATION', ]:
-                    #if tag in ['A']:
-                    if tag == cur_tag:
+                    if tag in ['A']:
+                    #if tag in ['DATE']:
+                    #if tag == cur_tag:
                         word = jTokken.get(stanford.getClassAnnotation('OriginalTextAnnotation'))
                         start_pos = jTokken.get(stanford.getClassAnnotation('CharacterOffsetBeginAnnotation'))
                         if start_pos == previous_end_pos + 1 and tag == previous_tag:
@@ -154,14 +154,14 @@ def predict_entity_stanford(entities, data, language=None, classifier_dict = {})
                         match = {
                             'start_match': start_pos,
                             'length_match': end_pos - start_pos,
-                            'word': word,
-                            'tag': tag
+                            'word': word#,
+                           # 'tag': tag
                         }
                         matches.append(match)
             #matches = tools.sample_update_matches(back_map, data, matches)
-            #result[entity['_id']] = matches
-            if matches:
-                result.append(matches)
+            result[entity['description']] = matches
+    # if matches:
+    #     result.append(matches)
 
     return result
 

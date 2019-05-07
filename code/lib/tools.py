@@ -188,17 +188,17 @@ def remove_tab(origin_text):
 #     return text
 #
 #
-# def sort_model(models, tag='type'):
-#     """groups models by type"""
-#     result_set = {}
-#     for model in models:
-#         if model[tag] not in result_set:
-#             result_set[model[tag]] = [model]
-#         else:
-#             result_set[model[tag]].append(model)
-#     return result_set
-#
-#
+def sort_model(models, tag='type'):
+    """groups models by type"""
+    result_set = {}
+    for model in models:
+        if model[tag] not in result_set:
+            result_set[model[tag]] = [model]
+        else:
+            result_set[model[tag]].append(model)
+    return result_set
+
+
 def get_abs_path(path):
     """"""
     path = path if os.path.isabs(path) else \
