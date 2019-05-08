@@ -173,19 +173,18 @@ class NewsCollector:
 
         return self.db_history_news
 
-    def get_tags(self, text, language, classifier_dict):
-      #  entities = add_standford_default()
-        entities = add_polyglot_default()
-        result = predict_entity_polyglot(
+    def get_tags(self, text, language):
+        entities = add_standford_default()
+      #   entities = add_polyglot_default()
+      #   result = predict_entity_polyglot(
+      #       entities,
+      #       text,
+      #       language)
+        result = predict_entity_stanford_default(
+        #result = predict_entity_stanford(
             entities,
             text,
             language)
-        #result = predict_entity_stanford_default(
-        #result = predict_entity_stanford(
-            # entities,
-            # text,
-            # language,
-            # classifier_dict)
         return result
 
     # def get_articles(self, q):

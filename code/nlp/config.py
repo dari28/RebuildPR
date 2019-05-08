@@ -14,7 +14,9 @@ STANFORD = dict(
     crf_spanish_4class='../stanford_corenlp/classifiers/spanish.ancora.distsim.s512.crf.ser.gz',
     crf_france_3class='../stanford_corenlp/classifiers/france.3class.crf.ser.gz',
     # path_stanford_ner='./stanford_corenlp/stanford-corenlp-3.8.0.jar',
-    path_stanford_ner='../stanford_corenlp/stanford-corenlp-3.9.2.jar',
+    # path_stanford_ner='../stanford_corenlp/stanford-corenlp-3.9.2.jar',
+    path_stanford_ner='../stanford_corenlp/stanford_update.jar',
+
 
     #path_stanford_ner='../stanford_corenlp/stanford_update.jar',
 )
@@ -35,6 +37,7 @@ STANDFORD_PACKAGE = {
 STANFORD_PREPOSSESSING = dict(
     en={
         'pos.model': '../stanford_corenlp/pos-tagger/english-left3words-distsim.tagger',
+        #'pos.model': '../stanford-postagger-full-2018-10-16/models/english-left3words-distsim.tagger',
         'tokenize.language': 'en',
         'tokenize.options': 'untokenizable=allKeep, invertible=true'
     },

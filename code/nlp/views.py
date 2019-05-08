@@ -10,7 +10,7 @@ from django.http import JsonResponse
 from polyglot import load
 from polyglot.detect import Detector, Language
 from polyglot.downloader import downloader
-from lib.server_tuning import models_dict
+#from lib.server_tuning import models_dict
 import json
 from rest_framework.decorators import api_view
 from news import NewsCollector
@@ -130,7 +130,8 @@ def get_tag_list(request):
     #data = json.loads(request.data['_content'])['text']
     data = request.data['text']
     nc = NewsCollector()
-    tags = nc.get_tags(data, 'en', classifier_dict=models_dict)
+    #tags = nc.get_tags(data, 'en', classifier_dict=models_dict)
+    tags = nc.get_tags(data, 'en')
     results = {'status': True, 'response': {'tags': tags}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 

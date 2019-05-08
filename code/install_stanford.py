@@ -16,19 +16,19 @@ from lib import tools
 import jnius
 
 
-def predict_entity_stanford_default(entities, data, language=None, classifier_dict = {}):
+def predict_entity_stanford_default(entities, data, language=None):
     """"""
     #"data" MUST BE str type(utf-8 encoding).
     entity_dict = tools.sort_model(entities, 'model')
 
     data = data if isinstance(data, str) else data.encode('utf8')
-    #data_predict, back_map = tools.adaptiv_remove_tab(data)
-    data_predict = data #SIDE
+    #data_predict, back_map = tools.adaptiv_remove_tab(data) #SIDE DELETE
+    data_predict = data #SIDE ADD
 
-    annotation = stanford.Annotation(data_predict)
+    annotation = stanford.Annotation(stanford.jString(data_predict))
     stanford.getTokenizerAnnotator(language).annotate(annotation)
     stanford.getWordsToSentencesAnnotator(language).annotate(annotation)
-    #stanford.getPOSTaggerAnnotator(language).annotate(annotation)  #SIDE DELETE(ERROR HERE)
+    stanford.getPOSTaggerAnnotator(language).annotate(annotation)
 
     result = {}
     for entity_model in entity_dict:
@@ -72,14 +72,22 @@ def predict_entity_stanford_default(entities, data, language=None, classifier_di
         dict_tag = {}
 
         for entity in entity_dict[entity_model]:
-            dict_tag[entity['model_settings']['tag']] = entity['_id']
+            # dict_tag[entity['model_settings']['tag']] = entity['_id'] #SIDE DELETE
+            dict_tag[entity['model_settings']['tag']] = entity['name']  # SIDE ADD
 
         for tag in dict_tag:
-            result[dict_tag[tag]] = []
+            #result[dict_tag[tag]] = []
+            result[tag] = []
 
         for match in matches:
-            result[dict_tag[match['tag']]].append(match['match'])
+            #result[dict_tag[match['tag']]].append(match['match'])
+            result[match['tag']].append(match['match'])
 
+        for tag in dict_tag:
+            # if not result[dict_tag[tag]]:
+            #     del result[dict_tag[tag]]
+            if not result[tag]:
+                del result[tag]
     # stanford.SystemJava.gc()
     # for key in result:
     #     result[key] = tools.sample_update_matches(back_map, data, result[key])

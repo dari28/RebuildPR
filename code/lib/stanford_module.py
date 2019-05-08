@@ -27,8 +27,7 @@ PropertiesFile = GetJavaClass('edu.stanford.nlp.util.StringUtils').propFileToPro
 ClassifierFlags = GetJavaClass('edu.stanford.nlp.sequences.SeqClassifierFlags')
 CRFClassifier = GetJavaClass('edu.stanford.nlp.ie.crf.CRFClassifier')
 ColumnDataClassifier = GetJavaClass('edu.stanford.nlp.classify.ColumnDataClassifier')
-jMap = GetJavaClass('java.util.HashMap')
-SystemJava = GetJavaClass('java.lang.System')
+Annotation = GetJavaClass('edu.stanford.nlp.pipeline.Annotation')
 TokenizerAnnotator = GetJavaClass('edu.stanford.nlp.pipeline.TokenizerAnnotator')
 WordsToSentencesAnnotator = GetJavaClass('edu.stanford.nlp.pipeline.WordsToSentencesAnnotator')
 POSTaggerAnnotator = GetJavaClass('edu.stanford.nlp.pipeline.POSTaggerAnnotator')
@@ -36,20 +35,22 @@ NERCombinerAnnotator = GetJavaClass('edu.stanford.nlp.pipeline.NERCombinerAnnota
 MorphAnnotator = GetJavaClass('edu.stanford.nlp.pipeline.MorphaAnnotator')
 jInteger = GetJavaClass('java.lang.Integer')
 jString = GetJavaClass('java.lang.String')
-Annotation = GetJavaClass('edu.stanford.nlp.pipeline.Annotation')
-
+jMap = GetJavaClass('java.util.HashMap')
+SystemJava = GetJavaClass('java.lang.System')
+jProperties = GetJavaClass('java.util.Properties')
+jArrayList = GetJavaClass('java.util.ArrayList')
 
 def to_prop(prop):
-    properties = GetJavaClass('java.util.Properties')()
+    properties = jProperties()
     for key in prop:
         if "=" in prop[key]:
             for prop_splited in prop[key].split(","):
                 ps = prop_splited.split("=")
                 prop_splited_key = ps[0]
                 prop_splited_value = ps[1]
-                properties.setProperty(prop_splited_key, prop_splited_value)
+                properties.setProperty(jString(prop_splited_key), jString(prop_splited_value))
         else:
-            properties.setProperty(key, prop[key])
+            properties.setProperty(jString(key), jString(prop[key]))
     return properties
 
 
@@ -61,7 +62,7 @@ def annotation_polyglot(data, language, settings={}):
     text_row = text.raw
     text_row = text_row if isinstance(text_row, str) \
         else text_row.encode('utf-8')
-    jannotation = Annotation(text_row)
+    jannotation = Annotation(jString(text_row))
     # jtokens = getTokens(text, text.words)
     # annot.set(getClassAnnotation('TokensAnnotation'), jtokens)
     jsentence, jtokens = getSentence(text)
@@ -77,7 +78,7 @@ def getClassAnnotation(name_class):
 
 
 def getTokens(sentence, tokens, from_pos=0, save_inex=False, index_sentence=None):
-    result = GetJavaClass('java.util.ArrayList')()
+    result = jArrayList()
     end_pos = 0
     index = 1
     core_label = None
@@ -144,12 +145,19 @@ def getSentence(text):
 def load_stanford_models(key):
     return CRFClassifier.getClassifier(tools.get_abs_path(STANFORD[key]))
 
+def func(prop_ner_temp):
+    result = []
+    enamurate = prop_ner_temp.propertyNames()
+    while enamurate.hasMoreElements():
+        result.append(enamurate.nextElement())
+    return result
 
 @memoize
 def load_stanford_ner(text, language):
     prop = get_prop_for_language(language)
     prop.update({'ner.model': tools.get_abs_path(STANFORD[text]), 'ner.useSUTime': 'false'})
     prop_ner = to_prop(prop)
+    a = func(prop_ner) #SIDE: DELETE IT PLEASE
     return NERCombinerAnnotator(prop_ner)
 
 
@@ -195,8 +203,8 @@ def getPOSTaggerAnnotator(language):
         if 'pos.model' not in prop:
             return None
         prop_an = to_prop(prop)
-        return POSTaggerAnnotator('pos', prop_an)
-        #return POSTaggerAnnotator(jString('pos'), prop_an)
+        #return POSTaggerAnnotator('pos', prop_an)
+        return POSTaggerAnnotator(jString('pos'), prop_an)
     else:
         return None
 
