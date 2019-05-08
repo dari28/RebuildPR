@@ -28,7 +28,7 @@ def predict_entity_stanford_default(entities, data, language=None, classifier_di
     annotation = stanford.Annotation(data_predict)
     stanford.getTokenizerAnnotator(language).annotate(annotation)
     stanford.getWordsToSentencesAnnotator(language).annotate(annotation)
-    #stanford.getPOSTaggerAnnotator(language).annotate(annotation)  #SIDE DELETE
+    #stanford.getPOSTaggerAnnotator(language).annotate(annotation)  #SIDE DELETE(ERROR HERE)
 
     result = {}
     for entity_model in entity_dict:

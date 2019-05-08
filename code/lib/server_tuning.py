@@ -149,8 +149,8 @@ def standford_default_install():
 
 def execution_at_startup():
     """Function that executes the necessary code at startup"""
-    # polyglot_default_install()
-    standford_default_install()
+    polyglot_default_install()
+   # standford_default_install()
     #models_dict = load_models()
     #add_polyglot_default()
     #add_standford_default()

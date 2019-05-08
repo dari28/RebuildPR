@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
 import sys
-from news import load_models
+# from news import load_models
 
 if __name__ == "__main__":
     #

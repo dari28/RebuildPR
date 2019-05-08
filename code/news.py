@@ -7,9 +7,13 @@ from pymongo import MongoClient
 #from polyglot.text import Text, Word
 from install_polyglot import install
 from install_stanford import predict_entity_stanford_default, predict_entity_stanford, add_standford_default
+from lib.learning_model import predict_entity_polyglot
 from lib import tools, text
 from lib import stanford_module as stanford
 from nlp.config import STANFORD
+from install.install_default_model import add_polyglot_default
+
+
 class NewsException(Exception):
     pass
 
@@ -102,11 +106,11 @@ class NewsCollector:
             #self.history_news = list()
             #self.history_news =
 
-    def get_phrases(self):
-        return self.read_history_phrases_from_db()
-
-    def update_phrases(self):
-        return self._history_phrases_from_db()
+    # def get_phrases(self):
+    #     return self.read_history_phrases_from_db()
+    #
+    # def update_phrases(self):
+    #     return self.write_history_phrases_from_db()
 
     def filter_sources(self, country=None, language=None):
         """
@@ -170,13 +174,18 @@ class NewsCollector:
         return self.db_history_news
 
     def get_tags(self, text, language, classifier_dict):
-        entities = add_standford_default()
-        result = predict_entity_stanford_default(
-        #result = predict_entity_stanford(
+      #  entities = add_standford_default()
+        entities = add_polyglot_default()
+        result = predict_entity_polyglot(
             entities,
             text,
-            language,
-            classifier_dict)
+            language)
+        #result = predict_entity_stanford_default(
+        #result = predict_entity_stanford(
+            # entities,
+            # text,
+            # language,
+            # classifier_dict)
         return result
 
     # def get_articles(self, q):

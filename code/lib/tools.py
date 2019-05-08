@@ -21,16 +21,16 @@ from lib.text import Text
 #
 # punctuation = '[!"#$%&\\\'()*+,-./:;<=>?@[\\]^_`{|}~]'
 #
-# def sample_update_matches(back_map, origin_text, matches):
-#     #origin_text MUST BE unicode type. In other case we have the wrong length of string and position of words
-#     utf_origin_text = origin_text if isinstance(origin_text, unicode) else origin_text.decode('utf-8')
-#     for match in matches:
-#         start_match = match['start_match']
-#         match['start_match'] = back_map[start_match]
-#         match['length_match'] = back_map[start_match + match['length_match'] - 1] - match['start_match'] + 1
-#         match['word'] = utf_origin_text[match['start_match']: match['start_match'] + match['length_match']]
-#     return matches
-#
+def sample_update_matches(back_map, origin_text, matches):
+    #origin_text MUST BE unicode type. In other case we have the wrong length of string and position of words
+    utf_origin_text = origin_text #if isinstance(origin_text, unicode) else origin_text.decode('utf-8')
+    for match in matches:
+        start_match = match['start_match']
+        match['start_match'] = back_map[start_match]
+        match['length_match'] = back_map[start_match + match['length_match'] - 1] - match['start_match'] + 1
+        match['word'] = utf_origin_text[match['start_match']: match['start_match'] + match['length_match']]
+    return matches
+
 #
 # def sample_strip(samples):
 #     """removes spaces at the beginning and at the end"""
@@ -327,33 +327,32 @@ class ParsePolyglot(object):
             except:
                 pass
 
-#
-# class ParsePolyglotPolarity(object):
-#     """Converts and filters the polyglot entities"""
-#     def __init__(self, classification, set_tags, origin_text, dict_tags):
-#         self.classification = classification
-#         self.set_tags = set_tags
-#         self.origin_text = origin_text
-#         self.dict_tags = dict_tags
-#
-#     def __iter__(self):
-#         end_pos = 0
-#         for word in self.classification:
-#             try:
-#                 tag = word.polarity
-#                 utf8_units = word if isinstance(word, unicode) \
-#                     else word.decode('utf8')
-#                 start_pos = self.origin_text.find(utf8_units, end_pos)
-#                 end_pos = start_pos + len(utf8_units)
-#                 if tag:
-#                     if self.dict_tags[tag] in self.set_tags:
-#                         yield {'match': {'start_match': start_pos,
-#                                          'length_match': len(utf8_units),
-#                                          'word': utf8_units},
-#                                'tag': self.dict_tags[tag]}
-#             except:
-#                 print get_error()
-#
+
+class ParsePolyglotPolarity(object):
+    """Converts and filters the polyglot entities"""
+    def __init__(self, classification, set_tags, origin_text, dict_tags):
+        self.classification = classification
+        self.set_tags = set_tags
+        self.origin_text = origin_text
+        self.dict_tags = dict_tags
+
+    def __iter__(self):
+        end_pos = 0
+        for word in self.classification:
+            try:
+                tag = word.polarity
+                utf8_units = word #if isinstance(word, unicode) else word.decode('utf8')
+                start_pos = self.origin_text.find(utf8_units, end_pos)
+                end_pos = start_pos + len(utf8_units)
+                if tag:
+                    if self.dict_tags[tag] in self.set_tags:
+                        yield {'match': {'start_match': start_pos,
+                                         'length_match': len(utf8_units),
+                                         'word': utf8_units},
+                               'tag': self.dict_tags[tag]}
+            except:
+                print(get_error())
+
 # class EncodingPredictEntity(object):
 #     def __init__(self, matches, origin_text):
 #         self.matches = matches

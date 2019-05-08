@@ -247,7 +247,7 @@ def annotation_stanford(data, language, settings={}):
         'part_of_speech': getPOSTaggerAnnotator,
     }
     #annotation = Annotation(data)
-    annotation = Annotation(jString(data))  #SIDE
+    annotation = Annotation(jString(data))  #SIDE(NO DATA WITHOUT IT)
     getTokenizerAnnotator(language).annotate(annotation)
     getWordsToSentencesAnnotator(language).annotate(annotation)
     # getPOSTaggerAnnotator(language).annotate(annotation)
