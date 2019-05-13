@@ -4,7 +4,6 @@ num2words
 psutil
 trans
 unidecode
-jTransliterate
 boto3
 boto
 pypinyin
