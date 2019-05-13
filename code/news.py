@@ -173,19 +173,19 @@ class NewsCollector:
 
         return self.db_history_news
 
-    def get_tags(self, text, language):
-        entities = add_standford_default()
-      #   entities = add_polyglot_default()
-      #   result = predict_entity_polyglot(
-      #       entities,
-      #       text,
-      #       language)
-        result = predict_entity_stanford_default(
-        #result = predict_entity_stanford(
-            entities,
-            text,
-            language)
-        return result
+    # def get_tags(self, text, language):
+    #     entities = add_standford_default()
+    #   #   entities = add_polyglot_default()
+    #   #   result = predict_entity_polyglot(
+    #   #       entities,
+    #   #       text,
+    #   #       language)
+    #     result = predict_entity_stanford_default(
+    #     #result = predict_entity_stanford(
+    #         entities,
+    #         text,
+    #         language)
+    #     return result
 
     # def get_articles(self, q):
     #     articles, errors = get_everything(q)
@@ -258,6 +258,20 @@ class NewsCollector:
     def write_history_sources_from_db(self, data):
         self.db['sources'].insert_one(data)
 
+
+def get_tags(text, language):
+    entities = add_standford_default()
+  #   entities = add_polyglot_default()
+  #   result = predict_entity_polyglot(
+  #       entities,
+  #       text,
+  #       language)
+    result = predict_entity_stanford_default(
+    #result = predict_entity_stanford(
+        entities,
+        text,
+        language)
+    return result
 
 def get_top_headliners(q):
     """

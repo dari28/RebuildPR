@@ -13,7 +13,7 @@ from polyglot.downloader import downloader
 #from lib.server_tuning import models_dict
 import json
 from rest_framework.decorators import api_view
-from news import NewsCollector
+from news import NewsCollector, get_tags
 # import tasks
 # from lib import check_config
 # from lib import import_export
@@ -129,9 +129,10 @@ def get_article_list(request):
 def get_tag_list(request):
     #data = json.loads(request.data['_content'])['text']
     data = request.data['text']
-    nc = NewsCollector()
+    #nc = NewsCollector()
     #tags = nc.get_tags(data, 'en', classifier_dict=models_dict)
-    tags = nc.get_tags(data, 'en')
+    #tags = nc.get_tags(data, 'en')
+    tags = get_tags(data, 'en')
     results = {'status': True, 'response': {'tags': tags}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
