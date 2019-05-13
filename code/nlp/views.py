@@ -28,8 +28,9 @@ from lib.json_encoder import JSONEncoderHttp
 # from text_to_speech import text_to_speech_module
 from datetime import datetime, timedelta
 
+
 @api_view(['POST'])
-def test_work(request):
+def test_exception_work(request):
     """
     List all snippets, or create a new snippet.
     """
@@ -42,7 +43,14 @@ def test_work(request):
     #     raise EnvironmentError(
     #         'Invalid input format! An example of how it should be: ["Sample1", "Sample2", ...]'.format())
     raise EnvironmentError("My error")
-    results = {'status': True, 'response': "IT Works", 'error': {}}
+
+
+@api_view(['POST'])
+def test_work(request):
+    """
+    List all snippets, or create a new snippet.
+    """
+    results = {'status': True, 'response': 'IT Works', 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
@@ -93,8 +101,12 @@ def update_article_list_from_server(request):
     mongodb = mongo.MongoConnection()
     print("mongo create")
     inserted_ids, deleted_ids = mongodb.update_article_list_from_server(params)
-    results = {'status': True, 'response': {'inserted_ids': inserted_ids, 'deleted_ids': deleted_ids}, 'error': {}}
-    print(results)
+    print(inserted_ids)
+    print(deleted_ids)
+   # results = {'status': True, 'response': {'inserted_ids': inserted_ids, 'deleted_ids': deleted_ids}, 'error': {}}
+   # print(results)
+    results = {'status': True, 'response': {'inserted_ids': [ObjectId('5cd96025daba692222a9255e'), ObjectId('5cd96025daba692222a9255f'), ObjectId('5cd96025daba692222a92560'), ObjectId('5cd96025daba692222a92561'), ObjectId('5cd96025daba692222a92562'), ObjectId('5cd96025daba692222a92563'), ObjectId('5cd96025daba692222a92564'), ObjectId('5cd96025daba692222a92565'), ObjectId('5cd96025daba692222a92566'), ObjectId('5cd96025daba692222a92567'), ObjectId('5cd96025daba692222a92568'), ObjectId('5cd96025daba692222a92569'), ObjectId('5cd96025daba692222a9256a'), ObjectId('5cd96025daba692222a9256b'), ObjectId('5cd96025daba692222a9256c'), ObjectId('5cd96025daba692222a9256d'), ObjectId('5cd96025daba692222a9256e'), ObjectId('5cd96025daba692222a9256f'), ObjectId('5cd96025daba692222a92570'), ObjectId('5cd96025daba692222a92571')], 'deleted_ids': []}, 'error': {}}
+
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
