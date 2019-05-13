@@ -6,18 +6,14 @@ from bson import ObjectId
 from rest_framework.renderers import JSONRenderer
 from rest_framework.utils import encoders
 from django.core.serializers.json import DjangoJSONEncoder
-#from django.utils.text import force_text
 
 class JSONEncoder(json.JSONEncoder):
     """JSONEncoder for import/export model"""
     def default(self, o):
-        print(o)
         if isinstance(o, ObjectId):
-            #return str(o)
-            return force_text('%s' % (o))
+            return str(o)
         if isinstance(o, datetime):
-            #return str(o)
-            return force_text('%s' % (o))
+            return str(o)
         if isinstance(o, numpy.integer):
             return int(o)
         return json.JSONEncoder.default(self, o)
@@ -28,8 +24,7 @@ class JSONEncoderHttp(DjangoJSONEncoder):
     def default(self, o):
         print(o)
         if isinstance(o, ObjectId):
-            #return str(o)
-            return force_text('%s' % (o))
+            return str(o)
         if isinstance(o, numpy.integer):
             return int(o)
         return super(JSONEncoderHttp, self).default(o)
@@ -40,8 +35,7 @@ class JSONEncoderRender(encoders.JSONEncoder):
     def default(self, o):
         print(o)
         if isinstance(o, ObjectId):
-            #return str(o)
-            return force_text('%s' % (o))
+            return str(o)
         if isinstance(o, numpy.integer):
             return int(o)
         return encoders.JSONEncoder.default(self, o)
@@ -50,5 +44,3 @@ class JSONEncoderRender(encoders.JSONEncoder):
 class JSONRender(JSONRenderer):
     """JSONRender for response views"""
     encoder_class = JSONEncoderRender
-
-
