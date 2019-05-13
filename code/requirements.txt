@@ -17,7 +17,7 @@ ijson
 numpy==1.9.2
 pandas==0.16.0
 html5lib
-Django
+Django = 1.11.20
 django-background-tasks
 django-compat
 djangorestframework
