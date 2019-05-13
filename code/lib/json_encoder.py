@@ -11,6 +11,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 class JSONEncoder(json.JSONEncoder):
     """JSONEncoder for import/export model"""
     def default(self, o):
+        print(o)
         if isinstance(o, ObjectId):
             #return str(o)
             return force_text('%s' % (o))
@@ -25,6 +26,7 @@ class JSONEncoder(json.JSONEncoder):
 class JSONEncoderHttp(DjangoJSONEncoder):
     """JSONEncoder for custom JSONRender """
     def default(self, o):
+        print(o)
         if isinstance(o, ObjectId):
             #return str(o)
             return force_text('%s' % (o))
@@ -36,6 +38,7 @@ class JSONEncoderHttp(DjangoJSONEncoder):
 class JSONEncoderRender(encoders.JSONEncoder):
     """JSONEncoder for custom JSONRender """
     def default(self, o):
+        print(o)
         if isinstance(o, ObjectId):
             #return str(o)
             return force_text('%s' % (o))
