@@ -12,6 +12,7 @@ from lib import tools, text
 from lib import stanford_module as stanford
 from nlp.config import STANFORD
 from install.install_default_model import add_polyglot_default
+from collections import defaultdict
 
 
 class NewsException(Exception):
@@ -174,18 +175,24 @@ class NewsCollector:
         return self.db_history_news
 
     def get_tags(self, text, language):
-        entities = add_standford_default()
-      #   entities = add_polyglot_default()
-      #   result = predict_entity_polyglot(
-      #       entities,
-      #       text,
-      #       language)
-        result = predict_entity_stanford_default(
-        #result = predict_entity_stanford(
-            entities,
+        entities2 = add_standford_default()
+        entities1 = add_polyglot_default()
+        result1 = predict_entity_polyglot(
+            entities1,
             text,
             language)
-        return result
+        result2 = predict_entity_stanford_default(
+        #result = predict_entity_stanford(
+            entities2,
+            text,
+            language)
+        results = (result1, result2)
+        super_dict = defaultdict(set)  # uses set to avoid duplicates
+
+        for d in results:
+            for k, v in d.items():
+                super_dict.setdefault(k, []).append(v)
+        return super_dict
 
     # def get_articles(self, q):
     #     articles, errors = get_everything(q)
