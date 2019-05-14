@@ -479,7 +479,7 @@ if __name__ == "__main__":
     #                 print(entity.tag, entity)
     #         print("*************END**********")
     #predict_entity_stanford_default({
-    result = nc.get_tags(test_article, classifier_dict, 'es')
+    result = get_tags(test_article, 'es')
     print(result)
     #########ADD struct for matching########
     result2 = list()

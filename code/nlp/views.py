@@ -34,14 +34,6 @@ def test_exception_work(request):
     """
     List all snippets, or create a new snippet.
     """
-    # data = request.data
-    # path_data_polyglot = POLIGLOT['path_polyglot_data']
-    # downloader.download_dir = path_data_polyglot
-    # load.polyglot_path = path_data_polyglot
-    # lang_list = []
-    # if not isinstance(data, list):
-    #     raise EnvironmentError(
-    #         'Invalid input format! An example of how it should be: ["Sample1", "Sample2", ...]'.format())
     raise EnvironmentError("My error")
 
 
@@ -95,17 +87,10 @@ def update_source_list_from_server(request):
 
 @api_view(['POST'])
 def update_article_list_from_server(request):
-    print("update_article_list_from_server start")
     params = request.data
-    print("request.data")
     mongodb = mongo.MongoConnection()
-    print("mongo create")
     inserted_ids, deleted_ids = mongodb.update_article_list_from_server(params)
-    print(inserted_ids)
-    print(deleted_ids)
-   # results = {'status': True, 'response': {'inserted_ids': inserted_ids, 'deleted_ids': deleted_ids}, 'error': {}}
-   # print(results)
-    results = {'status': True, 'response': {'inserted_ids': [ObjectId('5cd96025daba692222a9255e'), ObjectId('5cd96025daba692222a9255f'), ObjectId('5cd96025daba692222a92560'), ObjectId('5cd96025daba692222a92561'), ObjectId('5cd96025daba692222a92562'), ObjectId('5cd96025daba692222a92563'), ObjectId('5cd96025daba692222a92564'), ObjectId('5cd96025daba692222a92565'), ObjectId('5cd96025daba692222a92566'), ObjectId('5cd96025daba692222a92567'), ObjectId('5cd96025daba692222a92568'), ObjectId('5cd96025daba692222a92569'), ObjectId('5cd96025daba692222a9256a'), ObjectId('5cd96025daba692222a9256b'), ObjectId('5cd96025daba692222a9256c'), ObjectId('5cd96025daba692222a9256d'), ObjectId('5cd96025daba692222a9256e'), ObjectId('5cd96025daba692222a9256f'), ObjectId('5cd96025daba692222a92570'), ObjectId('5cd96025daba692222a92571')], 'deleted_ids': []}, 'error': {}}
+    results = {'status': True, 'response': {'inserted_ids': inserted_ids, 'deleted_ids': deleted_ids}, 'error': {}}
 
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -114,9 +99,7 @@ def update_article_list_from_server(request):
 def get_article_list(request):
     params = request.data
 
-    case_sensitive = True
-    if 'case_sensitive' in request.data:
-        case_sensitive = params['case_sensitive']
+    case_sensitive = True if 'case_sensitive' not in request.data else params['case_sensitive']
 
     ans = []
 
@@ -161,7 +144,6 @@ def get_phrase_list(request):
 
 @api_view(['POST'])
 def update_phrase_list(request):
-    #phrases = json.loads(request.data['_content'])
     phrases = request.data
     #nc = NewsCollector()
     #sources = nc.update_phrases()
@@ -173,34 +155,28 @@ def update_phrase_list(request):
 
 @api_view(['POST'])
 def add_phrase_list(request):
-    #phrases = json.loads(request.data['_content'])
     try:
         phrases = request.data['phrases']
     except Exception as ex:
         return JsonResponse({'status': False, 'response': [], 'error': ex}, encoder=JSONEncoderHttp)
-   # nc = NewsCollector()
-   # sources = nc.update_phrases()
     mongodb = mongo.MongoConnection()
     response = mongodb.add_phrases(phrases=phrases)
     results = {'status': True, 'response': response, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
+
 @api_view(['POST'])
 def delete_phrase_list(request):
-    #phrases = json.loads(request.data['_content'])
     phrases = request.data
-   # nc = NewsCollector()
-   # sources = nc.update_phrases()
     mongodb = mongo.MongoConnection()
     response = mongodb.delete_phrases(phrases=phrases)
     results = {'status': True, 'response': response, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
+
 @api_view(['POST'])
 def delete_permanent_phrase_list(request):
     phrases = json.loads(request.data['_content'])
-   # nc = NewsCollector()
-   # sources = nc.update_phrases()
     mongodb = mongo.MongoConnection()
     response = mongodb.delete_permanent_phrases(phrases=phrases)
     results = {'status': True, 'response': response, 'error': {}}
