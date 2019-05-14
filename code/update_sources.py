@@ -1,5 +1,11 @@
 import os
 import sys
-import news
+import logging
+from lib import mongo_connection as mongo
 
-news.read_history_sources()
+mongodb = mongo.MongoConnection()
+inserted_ids, deleted_ids = mongodb.update_source_list_from_server()
+logger = logging.getLogger()
+logger.info('SCHEDULAR UPDATE SOURCES:\n **************************')
+logger.info('\n {} \n {}'.format(inserted_ids, deleted_ids))
+
