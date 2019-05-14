@@ -261,7 +261,7 @@ class NewsCollector:
         self.db['sources'].insert_one(data)
 
 
-def get_tags(self, text, language):
+def get_tags(text, language):
     entities1 = add_polyglot_default()
     result1 = predict_entity_polyglot(
         entities1,

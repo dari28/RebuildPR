@@ -112,22 +112,14 @@ def update_article_list_from_server(request):
 
 @api_view(['POST'])
 def get_article_list(request):
-    #data = json.loads(request.data['_content'])['q']
     params = request.data
-    #data = params['q']
-    #start = request.data['start']
-    #end = request.data['start']
+
     case_sensitive = True
     if 'case_sensitive' in request.data:
         case_sensitive = params['case_sensitive']
 
     ans = []
-   # nc = NewsCollector()
-   #  for q in data:
-   #      if not case_sensitive:
-   #          q = str.lower(q)
-   #      sources = nc.get_articles(q)
-   #      ans.append({'q': q, 'sources': sources})
+
     mongodb = mongo.MongoConnection()
     q_article = mongodb.q_article.find_one({'q': params['q']})
     if not q_article or 'date' not in q_article or q_article['date'] < (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d"):
@@ -143,12 +135,11 @@ def get_article_list(request):
 
 @api_view(['POST'])
 def get_tag_list(request):
-    #data = json.loads(request.data['_content'])['text']
     data = request.data['text']
-    #nc = NewsCollector()
-    #tags = nc.get_tags(data, 'en', classifier_dict=models_dict)
-    #tags = nc.get_tags(data, 'en')
-    tags = get_tags(data, 'en')
+    language = 'en'
+    if 'language' in request.data:
+        language = request.data['language']
+    tags = get_tags(data, language)
     results = {'status': True, 'response': {'tags': tags}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -159,12 +150,9 @@ def get_tag_list(request):
 def get_phrase_list(request):
     params = None
     try:
-        #params = json.loads(request.data['_content'])
         params = request.data
     except:
         pass
-    #nc = NewsCollector()
-    #sources = nc.get_phrases()
     mongodb = mongo.MongoConnection()
     response = mongodb.get_phrases(params=params)
     results = {'status': True, 'response': response, 'error': {}}
