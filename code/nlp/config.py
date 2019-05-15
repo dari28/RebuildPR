@@ -216,6 +216,7 @@ MONGO = dict(
     q_article_collection='q_article',
     phrase_collection='phrase',
     source_collection='source',
+    entity_collection='entity'
     # entity_collection='entity',
     # intent_collection='intent',
 )

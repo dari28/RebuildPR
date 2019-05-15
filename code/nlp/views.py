@@ -181,3 +181,13 @@ def delete_permanent_phrase_list(request):
     response = mongodb.delete_permanent_phrases(phrases=phrases)
     results = {'status': True, 'response': response, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def train_article(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    response = mongodb.train_article(params=params)
+    results = {'status': True, 'response': response, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+

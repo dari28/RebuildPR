@@ -11,6 +11,7 @@ from nlp.config import MONGO#, TYPE_WITHOUT_FILE, SEND_POST_URL, ADMIN_USER, DEF
 from lib import tools
 import hashlib
 import json
+from news import get_tags
 
 
 class MongoConnection(object):
@@ -25,6 +26,7 @@ class MongoConnection(object):
         self.source = self.mongo_db[config['source_collection']]
         self.article = self.mongo_db[config['article_collection']]
         self.q_article = self.mongo_db[config['q_article_collection']]
+        self.entity = self.mongo_db[config['entity_collection']]
 
     def get_country_list(self):
         country_list = []
@@ -229,3 +231,25 @@ class MongoConnection(object):
 
         return list(self.phrase.find({'deleted': deleted}))
 
+    # ***************************** Train articles ******************************** #
+
+    def train_article(self, params):
+        if 'article_id' not in params:
+            raise EnvironmentError('Request must contain \'article_id\' field')
+        article_id = params['article_id']
+        if not isinstance(article_id, ObjectId):
+            article_id = ObjectId(article_id)
+
+        article = self.source.find_one({'deleted': False, 'id': article_id})
+        tags = get_tags(article['content'], 'en')
+        inserted_id = self.entity.insert_one(
+            {
+                'article_id': article_id,
+                'model': 'default_stanford',
+                'tags': tags,
+                'trained': True,
+                'deleted': False
+            },
+            # upsert=True
+        ).inserted_id
+        return inserted_id
