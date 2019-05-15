@@ -9,7 +9,7 @@ print("SCHEDULAR UPDATE ARTICLES STARTED")
 logger = logging.getLogger()
 logger.info('SCHEDULAR ARTICLES SOURCES:\n **************************')
 for q in phrases:
-    inserted_ids, deleted_ids = mongodb.update_article_list_from_server(q)
+    inserted_ids, deleted_ids = mongodb.update_article_list_from_server({'q': q})
     logger.info('{}\n **************************'.format(q))
 
 print("SCHEDULAR UPDATE ARTICLES FINISHED")
