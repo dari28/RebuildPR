@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-pwd > /home/vnc/file
+#pwd > /home/vnc/file
 #cd /home/vnc/Desktop/RebuildPR/code
-cd ~/Desktop/RebiuldPR/code
-/usr/bin/python update_sources.py
+source activate /home/developer/.pyenv/bin
+cd /home/developer/Desktop/RebiuldPR/code
+
+
+/home/developer/.pyenv/shims/python3.6 update_sources.py
