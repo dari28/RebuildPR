@@ -57,8 +57,8 @@ def get_pr_city_list():
     pr_city = soup.findAll('a', title=re.compile('Population Demographics and Statistics'))
     for city in pr_city:
         ct = dict()
-        ct['country'] = 'USA'
-        ct['state'] = 'Puerto Rico'
+        ct['country'] = '5cdc1484cde53353db41d8cd'
+        ct['state'] = '5cdcf40dcde5330f034fccc4'
         ct['name'] = city.get_text()
         pr_city_list.append(ct)
     return pr_city_list
@@ -80,7 +80,7 @@ def get_us_state_list():
                 description.append(d)
         description = remove(description)
         #!!!ATTENTION!!! USA change to ID
-        st['country_id'] = 'USA'
+        st['country_id'] = '5cdc1484cde53353db41d8cd'
         st['name'] = state
         st['description'] = description
         US_states_list.append(st)
