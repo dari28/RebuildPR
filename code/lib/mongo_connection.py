@@ -133,7 +133,9 @@ class MongoConnection(object):
                 article['source']['country'] = source['country']
             inserted_ids.append(self.article.insert_one(article).inserted_id)
 
-        deleted_ids = [x['_id'] for x in list(self.article.find({"hash": {"$nin": new_hash_list}}))]
+        q_article = self.q_article.find_one({'q': q})
+        current_article_ids = q_article['articles']
+        deleted_ids = [x['_id'] for x in list(self.article.find({"hash": {"$nin": new_hash_list}, '_id': {'$in': current_article_ids}}))]
         self.delete_source_list_by_ids(deleted_ids)
 
         existing_article_ids = [x['_id'] for x in list(self.article.find({"hash": {"$in": new_hash_list}}))]
