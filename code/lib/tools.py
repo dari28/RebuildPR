@@ -26,8 +26,8 @@ def sample_update_matches(back_map, origin_text, matches):
     utf_origin_text = origin_text #if isinstance(origin_text, unicode) else origin_text.decode('utf-8')
     for match in matches:
         start_match = match['start_match']
-        match['start_match'] = back_map[start_match]
-        match['length_match'] = back_map[start_match + match['length_match'] - 1] - match['start_match'] + 1
+        match['start_match'] = int(back_map[start_match])
+        match['length_match'] = int(back_map[start_match + match['length_match'] - 1] - match['start_match'] + 1)
         match['word'] = utf_origin_text[match['start_match']: match['start_match'] + match['length_match']]
     return matches
 
