@@ -42,5 +42,3 @@ class JSONEncoderRender(encoders.JSONEncoder):
 class JSONRender(JSONRenderer):
     """JSONRender for response views"""
     encoder_class = JSONEncoderRender
-
-

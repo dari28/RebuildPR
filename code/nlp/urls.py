@@ -4,6 +4,7 @@ from lib.server_tuning import execution_at_startup
 
 urlpatterns = [
     url(r'^test_work/?$', views.test_work),
+    url(r'^test_exception_work/?$', views.test_exception_work),
 
     url(r'^get_country_list/?$', views.get_country_list),
     url(r'^get_language_list/?$', views.get_language_list),
@@ -24,6 +25,8 @@ urlpatterns = [
     url(r'^add_phrase_list/?$', views.add_phrase_list),
     url(r'^delete_phrase_list/?$', views.delete_phrase_list),
     url(r'^delete_permanent_phrase_list/?$', views.delete_permanent_phrase_list),
+
+    url(r'^train_article/?$', views.train_article)
 ]
 
 execution_at_startup()

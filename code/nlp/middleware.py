@@ -21,7 +21,7 @@ class LoggingMiddleware(MiddlewareMixin):
 
                 logger.debug('"Params": {}'.format(json.dumps(request.POST)))
             else:
-                nr = request.body.decode("utf-8") if isinstance(request.body, bytes) else request
+                nr = request.body.decode("utf-8") if isinstance(request.body, bytes) else request.body
                 logger.debug('"Params": {}'.format(json.dumps(nr)))
 
     def process_response(self, request, response):

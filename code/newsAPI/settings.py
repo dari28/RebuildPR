@@ -50,16 +50,22 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'nlp.middleware.LoggingMiddleware',
-    'pyinstrument.middleware.ProfilerMiddleware',
+   #'django.contrib.auth.middleware.AuthenticationMiddleware',
+   #'django.contrib.messages.middleware.MessageMiddleware',
 ]
+
+if DEBUG:
+    MIDDLEWARE.append([
+        'django.middleware.security.SecurityMiddleware',
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'django.middleware.common.CommonMiddleware',
+        'django.middleware.csrf.CsrfViewMiddleware',
+ #       'django.contrib.auth.middleware.AuthenticationMiddleware',
+#        'django.contrib.messages.middleware.MessageMiddleware',
+        'django.middleware.clickjacking.XFrameOptionsMiddleware',
+        'pyinstrument.middleware.ProfilerMiddleware'
+    ])
 
 ROOT_URLCONF = 'newsAPI.urls'
 

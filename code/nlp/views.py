@@ -28,21 +28,21 @@ from lib.json_encoder import JSONEncoderHttp
 # from text_to_speech import text_to_speech_module
 from datetime import datetime, timedelta
 
+
+@api_view(['POST'])
+def test_exception_work(request):
+    """
+    List all snippets, or create a new snippet.
+    """
+    raise EnvironmentError("My error")
+
+
 @api_view(['POST'])
 def test_work(request):
     """
     List all snippets, or create a new snippet.
     """
-    # data = request.data
-    # path_data_polyglot = POLIGLOT['path_polyglot_data']
-    # downloader.download_dir = path_data_polyglot
-    # load.polyglot_path = path_data_polyglot
-    # lang_list = []
-    # if not isinstance(data, list):
-    #     raise EnvironmentError(
-    #         'Invalid input format! An example of how it should be: ["Sample1", "Sample2", ...]'.format())
-    raise EnvironmentError("My error")
-    results = {'status': True, 'response': "IT Works", 'error': {}}
+    results = {'status': True, 'response': 'IT Works', 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
@@ -87,35 +87,22 @@ def update_source_list_from_server(request):
 
 @api_view(['POST'])
 def update_article_list_from_server(request):
-    print("update_article_list_from_server start")
     params = request.data
-    print("request.data")
     mongodb = mongo.MongoConnection()
-    print("mongo create")
     inserted_ids, deleted_ids = mongodb.update_article_list_from_server(params)
     results = {'status': True, 'response': {'inserted_ids': inserted_ids, 'deleted_ids': deleted_ids}, 'error': {}}
-    print(results)
+
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
 @api_view(['POST'])
 def get_article_list(request):
-    #data = json.loads(request.data['_content'])['q']
     params = request.data
-    #data = params['q']
-    #start = request.data['start']
-    #end = request.data['start']
-    case_sensitive = True
-    if 'case_sensitive' in request.data:
-        case_sensitive = params['case_sensitive']
+
+    case_sensitive = True if 'case_sensitive' not in request.data else params['case_sensitive']
 
     ans = []
-   # nc = NewsCollector()
-   #  for q in data:
-   #      if not case_sensitive:
-   #          q = str.lower(q)
-   #      sources = nc.get_articles(q)
-   #      ans.append({'q': q, 'sources': sources})
+
     mongodb = mongo.MongoConnection()
     q_article = mongodb.q_article.find_one({'q': params['q']})
     if not q_article or 'date' not in q_article or q_article['date'] < (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d"):
@@ -131,12 +118,11 @@ def get_article_list(request):
 
 @api_view(['POST'])
 def get_tag_list(request):
-    #data = json.loads(request.data['_content'])['text']
     data = request.data['text']
-    #nc = NewsCollector()
-    #tags = nc.get_tags(data, 'en', classifier_dict=models_dict)
-    #tags = nc.get_tags(data, 'en')
-    tags = get_tags(data, 'en')
+    language = 'en'
+    if 'language' in request.data:
+        language = request.data['language']
+    tags = get_tags(data, language)
     results = {'status': True, 'response': {'tags': tags}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -147,12 +133,9 @@ def get_tag_list(request):
 def get_phrase_list(request):
     params = None
     try:
-        #params = json.loads(request.data['_content'])
         params = request.data
     except:
         pass
-    #nc = NewsCollector()
-    #sources = nc.get_phrases()
     mongodb = mongo.MongoConnection()
     response = mongodb.get_phrases(params=params)
     results = {'status': True, 'response': response, 'error': {}}
@@ -161,7 +144,6 @@ def get_phrase_list(request):
 
 @api_view(['POST'])
 def update_phrase_list(request):
-    #phrases = json.loads(request.data['_content'])
     phrases = request.data
     #nc = NewsCollector()
     #sources = nc.update_phrases()
@@ -173,34 +155,28 @@ def update_phrase_list(request):
 
 @api_view(['POST'])
 def add_phrase_list(request):
-    #phrases = json.loads(request.data['_content'])
     try:
         phrases = request.data['phrases']
     except Exception as ex:
         return JsonResponse({'status': False, 'response': [], 'error': ex}, encoder=JSONEncoderHttp)
-   # nc = NewsCollector()
-   # sources = nc.update_phrases()
     mongodb = mongo.MongoConnection()
     response = mongodb.add_phrases(phrases=phrases)
     results = {'status': True, 'response': response, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
+
 @api_view(['POST'])
 def delete_phrase_list(request):
-    #phrases = json.loads(request.data['_content'])
     phrases = request.data
-   # nc = NewsCollector()
-   # sources = nc.update_phrases()
     mongodb = mongo.MongoConnection()
     response = mongodb.delete_phrases(phrases=phrases)
     results = {'status': True, 'response': response, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
+
 @api_view(['POST'])
 def delete_permanent_phrase_list(request):
     phrases = json.loads(request.data['_content'])
-   # nc = NewsCollector()
-   # sources = nc.update_phrases()
     mongodb = mongo.MongoConnection()
     response = mongodb.delete_permanent_phrases(phrases=phrases)
     results = {'status': True, 'response': response, 'error': {}}
@@ -226,3 +202,13 @@ def update_pr_city_list(request):
     response = mongodb.update_pr_city_list()
     results = {'status': True, 'response': response, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
+
+@api_view(['POST'])
+def train_article(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    response = mongodb.train_article(params=params)
+    results = {'status': True, 'response': response, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+

@@ -12,6 +12,7 @@ from lib import tools
 import hashlib
 import json
 from wiki_parser import get_us_state_list, get_country_names_list, get_pr_city_list
+from news import get_tags
 
 
 class MongoConnection(object):
@@ -29,6 +30,7 @@ class MongoConnection(object):
         self.country = self.mongo_db[config['country_collection']]
         self.state = self.mongo_db[config['state_collection']]
         self.pr_city = self.mongo_db[config['pr_city_collection']]
+        self.entity = self.mongo_db[config['entity_collection']]
 
     def get_country_list(self):
         country_list = []
@@ -249,3 +251,28 @@ class MongoConnection(object):
 
         return list(self.phrase.find({'deleted': deleted}))
 
+    # ***************************** Train articles ******************************** #
+
+    def train_article(self, params):
+        language = 'en'
+        if 'article_id' not in params:
+            raise EnvironmentError('Request must contain \'article_id\' field')
+        article_id = params['article_id']
+        if not isinstance(article_id, ObjectId):
+            article_id = ObjectId(article_id)
+
+        article = self.source.find_one({'deleted': False, '_id': article_id})
+        if not article:
+            return None
+        tags = get_tags(article['description'], language)
+        inserted_id = self.entity.insert_one(
+            {
+                'article_id': str(article_id),
+                'model': 'default_stanford',
+                'tags': tags,
+                'trained': True,
+                'deleted': False
+            },
+            # upsert=True
+        ).inserted_id
+        return inserted_id

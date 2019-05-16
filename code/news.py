@@ -13,7 +13,7 @@ from lib import stanford_module as stanford
 from nlp.config import STANFORD
 from install.install_default_model import add_polyglot_default
 from collections import defaultdict
-
+import numpy as np
 
 class NewsException(Exception):
     pass
@@ -261,7 +261,7 @@ class NewsCollector:
         self.db['sources'].insert_one(data)
 
 
-def get_tags(self, text, language):
+def get_tags(text, language):
     entities1 = add_polyglot_default()
     result1 = predict_entity_polyglot(
         entities1,
@@ -272,13 +272,34 @@ def get_tags(self, text, language):
         entities2,
         text,
         language)
-    results = (result1, result2)
-    super_dict = defaultdict(set)  # uses set to avoid duplicates
+   # results = (result1, result2)
+    union_dict = dict()
+    for r1 in result1:
+        if result1[r1]:
+            v = result1[r1]
+            if isinstance(v, np.int64):
+                v = int(v)
+            if r1 in union_dict:
+                union_dict[r1].append(v)
+            else:
+                union_dict[r1] = list(v)
+    for r2 in result2:
+        if result2[r2]:
+            v = result2[r2]
+            if isinstance(v, np.int64):
+                v = int(v)
+            if r2 in union_dict:
+                union_dict[r2].append(v)
+            else:
+                union_dict[r2] = list(v)
 
-    for d in results:
-        for k, v in d.items():
-            super_dict.setdefault(k, []).append(v)
-    return super_dict
+    return union_dict
+    # super_dict = defaultdict(set)  # uses set to avoid duplicates
+    #
+    # for d in results:
+    #     for k, v in d.items():
+    #         super_dict.setdefault(k, []).append(v)
+    # return super_dict
 
 
 def get_top_headliners(q):
@@ -479,7 +500,7 @@ if __name__ == "__main__":
     #                 print(entity.tag, entity)
     #         print("*************END**********")
     #predict_entity_stanford_default({
-    result = nc.get_tags(test_article, classifier_dict, 'es')
+    result = get_tags(test_article, 'es')
     print(result)
     #########ADD struct for matching########
     result2 = list()
