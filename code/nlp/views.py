@@ -182,6 +182,26 @@ def delete_permanent_phrase_list(request):
     results = {'status': True, 'response': response, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
+@api_view(['POST'])
+def update_country_list(request):
+    mongodb = mongo.MongoConnection()
+    response = mongodb.update_country_list()
+    results = {'status': True, 'response': response, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+@api_view(['POST'])
+def update_state_list(request):
+    mongodb = mongo.MongoConnection()
+    response = mongodb.update_state_list()
+    results = {'status': True, 'response': response, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+@api_view(['POST'])
+def update_pr_city_list(request):
+    mongodb = mongo.MongoConnection()
+    response = mongodb.update_pr_city_list()
+    results = {'status': True, 'response': response, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
 
 @api_view(['POST'])
 def train_article(request):
@@ -190,4 +210,5 @@ def train_article(request):
     response = mongodb.train_article(params=params)
     results = {'status': True, 'response': response, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
+
 

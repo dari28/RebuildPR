@@ -11,6 +11,7 @@ from nlp.config import MONGO#, TYPE_WITHOUT_FILE, SEND_POST_URL, ADMIN_USER, DEF
 from lib import tools
 import hashlib
 import json
+from wiki_parser import get_us_state_list, get_country_names_list, get_pr_city_list
 from news import get_tags
 
 
@@ -26,6 +27,9 @@ class MongoConnection(object):
         self.source = self.mongo_db[config['source_collection']]
         self.article = self.mongo_db[config['article_collection']]
         self.q_article = self.mongo_db[config['q_article_collection']]
+        self.country = self.mongo_db[config['country_collection']]
+        self.state = self.mongo_db[config['state_collection']]
+        self.pr_city = self.mongo_db[config['pr_city_collection']]
         self.entity = self.mongo_db[config['entity_collection']]
 
     def get_country_list(self):
@@ -63,6 +67,22 @@ class MongoConnection(object):
 
         sources = list(self.source.find(search_param))
         return sources
+
+    def update_country_list(self):
+        country_list = get_country_names_list()
+        self.country.insert(country_list)
+        return country_list
+
+    def update_state_list(self):
+        states_list = get_us_state_list()
+        self.state.insert(states_list)
+        return states_list
+
+    def update_pr_city_list(self):
+        pr_city_list = get_pr_city_list()
+        self.pr_city.insert(pr_city_list)
+        return pr_city_list
+
 
     def update_source_list_from_server(self):
         # TO_DO: Refactor
