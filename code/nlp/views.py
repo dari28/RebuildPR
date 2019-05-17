@@ -217,8 +217,9 @@ def train_article(request):
 
 
 @api_view(['POST'])
-def train_untrained_article(request):
+def train_untrained_articles(request):
     mongodb = mongo.MongoConnection()
-    response = mongodb.train_untrained_article()
+    response = mongodb.train_untrained_articles()
     results = {'status': True, 'response': response, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
+

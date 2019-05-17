@@ -13,5 +13,5 @@ django.setup()
 from lib import mongo_connection as mongo
 mongodb = mongo.MongoConnection()
 print('train_untrained_article STARTED')
-mongodb.train_untrained_article()
+mongodb.train_untrained_articles()
 print('train_untrained_article FINISHED')

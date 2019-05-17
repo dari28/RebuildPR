@@ -294,7 +294,7 @@ class MongoConnection(object):
         ).inserted_id
         return inserted_id
 
-    def train_untrained_article(self):
+    def train_untrained_articles(self):
         import logging
         logger = logging.getLogger()
         logger.info('train_untrained_article START\n **************************')
