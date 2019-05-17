@@ -330,14 +330,12 @@ class MongoConnection(object):
         for article in ent:
             a_tags = article['tags']
             n = 0
-            for a_t in a_tags:
+            for a_t_k, a_t_v in a_tags.items():
                 for t in tags:
-                    if t == a_t:
-                        n += 1
+                    for t_k, t_v in t.items():
+                        if (t_k == a_t_k) & (t_v ==a_t_v[0]['word']):
+                            n += 1
             if n > 0:
-                art = dict()
-                art['tags'] = a_tags
-                art['article'] = article
-                list_to_show.append(art)
+                list_to_show.append(article)
         return list_to_show
     
