@@ -20,8 +20,10 @@ def predict_entity_stanford_default(entities, data, language=None):
     """"""
     #"data" MUST BE str type(utf-8 encoding).
     entity_dict = tools.sort_model(entities, 'model')
-
-    data = data if isinstance(data, str) else data.encode('utf8')
+    try:
+        data = data.encode('utf8')
+    except:
+        pass
     #data_predict, back_map = tools.adaptiv_remove_tab(data) #SIDE DELETE
     data_predict = data #SIDE ADD
 

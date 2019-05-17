@@ -155,10 +155,10 @@ class MongoConnection(object):
 
         q_article = self.q_article.find_one({'q': q})
         current_article_ids = q_article['articles']
-        deleted_ids = [x['_id'] for x in list(self.article.find({"hash": {"$nin": new_hash_list}, '_id': {'$in': current_article_ids}}))]
-        self.delete_source_list_by_ids(deleted_ids)
+        deleted_ids = [x['_id'] for x in list(self.article.find({"hash": {"$nin": new_hash_list}, '_id': {'$in': current_article_ids}, 'deleted': False}))]
+        self.delete_article_list_by_ids(deleted_ids)
 
-        existing_article_ids = [x['_id'] for x in list(self.article.find({"hash": {"$in": new_hash_list}}))]
+        existing_article_ids = [x['_id'] for x in list(self.article.find({"hash": {"$in": new_hash_list}, 'deleted': False}))]
         self.q_article.update_one({'q': q},
                                  {'$set': {'articles': existing_article_ids},
                                   "$currentDate": {"lastModified": True}},
@@ -199,6 +199,16 @@ class MongoConnection(object):
         full_artilces = list(self.article.find(search_param))
         articles['articles'] = full_artilces
         return articles
+
+    def delete_article_list_by_ids(self, ids):
+        """Delete sources by the database"""
+        for id in ids:
+            self.article.update_one(
+                {'_id': ObjectId(id)},
+                {'$set': {'deleted': True}},
+                upsert=True
+            )
+        return ids
     # ***************************** Phrases ******************************** #
 
     def add_phrases(self, phrases):
@@ -266,7 +276,12 @@ class MongoConnection(object):
         article = self.source.find_one({'deleted': False, '_id': article_id})
         if not article:
             return None
-        tags = get_tags(article['description'], language)
+
+        if 'content' in article and article['content']:
+            tags = get_tags(article['content'], language)
+        else:
+            tags = get_tags(article['description'], language)
+
         inserted_id = self.entity.insert_one(
             {
                 'article_id': str(article_id),
@@ -278,3 +293,21 @@ class MongoConnection(object):
             # upsert=True
         ).inserted_id
         return inserted_id
+
+    def train_untrained_article(self):
+        import logging
+        logger = logging.getLogger()
+        logger.info('train_untrained_article START\n **************************')
+        print('train_untrained_article START')
+        articles = list(self.source.find({'deleted': False}))
+        article_ids = [x['_id'] for x in articles]
+        trained_articles = list(self.entity.find({'trained': True}))
+        trained_article_ids = [ObjectId(x['article_id']) for x in trained_articles]
+        untrained_ids = list(set(article_ids)-set(trained_article_ids))
+        logger.info('list of untrained article:\n {}'.format(untrained_ids))
+        for id in untrained_ids:
+            self.train_article({'article_id': id})
+            logger.info('article {} trained'.format(id))
+        logger.info('train_untrained_article FINISHED\n **************************')
+        print('train_untrained_article FINISHED')
+        return untrained_ids

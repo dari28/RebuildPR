@@ -26,7 +26,8 @@ urlpatterns = [
     url(r'^delete_phrase_list/?$', views.delete_phrase_list),
     url(r'^delete_permanent_phrase_list/?$', views.delete_permanent_phrase_list),
 
-    url(r'^train_article/?$', views.train_article)
+    url(r'^train_article/?$', views.train_article),
+    url(r'^train_untrained_article/?$', views.train_untrained_article),
 ]
 
 execution_at_startup()

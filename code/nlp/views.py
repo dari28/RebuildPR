@@ -105,8 +105,8 @@ def get_article_list(request):
 
     mongodb = mongo.MongoConnection()
     q_article = mongodb.q_article.find_one({'q': params['q']})
-    if not q_article or 'date' not in q_article or q_article['date'] < (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d"):
-        inserted_ids, deleted_ids = mongodb.update_article_list_from_server(params)
+   # if not q_article or 'date' not in q_article or q_article['date'] < (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d"):
+    #    inserted_ids, deleted_ids = mongodb.update_article_list_from_server(params)
     #articles = mongodb.get_article_list(params=params)
     articles = mongodb.get_q_article_list(params=params)
 
@@ -182,12 +182,14 @@ def delete_permanent_phrase_list(request):
     results = {'status': True, 'response': response, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
+
 @api_view(['POST'])
 def update_country_list(request):
     mongodb = mongo.MongoConnection()
     response = mongodb.update_country_list()
     results = {'status': True, 'response': response, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
+
 
 @api_view(['POST'])
 def update_state_list(request):
@@ -196,12 +198,14 @@ def update_state_list(request):
     results = {'status': True, 'response': response, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
+
 @api_view(['POST'])
 def update_pr_city_list(request):
     mongodb = mongo.MongoConnection()
     response = mongodb.update_pr_city_list()
     results = {'status': True, 'response': response, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
+
 
 @api_view(['POST'])
 def train_article(request):
@@ -212,3 +216,9 @@ def train_article(request):
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
+@api_view(['POST'])
+def train_untrained_article(request):
+    mongodb = mongo.MongoConnection()
+    response = mongodb.train_untrained_article()
+    results = {'status': True, 'response': response, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
