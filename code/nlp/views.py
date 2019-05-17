@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+#from __future__ import unicode_literals
 
 import datetime
 import subprocess
@@ -211,15 +211,23 @@ def update_pr_city_list(request):
 def train_article(request):
     params = request.data
     mongodb = mongo.MongoConnection()
-    response = mongodb.train_article(params=params)
-    results = {'status': True, 'response': response, 'error': {}}
+    inserted_id = mongodb.train_article(params=params)
+    results = {'status': True, 'response': {'inserted_id': inserted_id}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
 @api_view(['POST'])
 def train_untrained_articles(request):
     mongodb = mongo.MongoConnection()
-    response = mongodb.train_untrained_articles()
-    results = {'status': True, 'response': response, 'error': {}}
+    inserted_ids = mongodb.train_untrained_articles()
+    results = {'status': True, 'response': {'inserted_ids': inserted_ids}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
+
+@api_view(['POST'])
+def get_geoposition(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    geoposition = mongodb.get_geoposition(params)
+    results = {'status': True, 'response': {'geoposition': geoposition}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)

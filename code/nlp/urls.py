@@ -28,6 +28,8 @@ urlpatterns = [
 
     url(r'^train_article/?$', views.train_article),
     url(r'^train_untrained_articles/?$', views.train_untrained_articles),
+
+    url(r'^get_geoposition/?$', views.get_geoposition),
 ]
 
 execution_at_startup()

@@ -273,6 +273,9 @@ class MongoConnection(object):
         if not isinstance(article_id, ObjectId):
             article_id = ObjectId(article_id)
 
+        if self.entity.find_one({'trained': True, 'article_id': article_id}):
+            return None
+
         article = self.source.find_one({'deleted': False, '_id': article_id})
         if not article:
             return None
@@ -311,3 +314,12 @@ class MongoConnection(object):
         logger.info('train_untrained_article FINISHED\n **************************')
         print('train_untrained_article FINISHED')
         return untrained_ids
+
+    def get_geoposition(self, params):
+        if 'text' not in params:
+            raise EnvironmentError('Request must contain \'text\' field')
+        from geopy.geocoders import Nominatim
+        geolocator = Nominatim(user_agent="specify_your_app_name_here")
+        location = geolocator.geocode(params['text'])
+        return {'latitude': location.latitude, 'longitude': location.longitude}
+
