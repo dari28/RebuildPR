@@ -211,4 +211,11 @@ def train_article(request):
     results = {'status': True, 'response': response, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
+@api_view(['POST'])
+def show_article_list(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    response = mongodb.show_article_list(params=params)
+    results = {'status': True, 'response': response, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
 
