@@ -11,6 +11,7 @@ urlpatterns = [
     url(r'^update_country_list/?$', views.update_country_list),
     url(r'^update_state_list/?$', views.update_state_list),
     url(r'^update_pr_city_list/?$', views.update_pr_city_list),
+    url(r'^show_article_list/?$', views.show_article_list),
 
     url(r'^get_source_list/?$', views.get_source_list),
     url(r'^update_source_list_from_server/?$', views.update_source_list_from_server),

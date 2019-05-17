@@ -294,6 +294,7 @@ class MongoConnection(object):
         ).inserted_id
         return inserted_id
 
+
     def train_untrained_articles(self):
         import logging
         logger = logging.getLogger()
@@ -311,3 +312,32 @@ class MongoConnection(object):
         logger.info('train_untrained_article FINISHED\n **************************')
         print('train_untrained_article FINISHED')
         return untrained_ids
+
+    def show_article_list(self, params):
+        language = 'en'
+        if 'tags' not in params:
+            raise EnvironmentError('Request must contain \'tags\' field')
+        tags = params['tags']
+        # if not isinstance(article_id, ObjectId):
+        #     article_id = ObjectId(article_id)
+
+        # article = self.source.find_one({'deleted': False, '_id': article_id})
+        # if not article:
+        #     return None
+        # tags = get_tags(article['description'], language)
+        list_to_show = []
+        ent = self.entity.find()
+        for article in ent:
+            a_tags = article['tags']
+            n = 0
+            for a_t in a_tags:
+                for t in tags:
+                    if t == a_t:
+                        n += 1
+            if n > 0:
+                art = dict()
+                art['tags'] = a_tags
+                art['article'] = article
+                list_to_show.append(art)
+        return list_to_show
+    
