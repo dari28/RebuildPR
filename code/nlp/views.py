@@ -27,6 +27,8 @@ from lib.json_encoder import JSONEncoderHttp
 # from speech_to_text import speech_to_text_module
 # from text_to_speech import text_to_speech_module
 from datetime import datetime, timedelta
+import geoposition as geo
+from nlp import tasks
 
 
 @api_view(['POST'])
@@ -176,9 +178,9 @@ def delete_phrase_list(request):
 
 @api_view(['POST'])
 def delete_permanent_phrase_list(request):
-    phrases = json.loads(request.data['_content'])
+    params = request.data
     mongodb = mongo.MongoConnection()
-    response = mongodb.delete_permanent_phrases(phrases=phrases)
+    response = mongodb.delete_permanent_phrases(params=params)
     results = {'status': True, 'response': response, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -186,7 +188,16 @@ def delete_permanent_phrase_list(request):
 @api_view(['POST'])
 def update_country_list(request):
     mongodb = mongo.MongoConnection()
-    response = mongodb.update_country_list()
+    #response = mongodb.update_country_list()
+    tasks.update_country_list()
+    results = {'status': True, 'response': {}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def fill_up_geolocation_country_list(request):
+    mongodb = mongo.MongoConnection()
+    response = mongodb.fill_up_geolocation_country_list()
     results = {'status': True, 'response': response, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -200,9 +211,25 @@ def update_state_list(request):
 
 
 @api_view(['POST'])
+def fill_up_geolocation_state_list(request):
+    mongodb = mongo.MongoConnection()
+    response = mongodb.fill_up_geolocation_state_list()
+    results = {'status': True, 'response': response, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
 def update_pr_city_list(request):
     mongodb = mongo.MongoConnection()
     response = mongodb.update_pr_city_list()
+    results = {'status': True, 'response': response, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def fill_up_geolocation_pr_city_list(request):
+    mongodb = mongo.MongoConnection()
+    response = mongodb.fill_up_geolocation_pr_city_list()
     results = {'status': True, 'response': response, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -215,6 +242,7 @@ def train_article(request):
     results = {'status': True, 'response': {'inserted_id': inserted_id}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
+
 @api_view(['POST'])
 def show_article_list(request):
     params = request.data
@@ -222,6 +250,7 @@ def show_article_list(request):
     response = mongodb.show_article_list(params=params)
     results = {'status': True, 'response': response, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
+
 
 @api_view(['POST'])
 def train_untrained_articles(request):
@@ -234,7 +263,14 @@ def train_untrained_articles(request):
 @api_view(['POST'])
 def get_geoposition(request):
     params = request.data
-    mongodb = mongo.MongoConnection()
-    geoposition = mongodb.get_geoposition(params)
+    geoposition = geo.get_geoposition(params)
     results = {'status': True, 'response': {'geoposition': geoposition}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def add_geoposition_to_DB(request):
+    mongodb = mongo.MongoConnection()
+    mongodb.add_geoposition_to_DB()
+    results = {'status': True, 'response': {'status': 'OK'}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)

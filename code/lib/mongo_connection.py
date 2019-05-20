@@ -13,6 +13,8 @@ import hashlib
 import json
 from wiki_parser import get_us_state_list, get_country_names_list, get_pr_city_list
 from news import get_tags
+import nlp.tasks as tasks
+import geoposition as geo
 
 
 class MongoConnection(object):
@@ -73,16 +75,59 @@ class MongoConnection(object):
         self.country.insert(country_list)
         return country_list
 
+    def fill_up_geolocation_country_list(self):
+        counties = list(self.country.find({'location': {'$exists': False}}))
+        updated_ids = []
+        for country in counties:
+            _id = country['_id']
+            updated_ids.append(_id)
+            country['location'] = None
+            try:
+                country['location'] = geo.get_geoposition({'text': country['official_name']})
+            except Exception:
+                pass
+            self.country.update_one({'_id': _id}, {'$set': country})
+        return updated_ids
+
     def update_state_list(self):
         states_list = get_us_state_list()
         self.state.insert(states_list)
         return states_list
+
+    def fill_up_geolocation_state_list(self):
+        states = list(self.state.find({'location': {'$exists': False}}))
+        updated_ids = []
+        for state in states:
+            _id = state['_id']
+            updated_ids.append(_id)
+
+            state['location'] = None
+            try:
+                state['location'] = geo.get_geoposition({'text': state['name']})
+            except Exception:
+                pass
+            self.state.update_one({'_id': _id}, {'$set': state})
+        return updated_ids
 
     def update_pr_city_list(self):
         pr_city_list = get_pr_city_list()
         self.pr_city.insert(pr_city_list)
         return pr_city_list
 
+    def fill_up_geolocation_pr_city_list(self):
+        pr_city_list = list(self.pr_city.find({'location': {'$exists': False}}))
+        updated_ids = []
+        for pr_city in pr_city_list:
+            _id = pr_city['_id']
+            updated_ids.append(_id)
+
+            pr_city['location'] = None
+            try:
+                pr_city['location'] = geo.get_geoposition({'text': pr_city['name']})
+            except Exception:
+                pass
+            self.pr_city.update_one({'_id': _id}, {'$set': pr_city})
+        return updated_ids
 
     def update_source_list_from_server(self):
         # TO_DO: Refactor
@@ -222,16 +267,22 @@ class MongoConnection(object):
         ).inserted_id
         return inserted_id
 
-    def delete_permanent_phrases(self, phrases):
+    def delete_permanent_phrases(self, params):
         """Permanent delete phrase by the database"""
-        if not isinstance(phrases['_id'], ObjectId):
-            phrases['_id'] = ObjectId(phrases['_id'])
+        if 'ids' not in params:
+            raise EnvironmentError('Request must contain \'ids\' field')
+        ids = params['ids']
+        if isinstance(ids, str):
+            ids = list(ids)
+        for _id in ids:
+            if not isinstance(_id, ObjectId):
+                _id = ObjectId(_id)
 
-        self.phrase.delete_one(
-            {'_id': phrases['_id']},
-            #upsert=True
-        )
-        return phrases
+            self.phrase.delete_one(
+                {'_id': _id},
+                #upsert=True
+            )
+        return params
 
     def delete_phrases(self, phrases):
         """Delete phrase by the database"""
@@ -266,7 +317,8 @@ class MongoConnection(object):
     # ***************************** Train articles ******************************** #
 
     def train_article(self, params):
-        language = 'en'
+        language = 'en' if 'language' not in params else params['language']
+
         if 'article_id' not in params:
             raise EnvironmentError('Request must contain \'article_id\' field')
         article_id = params['article_id']
@@ -297,7 +349,6 @@ class MongoConnection(object):
         ).inserted_id
         return inserted_id
 
-
     def train_untrained_articles(self):
         import logging
         logger = logging.getLogger()
@@ -316,16 +367,9 @@ class MongoConnection(object):
         print('train_untrained_article FINISHED')
         return untrained_ids
 
-    def get_geoposition(self, params):
-        if 'text' not in params:
-            raise EnvironmentError('Request must contain \'text\' field')
-        from geopy.geocoders import Nominatim
-        geolocator = Nominatim(user_agent="specify_your_app_name_here")
-        location = geolocator.geocode(params['text'])
-        return {'latitude': location.latitude, 'longitude': location.longitude}
-
     def show_article_list(self, params):
         language = 'en'
+
         if 'tags' not in params:
             raise EnvironmentError('Request must contain \'tags\' field')
         tags = params['tags']

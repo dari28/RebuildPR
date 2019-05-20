@@ -4,6 +4,7 @@ import re
 import requests
 from bs4 import BeautifulSoup, NavigableString
 import pycountry
+import geoposition as geo
 
 
 def get_country_names_list():
@@ -60,6 +61,7 @@ def get_pr_city_list():
         ct['country'] = '5cdc1484cde53353db41d8cd'
         ct['state'] = '5cdcf40dcde5330f034fccc4'
         ct['name'] = city.get_text()
+
         pr_city_list.append(ct)
     return pr_city_list
 
