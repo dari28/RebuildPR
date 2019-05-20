@@ -10,22 +10,13 @@ from django.http import JsonResponse
 from polyglot import load
 from polyglot.detect import Detector, Language
 from polyglot.downloader import downloader
-#from lib.server_tuning import models_dict
 import json
 from rest_framework.decorators import api_view
-from news import NewsCollector, get_tags
-# import tasks
-# from lib import check_config
-# from lib import import_export
-# from lib import learning_model as model
+from news import get_tags
 from lib import mongo_connection as mongo
 # from lib import transliteration
 # from lib import synonym
 from lib.json_encoder import JSONEncoderHttp
-# from lib.tools import get_error, get_abs_path
-# from nlp.config import POLIGLOT, DEFAULT_USER, SERVER, ADMIN_USER
-# from speech_to_text import speech_to_text_module
-# from text_to_speech import text_to_speech_module
 from datetime import datetime, timedelta
 import geoposition as geo
 from nlp import tasks

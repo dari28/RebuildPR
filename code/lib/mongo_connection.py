@@ -5,15 +5,11 @@ import shutil
 import pymongo
 import pycountry
 from bson import ObjectId, errors
-from news import get_sources, get_everything
+from news import get_sources, get_everything, get_tags
 from nlp.config import MONGO#, TYPE_WITHOUT_FILE, SEND_POST_URL, ADMIN_USER, DEFAULT_USER
-#from lib.dictionary import fix_name_field
-from lib import tools
 import hashlib
 import json
 from wiki_parser import get_us_state_list, get_country_names_list, get_pr_city_list
-from news import get_tags
-import nlp.tasks as tasks
 import geoposition as geo
 from collections import Counter
 
