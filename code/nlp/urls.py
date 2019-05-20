@@ -6,6 +6,8 @@ urlpatterns = [
     url(r'^test_work/?$', views.test_work),
     url(r'^test_exception_work/?$', views.test_exception_work),
 
+    url(r'^tag_stat/?$', views.tag_stat),
+
     url(r'^get_country_list/?$', views.get_country_list),
     url(r'^get_language_list/?$', views.get_language_list),
     url(r'^update_country_list/?$', views.update_country_list),
