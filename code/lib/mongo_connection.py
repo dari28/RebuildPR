@@ -15,6 +15,7 @@ from wiki_parser import get_us_state_list, get_country_names_list, get_pr_city_l
 from news import get_tags
 import nlp.tasks as tasks
 import geoposition as geo
+from collections import Counter
 
 
 class MongoConnection(object):
@@ -373,6 +374,7 @@ class MongoConnection(object):
         if 'tags' not in params:
             raise EnvironmentError('Request must contain \'tags\' field')
         tags = params['tags']
+        show = dict()
         # if not isinstance(article_id, ObjectId):
         #     article_id = ObjectId(article_id)
 
@@ -385,14 +387,33 @@ class MongoConnection(object):
         for article in ent:
             a_tags = article['tags']
             n = 0
-            for a_t in a_tags:
+            for a_t_k, a_t_v in a_tags.items():
                 for t in tags:
-                    if t == a_t:
-                        n += 1
+                    for t_k, t_v in t.items():
+                        if (t_k == a_t_k) & (t_v == a_t_v[0]['word']):
+                            n += 1
             if n > 0:
-                art = dict()
-                art['tags'] = a_tags
-                art['article'] = article
-                list_to_show.append(art)
-        return list_to_show
+                list_to_show.append(article)
+        show['Articles'] = list_to_show
+        return show
 
+    def tag_stat(self, params):
+        tag = params['tag']
+        phrase_list = []
+        stat = dict()
+        stat['tag'] = tag
+        ent = self.entity.find()
+        for article in ent:
+            a_tags = article['tags']
+            for a_t_k, a_t_v in a_tags.items():
+                if a_t_k == tag:
+                    phrase_list.append(a_t_v[0]['word'])
+        word_list = Counter(phrase_list).most_common()
+        t = []
+        for phrase in word_list:
+            d = dict()
+            d['phrase'] = phrase[0]
+            d['count'] = phrase[1]
+            t.append(d)
+        stat['tag_list'] = t
+        return stat

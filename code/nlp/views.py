@@ -274,3 +274,15 @@ def add_geoposition_to_DB(request):
     mongodb.add_geoposition_to_DB()
     results = {'status': True, 'response': {'status': 'OK'}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def tag_stat(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    response = mongodb.tag_stat(params=params)
+    results = {'status': True, 'response': response, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+
