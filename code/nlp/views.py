@@ -230,3 +230,11 @@ def train_untrained_articles(request):
     results = {'status': True, 'response': response, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
+@api_view(['POST'])
+def tag_stat(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    response = mongodb.tag_stat(params=params)
+    results = {'status': True, 'response': response, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
