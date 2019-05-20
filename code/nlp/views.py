@@ -198,7 +198,7 @@ def update_country_list(request):
 def fill_up_geolocation_country_list(request):
     mongodb = mongo.MongoConnection()
     response = mongodb.fill_up_geolocation_country_list()
-    results = {'status': True, 'response': response, 'error': {}}
+    results = {'status': True, 'response': {'updated_ids': response}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
@@ -214,7 +214,7 @@ def update_state_list(request):
 def fill_up_geolocation_state_list(request):
     mongodb = mongo.MongoConnection()
     response = mongodb.fill_up_geolocation_state_list()
-    results = {'status': True, 'response': response, 'error': {}}
+    results = {'status': True, 'response': {'updated_ids':response}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
@@ -230,7 +230,7 @@ def update_pr_city_list(request):
 def fill_up_geolocation_pr_city_list(request):
     mongodb = mongo.MongoConnection()
     response = mongodb.fill_up_geolocation_pr_city_list()
-    results = {'status': True, 'response': response, 'error': {}}
+    results = {'status': True, 'response': {'updated_ids': response}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
