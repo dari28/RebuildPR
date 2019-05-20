@@ -5,7 +5,7 @@ import shutil
 import pymongo
 import pycountry
 from bson import ObjectId, errors
-from news import get_sources, get_everything, get_tags
+from news import get_sources, get_everything
 from nlp.config import MONGO#, TYPE_WITHOUT_FILE, SEND_POST_URL, ADMIN_USER, DEFAULT_USER
 import hashlib
 import json
@@ -30,6 +30,7 @@ class MongoConnection(object):
         self.state = self.mongo_db[config['state_collection']]
         self.pr_city = self.mongo_db[config['pr_city_collection']]
         self.entity = self.mongo_db[config['entity_collection']]
+        self.default_entity = self.mongo_db[config['default_entity_collection']]
 
     def get_country_list(self):
         country_list = []
@@ -313,56 +314,56 @@ class MongoConnection(object):
 
     # ***************************** Train articles ******************************** #
 
-    def train_article(self, params):
-        language = 'en' if 'language' not in params else params['language']
+    # def train_article(self, params):
+    #     language = 'en' if 'language' not in params else params['language']
+    #
+    #     if 'article_id' not in params:
+    #         raise EnvironmentError('Request must contain \'article_id\' field')
+    #     article_id = params['article_id']
+    #     if not isinstance(article_id, ObjectId):
+    #         article_id = ObjectId(article_id)
+    #
+    #     if self.entity.find_one({'trained': True, 'article_id': article_id}):
+    #         return None
+    #
+    #     article = self.source.find_one({'deleted': False, '_id': article_id})
+    #     if not article:
+    #         return None
+    #
+    #     if 'content' in article and article['content']:
+    #         tags = get_tags(article['content'], language)
+    #     else:
+    #         tags = get_tags(article['description'], language)
+    #
+    #     inserted_id = self.entity.insert_one(
+    #         {
+    #             'article_id': str(article_id),
+    #             'model': 'default_stanford',
+    #             'tags': tags,
+    #             'trained': True,
+    #             'deleted': False
+    #         },
+    #         # upsert=True
+    #     ).inserted_id
+    #     return inserted_id
 
-        if 'article_id' not in params:
-            raise EnvironmentError('Request must contain \'article_id\' field')
-        article_id = params['article_id']
-        if not isinstance(article_id, ObjectId):
-            article_id = ObjectId(article_id)
-
-        if self.entity.find_one({'trained': True, 'article_id': article_id}):
-            return None
-
-        article = self.source.find_one({'deleted': False, '_id': article_id})
-        if not article:
-            return None
-
-        if 'content' in article and article['content']:
-            tags = get_tags(article['content'], language)
-        else:
-            tags = get_tags(article['description'], language)
-
-        inserted_id = self.entity.insert_one(
-            {
-                'article_id': str(article_id),
-                'model': 'default_stanford',
-                'tags': tags,
-                'trained': True,
-                'deleted': False
-            },
-            # upsert=True
-        ).inserted_id
-        return inserted_id
-
-    def train_untrained_articles(self):
-        import logging
-        logger = logging.getLogger()
-        logger.info('train_untrained_article START\n **************************')
-        print('train_untrained_article START')
-        articles = list(self.source.find({'deleted': False}))
-        article_ids = [x['_id'] for x in articles]
-        trained_articles = list(self.entity.find({'trained': True}))
-        trained_article_ids = [ObjectId(x['article_id']) for x in trained_articles]
-        untrained_ids = list(set(article_ids)-set(trained_article_ids))
-        logger.info('list of untrained article:\n {}'.format(untrained_ids))
-        for id in untrained_ids:
-            self.train_article({'article_id': id})
-            logger.info('article {} trained'.format(id))
-        logger.info('train_untrained_article FINISHED\n **************************')
-        print('train_untrained_article FINISHED')
-        return untrained_ids
+    # def train_untrained_articles(self):
+    #     import logging
+    #     logger = logging.getLogger()
+    #     logger.info('train_untrained_article START\n **************************')
+    #     print('train_untrained_article START')
+    #     articles = list(self.source.find({'deleted': False}))
+    #     article_ids = [x['_id'] for x in articles]
+    #     trained_articles = list(self.entity.find({'trained': True}))
+    #     trained_article_ids = [ObjectId(x['article_id']) for x in trained_articles]
+    #     untrained_ids = list(set(article_ids)-set(trained_article_ids))
+    #     logger.info('list of untrained article:\n {}'.format(untrained_ids))
+    #     for id in untrained_ids:
+    #         self.train_article({'article_id': id})
+    #         logger.info('article {} trained'.format(id))
+    #     logger.info('train_untrained_article FINISHED\n **************************')
+    #     print('train_untrained_article FINISHED')
+    #     return untrained_ids
 
     def show_article_list(self, params):
         language = 'en'

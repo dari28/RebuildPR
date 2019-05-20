@@ -1,9 +1,8 @@
 import os
 
-#from lib.mongo_connection import MongoConnection
+from lib.mongo_connection import MongoConnection
 from lib.linguistic_functions import get_supported_languages
 from nlp.config import SERVER
-
 
 def add_polyglot_default():
     """Defining default polyglot models"""
@@ -76,7 +75,7 @@ def add_polyglot_default():
         #  'name': 'Polyglot default detected polarity of document'},
     ]
 
-    #mongo = MongoConnection()
+    mongo = MongoConnection()
     for language in SERVER['language']:
         # Adding Entities
         for model in polyglot_model:
@@ -88,23 +87,23 @@ def add_polyglot_default():
                 model['language'] = language
                 model['training'] = 'finished'
                 model['available'] = True
-                #model['user'] = DEFAULT_USER[language]
+               # model['user'] = DEFAULT_USER[language]
                 entities.append(model)
-                # find_entity = model.copy()
-                # del find_entity['description']
-                # find_model = mongo.entity.find_one(find_entity)
-                # if find_model is None:
-                #     if '_id' in model:
-                #         del model['_id']
-                #     try:
-                #         model_id = mongo.entity.insert(model)
-                #     except Exception:
-                #         print model
-                #         raise
-                #     mongo.users.update_one(
-                #         {'_id': DEFAULT_USER[language]},
-                #         {'$addToSet': {'entity': model_id}},
-                #         upsert=True
-                #     )
+                find_entity = model.copy()
+                del find_entity['description']
+                find_model = mongo.default_entity.find_one(find_entity)
+                if find_model is None:
+                    if '_id' in model:
+                        del model['_id']
+                    try:
+                        model_id = mongo.default_entity.insert(model)
+                    except Exception:
+                        print(model)
+                        raise
+                    # mongo.users.update_one(
+                    #     {'_id': DEFAULT_USER[language]},
+                    #     {'$addToSet': {'entity': model_id}},
+                    #     upsert=True
+                    # )
     return entities
 

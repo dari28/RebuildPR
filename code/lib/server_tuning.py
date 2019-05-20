@@ -15,8 +15,22 @@ from lib import stanford_module as stanford
 from nlp.config import POLIGLOT, STANFORD, STANDFORD_PACKAGE, SERVER#, DEFAULT_USER, , CONFIGURATION_FILES, REPEAT_FINAL_PROCESSING, ADMIN_USER
 #from nlp.tasks import final_processing
 from lib.linguistic_functions import get_supported_languages
-from news import load_models
 from lib.stanford_module import jString
+from install.install_default_model import add_polyglot_default
+from install_stanford import add_standford_default
+
+
+def load_models():
+    models = [
+        'crf_english_3class', 'crf_english_4class', 'crf_english_7class', 'crf_chinese_7class', 'crf_german_7class', 'crf_spanish_4class', 'crf_france_3class'
+    ]
+    classifier_dict = dict()
+    for model in models:
+        model = tools.get_abs_path(STANFORD[model])
+        model = model if isinstance(model, str) else model.encode('utf8')
+        if model not in classifier_dict:
+            classifier_dict[model] = stanford.CRFClassifier.getClassifier(stanford.jString(model))
+    return classifier_dict
 
 
 def polyglot_default_install():
@@ -150,15 +164,12 @@ def execution_at_startup():
     """Function that executes the necessary code at startup"""
     polyglot_default_install()
     standford_default_install()
-    #models_dict = load_models()
-    #add_polyglot_default()
-    #add_standford_default()
+    add_polyglot_default()
+    add_standford_default()
     #create_folder()
     #add_final_processing()
     #add_admin_user()
 
-
-#models_dict = load_models()
 
 if __name__ == '__main__':
     # os.path.sep = '/'

@@ -1,5 +1,3 @@
-
-
 def fix_name_field(o):
     if isinstance(o, dict):
         result = {}

@@ -7,19 +7,14 @@ import psutil
 import iso639
 from bson import ObjectId, errors
 from django.http import JsonResponse
-from polyglot import load
-from polyglot.detect import Detector, Language
-from polyglot.downloader import downloader
-import json
 from rest_framework.decorators import api_view
-from news import get_tags
+from tags import get_tags
 from lib import mongo_connection as mongo
-# from lib import transliteration
-# from lib import synonym
 from lib.json_encoder import JSONEncoderHttp
 from datetime import datetime, timedelta
 import geoposition as geo
 from nlp import tasks
+from lib import learning_model as model
 
 
 @api_view(['POST'])
@@ -229,8 +224,10 @@ def fill_up_geolocation_pr_city_list(request):
 def train_article(request):
     params = request.data
     mongodb = mongo.MongoConnection()
-    inserted_id = mongodb.train_article(params=params)
-    results = {'status': True, 'response': {'inserted_id': inserted_id}, 'error': {}}
+    #inserted_id = mongodb.train_article(params=params)
+    tasks.train_article(params=params)
+    results = {'status': True, 'response': {}, 'error': {}}
+    #results = {'status': True, 'response': {'inserted_id': inserted_id}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
@@ -276,4 +273,24 @@ def tag_stat(request):
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
+@api_view(['POST'])
+def predict_entity(request):
+    data = request.data
+    if 'entity' not in data:
+        raise EnvironmentError('Entity not defined')
+    if 'language' not in data:
+        raise EnvironmentError('The input format is not correct! The input data must contain the "language" field.')
+    if 'data' not in data:
+        raise EnvironmentError('The input format is not correct! The input data must contain the "data" field.')
+
+    entity_id = []
+    for entity in data['entity']:
+        try:
+            entity_id.append(ObjectId(entity))
+        except:
+            raise errors.InvalidId('Invalid value for "entity" = {0}'.format(entity))
+
+    predict_result = model.predict_entity(data=data['data'], set_entity=entity_id, language=data['language'])
+    results = {'status': True, 'response': {'predict': predict_result}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
 
