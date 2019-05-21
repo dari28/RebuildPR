@@ -95,6 +95,39 @@ def get_us_state_list():
 
 
 @background(schedule=1)
+def train_on_country_list(params):
+    mongodb = mongo.MongoConnection()
+    if mongodb.entity.find_one({'name': 'country_common_names'}):
+        return None
+    countries = list(mongodb.country.find())
+    common_names = [x['common_name'] for x in countries]
+    #official_names = [x['official_name'] for x in countries]
+    language = 'en' if 'language' not in params else params['language']
+
+    # if 'article_id' not in params:
+    #     raise EnvironmentError('Request must contain \'article_id\' field')
+
+    inserted_id = mongodb.entity.insert_one(
+        {
+            'name': 'country_common_names',
+            'model':
+                {
+                    'train_text': common_names,
+                    'train_postags': []
+                },
+            'available': True,
+            'training': "finished",
+            # name
+            'language': language,
+            'type': 'list',
+            'deleted': False
+        },
+        # upsert=True
+    ).inserted_id
+    return inserted_id
+
+
+@background(schedule=1)
 def train_article(params):
     mongodb = mongo.MongoConnection()
     language = 'en' if 'language' not in params else params['language']
@@ -120,9 +153,12 @@ def train_article(params):
     inserted_id = mongodb.entity.insert_one(
         {
             'article_id': str(article_id),
-            'model': 'default_stanford',
-            'tags': tags,
+            'available': True,
             'trained': True,
+            #name
+            'language': language,
+            'type': 'default_stanford',
+            'tags': tags,
             'deleted': False
         },
         # upsert=True

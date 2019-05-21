@@ -232,6 +232,14 @@ def train_article(request):
 
 
 @api_view(['POST'])
+def train_on_country_list(request):
+    params = request.data
+    tasks.train_on_country_list(params=params)
+    results = {'status': True, 'response': {}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
 def show_article_list(request):
     params = request.data
     mongodb = mongo.MongoConnection()

@@ -31,12 +31,16 @@ urlpatterns = [
 
     url(r'^train_article/?$', views.train_article),
     url(r'^train_untrained_articles/?$', views.train_untrained_articles),
+    url(r'^train_on_country_list/?$', views.train_on_country_list),
 
     url(r'^get_geoposition/?$', views.get_geoposition),
     url(r'^add_geoposition_to_DB/?$', views.add_geoposition_to_DB),
     url(r'^fill_up_geolocation_country_list/?$', views.fill_up_geolocation_country_list),
     url(r'^fill_up_geolocation_state_list/?$', views.fill_up_geolocation_state_list),
     url(r'^fill_up_geolocation_pr_city_list/?$', views.fill_up_geolocation_pr_city_list),
+
+    url(r'^predict_entity/?$', views.predict_entity),
+
 ]
 
 execution_at_startup()

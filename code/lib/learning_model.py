@@ -1,11 +1,21 @@
+import time
+import os
+import re
+import tempfile
+import shutil
+import numpy
+from collections import defaultdict
+from datetime import datetime
+
+from lib import tools, stanford_module as stanford
 from lib.text import Text
-from lib import tools
-from bson import ObjectId
 from lib.dictionary import defix_name_field
 from lib.mongo_connection import MongoConnection
-from lib import stanford_module as stanford
+from lib.linguistic_functions import tag, pattern_language, get_base_form_for_word
+
+from bson import ObjectId
 from nlp.config import description_tag, STANFORD, stanford_models
-from lib import tools
+
 import jnius
 
 def predict_entity(set_entity=None, data=None, language='en'):
@@ -262,6 +272,178 @@ def predict_entity_stanford(entities, data, language=None, classifier_dict = {})
 
     return result
 
+
+def predict_entity_list(entities, data, language='en'):
+    """The predict function for an entity list"""
+    # "data" MUST BE unicode type(unicode encoding).
+    matches = {}
+    try:
+        data = data.decode('utf8')
+    except:
+        pass
+    data = tools.escape(data)
+    for entity in entities:
+        match = []
+        if 'model_settings' in entity:
+            settings = entity['model_settings']
+        else:
+            settings = {}
+        if 'case_sensitive' in settings and not settings['case_sensitive']:
+            data_predict = data.lower()
+        else:
+            data_predict = data
+        if 'match_level' in settings:
+            match_level = settings['match_level']
+        else:
+            match_level = -1
+        if 'normal_form' in settings:
+            normal_form = settings['normal_form']
+        else:
+            normal_form = False
+
+        if 'train_postags' in settings:
+            train_postags = settings['train_postags']
+        else:
+            train_postags = False
+        train_postags = train_postags or normal_form
+
+        train_dict = entity['model']
+        train_list = train_dict['train_text']
+
+        if 'train_postags' in train_dict:
+            train_tags = train_dict['train_postags']
+        else:
+            train_tags = None
+
+        if 'row_delimiter_as_dot' in settings and settings['row_delimiter_as_dot']:
+            data_predict, back_map = tools.adaptiv_remove_tab(data_predict)
+        else:
+            data_predict, back_map = tools.remove_tab(data_predict)
+
+        data_text = Text(data_predict, hint_language_code=language)
+        if train_postags:
+            if language in pattern_language:
+                tagged_list = tag(data_predict, language)
+                word_list = [tagged[0] for tagged in tagged_list]
+            else:
+                tagged_list = data_text.pos_tags
+                word_list = data_text.words
+        else:
+            tagged_list = None
+            word_list = data_text.words
+        i = 0
+
+        for entry in train_list:
+            if match_level == 0 and not normal_form:
+                match_entry = [[m.start(), m.end() - 1] for m in re.finditer(tools.escape(entry), data_predict)]
+
+                extend_matchto_word = \
+                    tools.ParseMatchesUnits(iter(match_entry), data_predict, word_list, tagged_list)
+
+                for match_word in extend_matchto_word:
+                    word, start_match, end_match, _, _, word_tag = match_word
+                    if word == entry:
+                        if train_postags and train_tags[i] != word_tag:
+                            continue
+                        match.append({'start_match': start_match,
+                                          'length_match': end_match - start_match,
+                                          'word': word})
+                i = i + 1
+            elif match_level == 0 and normal_form:
+
+                normal_data = NormalForm(data_predict, word_list, tagged_list, language)
+
+                match_entry = [[m.start(), m.end() - 1] for m in re.finditer(tools.escape(entry), normal_data.normal_text)]
+
+                extend_matchto_word = tools.ParseMatchesUnits(
+                    iter(match_entry), normal_data.normal_text, normal_data.normal_words, tagged_list)
+
+                pos_match = []
+
+                for match_word in extend_matchto_word:
+                    word, _, _, _, _, word_tag = match_word
+                    if word == entry and train_tags[i] == word_tag:
+                        pos_match.append(match_word[3:5])
+
+                negative_matchto_word = tools.ParseMatchesUnitsBack(
+                    iter(pos_match), data_predict, word_list
+                )  # (self, matches, text, units, units_tag=None)
+                for match_word in negative_matchto_word:
+                    entry, start_match, end_match, _, _, _ = match_word
+                    match.append({'start_match': start_match,
+                                  'length_match': end_match - start_match,
+                                  'word': entry})
+
+                i = i + 1
+
+            elif match_level == 1:
+                match_entry = [[m.start(), m.end()] for m in re.finditer(tools.escape(entry), data_predict)]
+                morphemes = []
+                for word in data_text.tokens:
+                    morphemes.extend(word.morphemes)
+                # extend_match_morpheme = tools.ParseMatchesUnits(
+                #     match_entry, data_text.string, morphemes)
+                extend_match_morpheme = tools.ParseMatchesMorphemes(
+                    match_entry, data_text, entity['language'])
+                for match_morpheme in extend_match_morpheme:
+                    if entry == match_morpheme[0]:
+                        match.append({'start_match': match_morpheme[1],
+                                      'length_match': match_morpheme[2]-match_morpheme[1],
+                                      'word': match_morpheme[0]})
+            else:
+                match += [{'start_match': m.start(), 'length_match': m.end() - m.start(), 'word': entry} for m in re.finditer(tools.escape(entry), data_predict)]
+
+        match = tools.sample_update_matches(back_map, data, match)
+
+        match = sorted(match, key=lambda x: x['start_match'])
+
+        matches.update({entity['_id']: match})
+
+    return matches
+
+
+class NormalForm(object):
+    _normal_text = None
+    _normal_words = None
+
+    def __init__(self, text, words, tags, lang):
+        self.origin_text = text
+        self.origin_words = words
+        self.language = lang
+        self.tags = tags
+
+    def to_normal(self):
+        text = self.origin_text
+        end_pos = 0
+        # normal_words = self.origin_words
+        normal_words = []
+        pref_end = 0
+        new_text = ''
+        for i in range(len(self.origin_words)):
+            word = self.origin_words[i]
+            ini_pos = self.origin_text.find(word, end_pos)
+            end_pos = ini_pos + len(word)
+            normal_form = get_base_form_for_word(word, self.language, self.tags[i][1])
+            #normal_form = word
+            new_text += text[pref_end:ini_pos] + normal_form
+            pref_end = end_pos
+            normal_words.append(unicode(normal_form))
+        new_text += text[pref_end:]
+        self._normal_text = new_text
+        self._normal_words = normal_words
+
+    @property
+    def normal_text(self):
+        if not self._normal_text:
+            self.to_normal()
+        return self._normal_text
+
+    @property
+    def normal_words(self):
+        if not self._normal_words:
+            self.to_normal()
+        return self._normal_words
+
 #
 # model_entity_train = {
 #     'list': train_entity_list,
@@ -273,7 +455,7 @@ def predict_entity_stanford(entities, data, language=None, classifier_dict = {})
 # }
 #
 model_entity_predict = {
-   # 'list': predict_entity_list,
+    'list': predict_entity_list,
     'default_polyglot': predict_entity_polyglot,
     'default_stanford': predict_entity_stanford_default,
    # 'stanford_crf': predict_entity_stanford
