@@ -414,3 +414,30 @@ class MongoConnection(object):
             t.append(d)
         stat['tag_list'] = t
         return stat
+
+    def show_country_list(self):
+        country_list = []
+        show = dict()
+        countries = self.country.find()
+        for country in countries:
+            country_list.append(country)
+        show['countries'] = country_list
+        return show
+
+    def show_state_list(self):
+        state_list = []
+        show = dict()
+        states = self.state.find()
+        for state in states:
+            state_list.append(state)
+        show['states'] = state_list
+        return show
+
+    def show_pr_city_list(self):
+        pr_city_list = []
+        show = dict()
+        pr_cities = self.pr_city.find()
+        for pr_city in pr_cities:
+            pr_city_list.append(pr_city)
+        show['pr_cities'] = pr_city_list
+        return show

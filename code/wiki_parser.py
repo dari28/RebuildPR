@@ -58,8 +58,8 @@ def get_pr_city_list():
     pr_city = soup.findAll('a', title=re.compile('Population Demographics and Statistics'))
     for city in pr_city:
         ct = dict()
-        ct['country'] = '5cdc1484cde53353db41d8cd'
-        ct['state'] = '5cdcf40dcde5330f034fccc4'
+        ct['country_id'] = '5cdc1484cde53353db41d8cd'
+        ct['state_id'] = '5cdcf40dcde5330f034fccc4'
         ct['name'] = city.get_text()
 
         pr_city_list.append(ct)

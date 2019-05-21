@@ -274,6 +274,33 @@ def tag_stat(request):
 
 
 @api_view(['POST'])
+def show_country_list(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    response = mongodb.show_country_list()
+    results = {'status': True, 'response': response, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def show_state_list(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    response = mongodb.show_state_list()
+    results = {'status': True, 'response': response, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def show_pr_city_list(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    response = mongodb.show_pr_city_list()
+    results = {'status': True, 'response': response, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
 def predict_entity(request):
     data = request.data
     if 'entity' not in data:
