@@ -18,6 +18,7 @@ urlpatterns = [
     url(r'^show_country_list/?$', views.show_country_list),
     url(r'^show_state_list/?$', views.show_state_list),
     url(r'^show_pr_city_list/?$', views.show_pr_city_list),
+    url(r'^show_trained_article_list/?$', views.show_trained_article_list),
 
     url(r'^get_source_list/?$', views.get_source_list),
     url(r'^update_source_list_from_server/?$', views.update_source_list_from_server),

@@ -17,6 +17,13 @@ from nlp import tasks
 from lib import learning_model as model
 
 
+#   TO DO fix at mongo.find(limit)
+#  def cut_list(list, start, length):
+#     if len(list) > start + length:
+#         ret =
+#     return list[start::start+length]
+
+
 @api_view(['POST'])
 def test_exception_work(request):
     """
@@ -68,7 +75,7 @@ def get_source_list(request):
 def update_source_list_from_server(request):
     mongodb = mongo.MongoConnection()
     inserted_ids, deleted_ids = mongodb.update_source_list_from_server()
-    results = {'status': True, 'response': {'inserted_ids': inserted_ids, 'deleted_ids': deleted_ids}, 'error': {}}
+    results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 #                            ARTICLES                                 #
 
@@ -78,7 +85,7 @@ def update_article_list_from_server(request):
     params = request.data
     mongodb = mongo.MongoConnection()
     inserted_ids, deleted_ids = mongodb.update_article_list_from_server(params)
-    results = {'status': True, 'response': {'inserted_ids': inserted_ids, 'deleted_ids': deleted_ids}, 'error': {}}
+    results = {'status': True, 'response': {}, 'error': {}}
 
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -137,7 +144,7 @@ def update_phrase_list(request):
     #sources = nc.update_phrases()
     mongodb = mongo.MongoConnection()
     response = mongodb.update_phrases(phrases=phrases)
-    results = {'status': True, 'response': response, 'error': {}}
+    results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
@@ -174,8 +181,8 @@ def delete_permanent_phrase_list(request):
 @api_view(['POST'])
 def update_country_list(request):
     mongodb = mongo.MongoConnection()
-    #response = mongodb.update_country_list()
-    tasks.update_country_list()
+    mongodb.update_country_list()
+    # tasks.update_country_list()
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -191,8 +198,8 @@ def fill_up_geolocation_country_list(request):
 @api_view(['POST'])
 def update_state_list(request):
     mongodb = mongo.MongoConnection()
-    response = mongodb.update_state_list()
-    results = {'status': True, 'response': response, 'error': {}}
+    mongodb.update_state_list()
+    results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
@@ -207,8 +214,8 @@ def fill_up_geolocation_state_list(request):
 @api_view(['POST'])
 def update_pr_city_list(request):
     mongodb = mongo.MongoConnection()
-    response = mongodb.update_pr_city_list()
-    results = {'status': True, 'response': response, 'error': {}}
+    mongodb.update_pr_city_list()
+    results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
@@ -260,7 +267,7 @@ def get_geoposition(request):
 def add_geoposition_to_DB(request):
     mongodb = mongo.MongoConnection()
     mongodb.add_geoposition_to_DB()
-    results = {'status': True, 'response': {'status': 'OK'}, 'error': {}}
+    results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
@@ -275,28 +282,36 @@ def tag_stat(request):
 
 @api_view(['POST'])
 def show_country_list(request):
-    params = request.data
     mongodb = mongo.MongoConnection()
     response = mongodb.show_country_list()
-    results = {'status': True, 'response': response, 'error': {}}
+    results = {'status': True, 'response': {'country': response}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
 @api_view(['POST'])
 def show_state_list(request):
-    params = request.data
     mongodb = mongo.MongoConnection()
+    start = request['start'] if request['start'] else 0
+    len = request['len'] if request['len'] else 0
     response = mongodb.show_state_list()
-    results = {'status': True, 'response': response, 'error': {}}
+    results = {'status': True, 'response': {'state': response}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
 @api_view(['POST'])
 def show_pr_city_list(request):
-    params = request.data
     mongodb = mongo.MongoConnection()
     response = mongodb.show_pr_city_list()
-    results = {'status': True, 'response': response, 'error': {}}
+    results = {'status': True, 'response': {'pr_city': response}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def show_trained_article_list(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    articles, trained, untrained = mongodb.show_trained_article_list(params=params)
+    results = {'status': True, 'response': {'trained count': trained, 'untrained count': untrained, 'trained articles': articles}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
