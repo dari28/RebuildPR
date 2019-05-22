@@ -151,7 +151,6 @@ class MongoConnection(object):
 
         return inserted_ids, deleted_ids
 
-
     def delete_source_list_by_ids(self, ids):
         """Delete sources by the database"""
         for id in ids:
@@ -313,6 +312,13 @@ class MongoConnection(object):
         return list(self.phrase.find({'deleted': deleted}))
 
     # ***************************** Train articles ******************************** #
+    def get_default_entity(self, params):
+        search_params = {}
+        if params and 'type' in params:
+            search_params['type'] = params['type']
+
+        return list(self.default_entity.find(search_params))
+
 
     # def train_article(self, params):
     #     language = 'en' if 'language' not in params else params['language']

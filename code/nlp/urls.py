@@ -31,7 +31,8 @@ urlpatterns = [
 
     url(r'^train_article/?$', views.train_article),
     url(r'^train_untrained_articles/?$', views.train_untrained_articles),
-    url(r'^train_on_country_list/?$', views.train_on_country_list),
+    url(r'^train_on_default_list/?$', views.train_on_default_list),
+    url(r'^get_default_entity/?$', views.get_default_entity),
 
     url(r'^get_geoposition/?$', views.get_geoposition),
     url(r'^add_geoposition_to_DB/?$', views.add_geoposition_to_DB),

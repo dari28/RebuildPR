@@ -232,10 +232,19 @@ def train_article(request):
 
 
 @api_view(['POST'])
-def train_on_country_list(request):
+def train_on_default_list(request):
     params = request.data
-    tasks.train_on_country_list(params=params)
+    tasks.train_on_default_list(params=params)
     results = {'status': True, 'response': {}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def get_default_entity(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    entities = mongodb.get_default_entity(params=params)
+    results = {'status': True, 'response': {'entities': entities}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 

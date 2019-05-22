@@ -18,6 +18,7 @@ from nlp.config import description_tag, STANFORD, stanford_models
 
 import jnius
 
+
 def predict_entity(set_entity=None, data=None, language='en'):
     """predict the entity model"""
     # Elements of the list "data" MUST BE str type(utf-8 encoding).

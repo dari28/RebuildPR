@@ -95,36 +95,56 @@ def get_us_state_list():
 
 
 @background(schedule=1)
-def train_on_country_list(params):
+def train_on_list(train_text, name, language):
     mongodb = mongo.MongoConnection()
-    if mongodb.entity.find_one({'name': 'country_common_names'}):
+    if mongodb.default_entity.find_one({'name': name}):
         return None
-    countries = list(mongodb.country.find())
-    common_names = [x['common_name'] for x in countries]
-    #official_names = [x['official_name'] for x in countries]
-    language = 'en' if 'language' not in params else params['language']
 
-    # if 'article_id' not in params:
-    #     raise EnvironmentError('Request must contain \'article_id\' field')
-
-    inserted_id = mongodb.entity.insert_one(
+    inserted_id = mongodb.default_entity.insert_one(
         {
-            'name': 'country_common_names',
+            'name': name,
             'model':
                 {
-                    'train_text': common_names,
+                    'train_text': train_text,
                     'train_postags': []
                 },
             'available': True,
             'training': "finished",
-            # name
             'language': language,
             'type': 'list',
             'deleted': False
         },
         # upsert=True
     ).inserted_id
+    print(inserted_id)
     return inserted_id
+
+
+@background(schedule=1)
+def train_on_default_list(params):
+    language = 'en' if 'language' not in params else params['language']
+    mongodb = mongo.MongoConnection()
+    # Add country
+    countries = list(mongodb.country.find())
+    common_names = [x['common_name'] for x in countries]
+    common_names = list(set(common_names))
+    official_names = [x['official_name'] for x in countries]
+    official_names = list(set(official_names))
+    train_on_list(list=common_names, name='country_common_names', language=language)
+    train_on_list(list=official_names, name='country_official_names', language=language)
+    # Add state
+    states = list(mongodb.state.find())
+    names = [x['name'] for x in states]
+    names = list(set(names))
+    descriptions = [item for sublist in states for item in sublist['description']]
+    descriptions = list(set(descriptions))
+    train_on_list(list=names, name='state_names', language=language)
+    train_on_list(list=descriptions, name='state_descriptions', language=language)
+    # Add pr_city
+    pr_cities = list(mongodb.pr_city.find())
+    pr_city_names = [x['name'] for x in pr_cities]
+    pr_city_names = list(set(pr_city_names))
+    train_on_list(list=pr_city_names, name='pr_city_names', language=language)
 
 
 @background(schedule=1)
