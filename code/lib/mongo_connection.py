@@ -71,7 +71,6 @@ class MongoConnection(object):
     def update_country_list(self):
         country_list = get_country_names_list()
         self.country.insert(country_list)
-        return country_list
 
     def fill_up_geolocation_country_list(self):
         counties = list(self.country.find({'location': {'$exists': False}}))
@@ -90,7 +89,6 @@ class MongoConnection(object):
     def update_state_list(self):
         states_list = get_us_state_list()
         self.state.insert(states_list)
-        return states_list
 
     def fill_up_geolocation_state_list(self):
         states = list(self.state.find({'location': {'$exists': False}}))
@@ -110,7 +108,6 @@ class MongoConnection(object):
     def update_pr_city_list(self):
         pr_city_list = get_pr_city_list()
         self.pr_city.insert(pr_city_list)
-        return pr_city_list
 
     def fill_up_geolocation_pr_city_list(self):
         pr_city_list = list(self.pr_city.find({'location': {'$exists': False}}))
@@ -420,3 +417,20 @@ class MongoConnection(object):
             t.append(d)
         stat['tag_list'] = t
         return stat
+
+    def show_country_list(self):
+        return list(self.country.find())
+
+    def show_state_list(self):
+        return list(self.state.find())
+
+    def show_pr_city_list(self):
+        return list(self.pr_city.find())
+
+    def show_trained_article_list(self, params={'status':'trained'}):
+        search_param = dict()
+        trained = self.entity.count({'trained': True})
+        untrained = self.entity.count({'trained': False})
+        search_param['trained'] = True if params['status'] == 'trained' else False
+        articles = list(self.entity.find(search_param))
+        return articles, trained, untrained
