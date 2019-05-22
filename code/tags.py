@@ -27,16 +27,17 @@ def union_res(result1 , result2):
 
     return union_dict
 
-def get_tags(text, language):
+
+def get_tags(text, language="en"):
     mongo = MongoConnection()
     #entities1 = add_polyglot_default()
-    entities1 = list(mongo.default_entity.find({"type": "default_polyglot"}))
+    entities1 = list(mongo.default_entity.find({"type": "default_polyglot", "language": language}))
     result1 = model.predict_entity_polyglot(
         entities1,
         text,
         language)
     #entities2 = add_standford_default()
-    entities2 = list(mongo.default_entity.find({"type": "default_stanford"}))
+    entities2 = list(mongo.default_entity.find({"type": "default_stanford", "language": language}))
     result2 = model.predict_entity_stanford_default(
         entities2,
         text,
