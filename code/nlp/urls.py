@@ -8,7 +8,7 @@ urlpatterns = [
 
     url(r'^tag_stat/?$', views.tag_stat),
 
-    url(r'^get_country_list/?$', views.get_country_list),
+    # url(r'^get_country_list/?$', views.get_country_list),
     url(r'^get_language_list/?$', views.get_language_list),
     url(r'^update_country_list/?$', views.update_country_list),
     url(r'^update_state_list/?$', views.update_state_list),
