@@ -17,13 +17,6 @@ from nlp import tasks
 from lib import learning_model as model
 
 
-#   TO DO fix at mongo.find(limit)
-#  def cut_list(list, start, length):
-#     if len(list) > start + length:
-#         ret =
-#     return list[start::start+length]
-
-
 @api_view(['POST'])
 def test_exception_work(request):
     """
@@ -42,14 +35,6 @@ def test_work(request):
 
 
 @api_view(['POST'])
-def get_country_list(request):
-    mongodb = mongo.MongoConnection()
-    countries = mongodb.get_country_list()
-    results = {'status': True, 'response': {'countries': countries}, 'error': {}}
-    return JsonResponse(results, encoder=JSONEncoderHttp)
-
-
-@api_view(['POST'])
 def get_language_list(request):
     mongodb = mongo.MongoConnection()
     languages = mongodb.get_language_list()
@@ -64,10 +49,10 @@ def get_source_list(request):
     try:
         params = request.data
         mongodb = mongo.MongoConnection()
-        sources = mongodb.get_sources(params=params)
+        sources, more = mongodb.get_sources(params=params)
     except:
         raise EnvironmentError("Error in get_source_list")
-    results = {'status': True, 'response': {'sources': sources}, 'error': {}}
+    results = {'status': True, 'response': {'sources': sources, 'more': more}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
@@ -103,9 +88,9 @@ def get_article_list(request):
    # if not q_article or 'date' not in q_article or q_article['date'] < (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d"):
     #    inserted_ids, deleted_ids = mongodb.update_article_list_from_server(params)
     #articles = mongodb.get_article_list(params=params)
-    articles = mongodb.get_q_article_list(params=params)
+    articles, more = mongodb.get_q_article_list(params=params)
 
-    results = {'status': True, 'response': {'articles': articles}, 'error': {}}
+    results = {'status': True, 'response': {'articles': articles, 'more': more}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 #                            TAGS                                 #
@@ -191,7 +176,7 @@ def update_country_list(request):
 def fill_up_geolocation_country_list(request):
     mongodb = mongo.MongoConnection()
     response = mongodb.fill_up_geolocation_country_list()
-    results = {'status': True, 'response': {'updated_ids': response}, 'error': {}}
+    results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
@@ -207,7 +192,7 @@ def update_state_list(request):
 def fill_up_geolocation_state_list(request):
     mongodb = mongo.MongoConnection()
     response = mongodb.fill_up_geolocation_state_list()
-    results = {'status': True, 'response': {'updated_ids':response}, 'error': {}}
+    results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
@@ -223,7 +208,7 @@ def update_pr_city_list(request):
 def fill_up_geolocation_pr_city_list(request):
     mongodb = mongo.MongoConnection()
     response = mongodb.fill_up_geolocation_pr_city_list()
-    results = {'status': True, 'response': {'updated_ids': response}, 'error': {}}
+    results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
@@ -259,8 +244,8 @@ def get_default_entity(request):
 def show_article_list(request):
     params = request.data
     mongodb = mongo.MongoConnection()
-    response = mongodb.show_article_list(params=params)
-    results = {'status': True, 'response': response, 'error': {}}
+    response, more = mongodb.show_article_list(params=params)
+    results = {'status': True, 'response': {'article': response, 'more': more}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
@@ -268,7 +253,7 @@ def show_article_list(request):
 def train_untrained_articles(request):
     mongodb = mongo.MongoConnection()
     inserted_ids = mongodb.train_untrained_articles()
-    results = {'status': True, 'response': {'inserted_ids': inserted_ids}, 'error': {}}
+    results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
@@ -299,27 +284,28 @@ def tag_stat(request):
 
 @api_view(['POST'])
 def show_country_list(request):
+    params = request.data
     mongodb = mongo.MongoConnection()
-    response = mongodb.show_country_list()
-    results = {'status': True, 'response': {'country': response}, 'error': {}}
+    response, more = mongodb.show_country_list(params=params)
+    results = {'status': True, 'response': {'country': response, 'more': more}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
 @api_view(['POST'])
 def show_state_list(request):
+    params = request.data
     mongodb = mongo.MongoConnection()
-    start = request['start'] if request['start'] else 0
-    len = request['len'] if request['len'] else 0
-    response = mongodb.show_state_list()
-    results = {'status': True, 'response': {'state': response}, 'error': {}}
+    response, more = mongodb.show_state_list(params=params)
+    results = {'status': True, 'response': {'state': response, 'more': more}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
 @api_view(['POST'])
 def show_pr_city_list(request):
+    params = request.data
     mongodb = mongo.MongoConnection()
-    response = mongodb.show_pr_city_list()
-    results = {'status': True, 'response': {'pr_city': response}, 'error': {}}
+    response, more = mongodb.show_pr_city_list(params=params)
+    results = {'status': True, 'response': {'pr_city': response, 'more': more}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
@@ -327,8 +313,8 @@ def show_pr_city_list(request):
 def show_trained_article_list(request):
     params = request.data
     mongodb = mongo.MongoConnection()
-    articles, trained, untrained = mongodb.show_trained_article_list(params=params)
-    results = {'status': True, 'response': {'trained count': trained, 'untrained count': untrained, 'trained articles': articles}, 'error': {}}
+    articles, trained, untrained, more = mongodb.show_trained_article_list(params=params)
+    results = {'status': True, 'response': {'trained count': trained, 'untrained count': untrained, 'trained articles': articles, 'more': more}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
