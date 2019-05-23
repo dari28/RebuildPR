@@ -1,10 +1,8 @@
 # coding=utf-8
-import urllib3
 import re
 import requests
-from bs4 import BeautifulSoup, NavigableString
+from bs4 import BeautifulSoup
 import pycountry
-import geoposition as geo
 
 
 def get_country_names_list():
@@ -52,7 +50,7 @@ def get_country_names_list():
 
 
 def get_pr_city_list():
-    pr_city_list=[]
+    pr_city_list = []
     url = requests.get('https://suburbanstats.org/population/puerto-rico/list-of-counties-and-cities-in-puerto-rico').text
     soup = BeautifulSoup(url, 'lxml')
     pr_city = soup.findAll('a', title=re.compile('Population Demographics and Statistics'))
@@ -67,7 +65,7 @@ def get_pr_city_list():
 
 
 def get_us_state_list():
-    US_states_list = []
+    us_states_list = []
     url = requests.get('https://en.wikipedia.org/wiki/List_of_U.S._state_abbreviations').text
     soup = BeautifulSoup(url, 'lxml')
     table = soup.find('table', "wikitable sortable").findAll('tr')
@@ -81,12 +79,12 @@ def get_us_state_list():
             if d is not '':
                 description.append(d)
         description = remove(description)
-        #!!!ATTENTION!!! USA change to ID
+        # !!!ATTENTION!!! USA change to ID
         st['country_id'] = '5cdc1484cde53353db41d8cd'
         st['name'] = state
         st['description'] = description
-        US_states_list.append(st)
-    return US_states_list
+        us_states_list.append(st)
+    return us_states_list
 
 
 def remove(duplicate):

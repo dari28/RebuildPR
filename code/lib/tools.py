@@ -124,7 +124,7 @@ def adaptiv_remove_tab(origin_text):
     end = 0
     new_text = ''
     for match in re.finditer('{0}{1}+'.format(punctuation_sign, tab), origin_text):
-        # b = match.regs[0]
+        # b = match.regs[0]  # Delete SIDE(PY3)
         b = match.span()  # Add SIDE(PY3)
         new_text += origin_text[end:(b[0] + 1)] + ' '*(b[1] - b[0] - 1)
         end = b[1]
@@ -134,7 +134,7 @@ def adaptiv_remove_tab(origin_text):
     end = 0
     new_text = ''
     for match in re.finditer('{1}+(?={0})'.format(punctuation_sign, tab), fixed_text):  # ' '
-        # b = match.regs[0]
+        # b = match.regs[0]  # Delete SIDE(PY3)
         b = match.span()  # Add SIDE(PY3)
         new_text += fixed_text[end:(b[0])] + ' ' * (b[1] - b[0] - 1)
         end = b[1]
@@ -144,7 +144,7 @@ def adaptiv_remove_tab(origin_text):
     end = 0
     new_text = ''
     for match in re.finditer('{1}+(?!{0})'.format(punctuation_sign, tab), fixed_text):  # '.'
-        # b = match.regs[0]
+        # b = match.regs[0]  # Delete SIDE(PY3)
         b = match.span()  # Add SIDE(PY3)
         new_text += fixed_text[end:(b[0])] + '.' + ' ' * (b[1] - b[0] - 1)
         end = b[1]
@@ -185,7 +185,7 @@ def fixe_samples_match(skip_map, origin_matches):
 
 def to_lower(text):
     if isinstance(text, str):
-        return str.lower(text)  # Add SIDE(PY3)
+        return text.lower()  # Add SIDE(PY3)
     # return string.lower(text) # Delete SIDE(PY3)
 
     # if isinstance(text, unicode):  # Delete SIDE(PY3)
@@ -314,14 +314,19 @@ class ParsePolyglot(object):
         self.text_class = text_class
 
     def __iter__(self):
-        end_pos = 0
+        # end_pos = 0  # Delete SIDE
         for word_class in self.classification:
             try:
                 if word_class.tag in self.set_tags:
+                    end_pos = 0  # Add SIDE
                     for i in range(word_class.start, word_class.end):
-                        # utf8_units = self.text_class.words[i] if isinstance(self.text_class.words[i], unicode) \
-                        #     else self.text_class.words[i].decode('utf8')
                         utf8_units = self.text_class.words[i]
+                        try:
+                            utf8_units = utf8_units.decode('utf8')
+                        except UnicodeError:
+                            pass
+                        except AttributeError:
+                            pass
                         if i == word_class.start:
                             start_pos = self.origin_text.find(utf8_units, end_pos)
                         end_pos = self.origin_text.find(utf8_units, end_pos) + len(utf8_units)
@@ -347,7 +352,14 @@ class ParsePolyglotPolarity(object):
         for word in self.classification:
             try:
                 tag = word.polarity
-                utf8_units = word  # if isinstance(word, unicode) else word.decode('utf8')
+                # utf8_units = word if isinstance(word, unicode) else word.decode('utf8')  # Delele SIDE(PY3)
+                utf8_units = word
+                try:
+                    utf8_units = utf8_units.decode('utf8')
+                except UnicodeError:
+                    pass
+                except AttributeError:
+                    pass
                 start_pos = self.origin_text.find(utf8_units, end_pos)
                 end_pos = start_pos + len(utf8_units)
                 if tag:
@@ -408,7 +420,7 @@ class DecodingPredictEntity(object):
             sample = self.replace(self.match['string'], tags, comb)
             samples.append(sample)
         samples.append({'string': self.match['string'],
-                        'matches':self.match['matches'],
+                        'matches': self.match['matches'],
                         'entity': self.match['entity']})
         yield samples
 
@@ -525,7 +537,9 @@ class ParseMatchesUnits(object):
         self.matches = matches
         try:
             text = text.decode('utf8')
-        except:
+        except UnicodeError:
+            pass
+        except AttributeError:
             pass
         self.origin_text = text
         self.units = units
@@ -590,7 +604,9 @@ class ParseMatchesUnitsBack(object):
         self.matches = matches
         try:
             text = text.decode('utf8')
-        except:
+        except UnicodeError:
+            pass
+        except AttributeError:
             pass
         self.origin_text = text
         self.units = units
@@ -640,11 +656,15 @@ class ParseMatchesUnitsBack(object):
 def check_skip_string_old(text, origin_text):
     try:
         text = text.decode('utf8')
-    except:
+    except UnicodeError:
+        pass
+    except AttributeError:
         pass
     try:
         origin_text = origin_text.decode('utf8')
-    except:
+    except UnicodeError:
+        pass
+    except AttributeError:
         pass
     j = 0
     dif_map = [0]*len(origin_text)
@@ -659,11 +679,15 @@ def check_skip_string_old(text, origin_text):
 def check_skip_string(text, origin_text):
     try:
         text = text.decode('utf8')
-    except:
+    except UnicodeError:
+        pass
+    except AttributeError:
         pass
     try:
         origin_text = origin_text.decode('utf8')
-    except:
+    except UnicodeError:
+        pass
+    except AttributeError:
         pass
     dif_map = [1]*len(origin_text)
     diff = difflib.SequenceMatcher(None, text, origin_text)
@@ -874,9 +898,4 @@ def escape(pattern):
 #     # zeros_right = len_string - len(string.rstrip())
 #     # print(len(string))
 #     ###################################################
-def country_code():
-    import csv
-    with open('/home/vnc/Desktop/RebuildPR/data/country_code_alpha2.csv', mode='r') as infile:
-        reader = csv.reader(infile)
-        my_dict = {rows[1].lower(): rows[0] for rows in reader}
-    return my_dict
+

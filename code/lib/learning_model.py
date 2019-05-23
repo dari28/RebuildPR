@@ -1,11 +1,4 @@
-import time
-import os
 import re
-import tempfile
-import shutil
-import numpy
-from collections import defaultdict
-from datetime import datetime
 
 from lib import tools, stanford_module as stanford
 from lib.text import Text
@@ -17,6 +10,150 @@ from bson import ObjectId
 from nlp.config import description_tag, STANFORD, stanford_models
 
 import jnius
+import numpy as np
+
+
+def union_res(result1, result2):
+    union_dict = dict()
+    for r1 in result1:
+        if result1[r1]:
+            v = result1[r1]
+            if isinstance(v, np.int64):
+                v = int(v)
+            if r1 in union_dict:
+                union_dict[r1].append(v)
+            else:
+                union_dict[r1] = list(v)
+    for r2 in result2:
+        if result2[r2]:
+            v = result2[r2]
+            if isinstance(v, np.int64):
+                v = int(v)
+            if r2 in union_dict:
+                union_dict[r2].append(v)
+            else:
+                union_dict[r2] = list(v)
+
+    return union_dict
+
+
+def get_tags(text, language="en"):
+    mongodb = MongoConnection()
+
+    entities1 = mongodb.get_default_entity({"type": "default_polyglot", "language": language})
+    result1 = predict_entity_polyglot(
+        entities1,
+        text,
+        language)
+
+    entities2 = mongodb.get_default_entity({"type": "default_stanford", "language": language})
+    result2 = predict_entity_stanford_default(
+        entities2,
+        text,
+        language)
+
+    return union_res(result1, result2)
+
+
+def train_article(params):
+    mongodb = MongoConnection()
+
+    language = 'en' if 'language' not in params else params['language']
+
+    if 'article_id' not in params:
+        raise EnvironmentError('Request must contain \'article_id\' field')
+    article_id = params['article_id']
+    if not isinstance(article_id, ObjectId):
+        article_id = ObjectId(article_id)
+
+    if mongodb.entity.find_one({'trained': True, 'article_id': article_id}):
+        return None
+
+    article = mongodb.article.find_one({'deleted': False, '_id': article_id})
+    if not article:
+        return None
+
+    if 'content' in article and article['content']:
+        tags = get_tags(article['content'], language)
+    else:
+        tags = get_tags(article['description'], language)
+
+    inserted_id = mongodb.entity.insert_one(
+        {
+            'article_id': str(article_id),
+            'model': 'default_stanford',
+            'tags': tags,
+            'trained': True,
+            'deleted': False
+        },
+        # upsert=True
+    ).inserted_id
+    return inserted_id
+
+
+def train_untrained_articles():
+    mongodb = MongoConnection()
+
+    article_ids = [x['_id'] for x in mongodb.source.find({'deleted': False})]
+    trained_article_ids = [ObjectId(x['article_id']) for x in mongodb.entity.find({'trained': True})]
+    untrained_ids = list(set(article_ids)-set(trained_article_ids))
+
+    for id in untrained_ids:
+        # self.train_article({'article_id': id}
+        train_article({'article_id': id})
+
+    return untrained_ids
+
+
+def train_on_list(train_text, name, language):
+    mongodb = MongoConnection()
+    if mongodb.default_entity.find_one({'name': name}):
+        return None
+
+    inserted_id = mongodb.default_entity.insert_one(
+        {
+            'name': name,
+            'model':
+                {
+                    'train_text': train_text,
+                    'train_postags': []
+                },
+            'available': True,
+            'training': "finished",
+            'language': language,
+            'type': 'list',
+            'deleted': False
+        },
+        # upsert=True
+    ).inserted_id
+    return inserted_id
+
+
+def train_on_default_list(params):
+    mongodb = MongoConnection()
+
+    language = 'en' if 'language' not in params else params['language']
+    # Add country
+    countries = mongodb.country.find()
+    common_names = [x['common_name'].lower() for x in countries]
+    common_names = list(set(common_names))
+    official_names = [x['official_name'].lower() for x in countries]
+    official_names = list(set(official_names))
+    train_on_list(train_text=common_names, name='country_common_names', language=language)
+    train_on_list(train_text=official_names, name='country_official_names', language=language)
+    # Add state
+    states = mongodb.state.find()
+    names = [x['name'].lower() for x in states]
+    names = list(set(names))
+    descriptions = [item.lower() for sublist in states for item in sublist['description']]
+    descriptions = list(set(descriptions))
+    train_on_list(train_text=names, name='state_names', language=language)
+    train_on_list(train_text=descriptions, name='state_descriptions', language=language)
+    # Add pr_city
+    pr_cities = mongodb.pr_city.find()
+    pr_city_names = [x['name'].lower() for x in pr_cities]
+    pr_city_names = list(set(pr_city_names))
+    train_on_list(train_text=pr_city_names, name='pr_city_names', language=language)
 
 
 def predict_entity(set_entity=None, data=None, language='en'):
@@ -74,9 +211,15 @@ def predict_entity_polyglot(entities, data, language=None):
     set_tag = [entity['model_settings']['tag'] for entity in entities]
     matches = []
 
-    #data = data if isinstance(data, unicode) else data.decode('utf8')
+    # data = data if isinstance(data, unicode) else data.decode('utf8')  # Delete SIDE(PY3)
+    try:
+        data = data.decode('utf8')
+    except UnicodeError:
+        pass
+    except AttributeError:
+        pass
 
-    #if 'case_sensitive' in entity['model_settings'] and not entity['model_settings']['case_sensitive']:
+    # if 'case_sensitive' in entity['model_settings'] and not entity['model_settings']['case_sensitive']:
     for entity in entities:
         if entity['model_settings']['tag'] in ['negative_word', 'positive_word']:
             data = data.lower()
@@ -100,7 +243,7 @@ def predict_entity_polyglot(entities, data, language=None):
 
     dict_tag = {}
     for entity in entities:
-        #dict_tag[entity['model_settings']['tag']] = entity['_id'] #SIDE
+        # dict_tag[entity['model_settings']['tag']] = entity['_id'] #SIDE
         dict_tag[entity['model_settings']['tag']] = entity['name']
     result = {}
     for tag in dict_tag:
@@ -120,10 +263,11 @@ def predict_entity_stanford_default(entities, data, language=None):
     entity_dict = tools.sort_model(entities, 'model')
     try:
         data = data.encode('utf8')
-    except:
+    except UnicodeError:
         pass
-    #data_predict, back_map = tools.adaptiv_remove_tab(data) #SIDE DELETE
-    data_predict = data #SIDE ADD
+    except AttributeError:
+        pass
+    data_predict, back_map = tools.adaptiv_remove_tab(data)
 
     annotation = stanford.Annotation(stanford.jString(data_predict))
     stanford.getTokenizerAnnotator(language).annotate(annotation)
@@ -176,11 +320,11 @@ def predict_entity_stanford_default(entities, data, language=None):
             dict_tag[entity['model_settings']['tag']] = entity['name']  # SIDE ADD
 
         for tag in dict_tag:
-            #result[dict_tag[tag]] = []
+            # result[dict_tag[tag]] = []
             result[tag] = []
 
         for match in matches:
-            #result[dict_tag[match['tag']]].append(match['match'])
+            # result[dict_tag[match['tag']]].append(match['match'])
             result[match['tag']].append(match['match'])
 
         for tag in dict_tag:
@@ -215,10 +359,10 @@ def predict_entity_stanford(entities, data, language=None, classifier_dict = {})
             #     data_predict, back_map = tools.adaptiv_remove_tab(data_predict)
             # else:
             #     data_predict, back_map = tools.remove_tab(data_predict)
-            #settings = entity['tags']
+            # settings = entity['tags']
             data_predict = data
             annotation = stanford.annotation(data_predict, language, settings)
-            #document = annotation.get(stanford.getClassAnnotation('TokensAnnotation'))
+            # document = annotation.get(stanford.getClassAnnotation('TokensAnnotation'))
             model = tools.get_abs_path(STANFORD[entity['model']])
             model = model if isinstance(model, str) else model.encode('utf8')
 
@@ -243,10 +387,10 @@ def predict_entity_stanford(entities, data, language=None, classifier_dict = {})
                     jTokken = document.get(i)
                     tag = jTokken.get(stanford.getClassAnnotation('AnswerAnnotation'))
                     # word = jTokken.get(stanford.getClassAnnotation('TextAnnotation'))
-                    #if tag in list(description_tag.keys()):#['A', 'LOCATION', ]:
+                    # if tag in list(description_tag.keys()):#['A', 'LOCATION', ]:
+                    # if tag in ['DATE']:
+                    # if tag == cur_tag:
                     if tag in ['A']:
-                    #if tag in ['DATE']:
-                    #if tag == cur_tag:
                         word = jTokken.get(stanford.getClassAnnotation('OriginalTextAnnotation'))
                         start_pos = jTokken.get(stanford.getClassAnnotation('CharacterOffsetBeginAnnotation'))
                         if start_pos == previous_end_pos + 1 and tag == previous_tag:
@@ -262,11 +406,11 @@ def predict_entity_stanford(entities, data, language=None, classifier_dict = {})
                         match = {
                             'start_match': start_pos,
                             'length_match': end_pos - start_pos,
-                            'word': word#,
-                           # 'tag': tag
+                            'word': word  # ,
+                            # 'tag': tag
                         }
                         matches.append(match)
-            #matches = tools.sample_update_matches(back_map, data, matches)
+            # matches = tools.sample_update_matches(back_map, data, matches)
             result[entity['description']] = matches
     # if matches:
     #     result.append(matches)
@@ -280,7 +424,9 @@ def predict_entity_list(entities, data, language='en'):
     matches = {}
     try:
         data = data.decode('utf8')
-    except:
+    except UnicodeError:
+        pass
+    except AttributeError:
         pass
     data = tools.escape(data)
     for entity in entities:
@@ -289,10 +435,11 @@ def predict_entity_list(entities, data, language='en'):
             settings = entity['model_settings']
         else:
             settings = {}
-        if 'case_sensitive' in settings and not settings['case_sensitive']:
-            data_predict = data.lower()
-        else:
-            data_predict = data
+        # if 'case_sensitive' in settings and not settings['case_sensitive']:
+        #     data_predict = data.lower()
+        # else:
+        #     data_predict = data
+        data_predict = data.lower()
         if 'match_level' in settings:
             match_level = settings['match_level']
         else:
@@ -335,6 +482,7 @@ def predict_entity_list(entities, data, language='en'):
         i = 0
 
         for entry in train_list:
+            entry = entry.lower()  # Add SIDE(case_sensative)
             if match_level == 0 and not normal_form:
                 match_entry = [[m.start(), m.end() - 1] for m in re.finditer(tools.escape(entry), data_predict)]
 
@@ -346,9 +494,11 @@ def predict_entity_list(entities, data, language='en'):
                     if word == entry:
                         if train_postags and train_tags[i] != word_tag:
                             continue
-                        match.append({'start_match': start_match,
-                                          'length_match': end_match - start_match,
-                                          'word': word})
+                        match.append({
+                            'start_match': start_match,
+                            'length_match': end_match - start_match,
+                            'word': word
+                        })
                 i = i + 1
             elif match_level == 0 and normal_form:
 
@@ -392,7 +542,8 @@ def predict_entity_list(entities, data, language='en'):
                                       'length_match': match_morpheme[2]-match_morpheme[1],
                                       'word': match_morpheme[0]})
             else:
-                match += [{'start_match': m.start(), 'length_match': m.end() - m.start(), 'word': entry} for m in re.finditer(tools.escape(entry), data_predict)]
+                match += [{'start_match': m.start(), 'length_match': m.end() - m.start(), 'word': entry}
+                          for m in re.finditer(tools.escape(entry), data_predict)]
 
         match = tools.sample_update_matches(back_map, data, match)
 
@@ -425,10 +576,11 @@ class NormalForm(object):
             ini_pos = self.origin_text.find(word, end_pos)
             end_pos = ini_pos + len(word)
             normal_form = get_base_form_for_word(word, self.language, self.tags[i][1])
-            #normal_form = word
+            # normal_form = word
             new_text += text[pref_end:ini_pos] + normal_form
             pref_end = end_pos
-            normal_words.append(unicode(normal_form))
+            # normal_words.append(unicode(normal_form))
+            normal_words.append(str(normal_form))
         new_text += text[pref_end:]
         self._normal_text = new_text
         self._normal_words = normal_words
@@ -459,7 +611,7 @@ model_entity_predict = {
     'list': predict_entity_list,
     'default_polyglot': predict_entity_polyglot,
     'default_stanford': predict_entity_stanford_default,
-   # 'stanford_crf': predict_entity_stanford
+    # 'stanford_crf': predict_entity_stanford
 }
 #
 # model_intent_predict = {

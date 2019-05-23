@@ -157,7 +157,6 @@ def load_stanford_ner(text, language):
     prop = get_prop_for_language(language)
     prop.update({'ner.model': tools.get_abs_path(STANFORD[text]), 'ner.useSUTime': 'false'})
     prop_ner = to_prop(prop)
-    a = func(prop_ner) #SIDE: DELETE IT PLEASE
     return NERCombinerAnnotator(prop_ner)
 
 
