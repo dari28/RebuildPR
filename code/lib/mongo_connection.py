@@ -78,57 +78,37 @@ class MongoConnection(object):
         country_list = get_country_names_list()
         self.country.insert(country_list)
 
-    def fill_up_geolocation_country_list(self):
-        counties = list(self.country.find({'location': {'$exists': False}}))
-        updated_ids = []
-        for country in counties:
-            _id = country['_id']
-            updated_ids.append(_id)
-            country['location'] = None
-            try:
-                country['location'] = geo.get_geoposition({'text': country['official_name']})
-            except Exception:
-                pass
-            self.country.update_one({'_id': _id}, {'$set': country})
-        return updated_ids
-
     def update_state_list(self):
         states_list = get_us_state_list()
         self.state.insert(states_list)
-
-    def fill_up_geolocation_state_list(self):
-        states = list(self.state.find({'location': {'$exists': False}}))
-        updated_ids = []
-        for state in states:
-            _id = state['_id']
-            updated_ids.append(_id)
-
-            state['location'] = None
-            try:
-                state['location'] = geo.get_geoposition({'text': state['name']})
-            except Exception:
-                pass
-            self.state.update_one({'_id': _id}, {'$set': state})
-        return updated_ids
 
     def update_pr_city_list(self):
         pr_city_list = get_pr_city_list()
         self.pr_city.insert(pr_city_list)
 
-    def fill_up_geolocation_pr_city_list(self):
-        pr_city_list = list(self.pr_city.find({'location': {'$exists': False}}))
+    @staticmethod
+    def fill_up_geolocation(table, field):
+        table_list = list(table.find({'location': {'$exists': False}}))
         updated_ids = []
-        for pr_city in pr_city_list:
-            _id = pr_city['_id']
+        for table_item in table_list:
+            _id = table_item['_id']
             updated_ids.append(_id)
-
-            pr_city['location'] = None
+            table_item['location'] = None
             try:
-                pr_city['location'] = geo.get_geoposition({'text': pr_city['name']})
+                table_item['location'] = geo.get_geoposition({'text': table_item[field]})
             except Exception:
                 pass
-            self.pr_city.update_one({'_id': _id}, {'$set': pr_city})
+            table.update_one({'_id': _id}, {'$set': table_item})
         return updated_ids
+
+    def fill_up_geolocation_country_list(self):
+        return MongoConnection.fill_up_geolocation(self.country, 'official_name')
+
+    def fill_up_geolocation_state_list(self):
+        return MongoConnection.fill_up_geolocation(self.state, 'name')
+
+    def fill_up_geolocation_pr_city_list(self):
+        return MongoConnection.fill_up_geolocation(self.pr_city, 'name')
 
     def update_source_list_from_server(self):
         # TO_DO: Refactor
