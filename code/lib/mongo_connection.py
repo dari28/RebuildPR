@@ -72,7 +72,7 @@ class MongoConnection(object):
         length = 10 if 'length' not in params else params['length']
         sources = list(self.source.find(search_param).skip(start).limit(length + 1))
         more = True if len(sources) > length else False
-        return sources[:-1], more
+        return sources[:length], more
 
     def update_country_list(self):
         country_list = get_country_names_list()
@@ -244,7 +244,7 @@ class MongoConnection(object):
         #full_artilces = list(self.article.find({'_id': {"$in": articles['articles']}}))
         full_articles = list(self.article.find(search_param).skip(start).limit(length + 1))
         more = True if len(full_articles) > length else False
-        return full_articles
+        return full_articles[:length], more
 
     def delete_article_list_by_ids(self, ids):
         """Delete sources by the database"""
@@ -376,27 +376,19 @@ class MongoConnection(object):
     #     return untrained_ids
 
     def show_article_list(self, params):
-        language = 'en'
-
         if 'tags' not in params:
             raise EnvironmentError('Request must contain \'tags\' field')
         tags = params['tags']
+        query = dict()
+        query_list = []
+        for tag in tags.keys():
+            query_list.append({'tags.{0}.word'.format(tag): tags.get(tag)})
+        query['$or'] = query_list
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
-        list_to_show = []
-        ent = self.entity.find()
-        for article in ent:
-            a_tags = article['tags']
-            n = 0
-            for a_t_k, a_t_v in a_tags.items():
-                for t in tags:
-                    for t_k, t_v in t.items():
-                        if (t_k == a_t_k) & (t_v == a_t_v[0]['word']):
-                            n += 1
-            if n > 0:
-                list_to_show.append(article)
+        list_to_show = list(self.entity.find(query).skip(start).limit(length))
         more = True if len(list_to_show) > start + length else False
-        return list_to_show[start:start + length], more
+        return list_to_show[:length], more
 
     def tag_stat(self, params):
         if 'tag' not in params:
@@ -429,21 +421,21 @@ class MongoConnection(object):
         length = 10 if 'length' not in params else params['length']
         c_list = list(self.country.find().skip(start).limit(length + 1))
         more = True if len(c_list) > length else False
-        return c_list[:-1], more
+        return c_list[:length], more
 
     def show_state_list(self, params):
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
         s_list = list(self.state.find().skip(start).limit(length + 1))
         more = True if len(s_list) > length else False
-        return s_list[:-1], more
+        return s_list[:length], more
 
     def show_pr_city_list(self, params):
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
         pr_list = list(self.pr_city.find().skip(start).limit(length + 1))
         more = True if len(pr_list) > length else False
-        return pr_list[:-1], more
+        return pr_list[:length], more
 
     def show_trained_article_list(self, params={'status': 'trained'}):
         search_param = dict()
@@ -454,4 +446,4 @@ class MongoConnection(object):
         search_param['trained'] = True if params['status'] == 'trained' else False
         articles = list(self.entity.find(search_param).skip(start).limit(length + 1))
         more = True if len(articles) > length else False
-        return articles, trained, untrained, more
+        return articles[:length], trained, untrained, more
