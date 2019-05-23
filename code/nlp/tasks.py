@@ -27,6 +27,7 @@ import geoposition as geo
 from lib import mongo_connection as mongo
 from tags import get_tags
 
+
 @background(schedule=1)
 def update_country_list():
     mongodb = mongo.MongoConnection()
@@ -39,59 +40,33 @@ def update_country_list():
 
 
 @background(schedule=1)
-def get_pr_city_list():
-    pr_city_list = []
+def fill_up_geolocation_country_list(self):
     try:
-
-        url = requests.get('https://suburbanstats.org/population/puerto-rico/list-of-counties-and-cities-in-puerto-rico').text
-        soup = BeautifulSoup(url, 'lxml')
-        pr_city = soup.findAll('a', title=re.compile('Population Demographics and Statistics'))
-        for city in pr_city:
-            ct = dict()
-            ct['country'] = '5cdc1484cde53353db41d8cd'
-            ct['state'] = '5cdcf40dcde5330f034fccc4'
-            ct['name'] = city.get_text()
-            ct['location'] = None
-            try:
-                ct['location'] = geo.get_geoposition({'text': ct['name']})
-            except:
-                pass
-            pr_city_list.append(ct)
+        print("Background task fill_up_geolocation_country_list started")
+        ids = mongo.MongoConnection.fill_up_geolocation(self.country, 'official_name')
+        print("Background task fill_up_geolocation_country_list finished. Response: \n{}".format(ids))
     except:
         pass
-    return pr_city_list
 
 
 @background(schedule=1)
-def get_us_state_list():
-    US_states_list = []
+def fill_up_geolocation_state_list(self):
     try:
-        url = requests.get('https://en.wikipedia.org/wiki/List_of_U.S._state_abbreviations').text
-        soup = BeautifulSoup(url, 'lxml')
-        table = soup.find('table', "wikitable sortable").findAll('tr')
-        for row in table[12:]:
-            st = dict()
-            state = row.find('td').get_text().replace('\n', '').replace('\r', '').replace(u'\xa0', u'')
-            state = re.sub(r'[[a-z,0-9].]', '', state)
-            description = []
-            for desc in row.findAll('td')[2:]:
-                d = desc.get_text().replace('\n', '').replace('\r', '').replace(u'\xa0', u'')
-                if d is not '':
-                    description.append(d)
-            description = remove(description)
-            #!!!ATTENTION!!! USA change to ID
-            st['country_id'] = '5cdc1484cde53353db41d8cd'
-            st['name'] = state
-            st['description'] = description
-            st['location'] = None
-            try:
-                st['location'] = geo.get_geoposition({'text': st['name']})
-            except:
-                pass
-            US_states_list.append(st)
+        print("Background task fill_up_geolocation_state_list started")
+        ids = mongo.MongoConnection.fill_up_geolocation(self.state, 'name')
+        print("Background task fill_up_geolocation_state_list finished. Response: \n{}".format(ids))
     except:
         pass
-    return US_states_list
+
+
+@background(schedule=1)
+def fill_up_geolocation_pr_city_list(self):
+    try:
+        print("Background task fill_up_geolocation_pr_city_list started")
+        ids = mongo.MongoConnection.fill_up_geolocation(self.pr_city, 'name')
+        print("Background task fill_up_geolocation_pr_city_list finished. Response: \n{}".format(ids))
+    except:
+        pass
 
 
 @background(schedule=1)
