@@ -35,9 +35,9 @@ def test_work(request):
 
 
 @api_view(['POST'])
-def get_language_list(request):
+def get_article_language_list(request):
     mongodb = mongo.MongoConnection()
-    languages = mongodb.get_language_list()
+    languages = mongodb.get_article_language_list()
     results = {'status': True, 'response': {'languages': languages}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -283,6 +283,15 @@ def tag_stat(request):
 
 
 @api_view(['POST'])
+def show_language_list(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    response, more = mongodb.show_language_list(params=params)
+    results = {'status': True, 'response': {'language': response, 'more': more}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
 def show_country_list(request):
     params = request.data
     mongodb = mongo.MongoConnection()
@@ -337,5 +346,22 @@ def predict_entity(request):
 
     predict_result = model.predict_entity(data=data['data'], set_entity=entity_id, language=data['language'])
     results = {'status': True, 'response': {'predict': predict_result}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def get_language(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    response = mongodb.get_language(params=params)
+    results = {'status': True, 'response': response, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def update_language_list(request):
+    mongodb = mongo.MongoConnection()
+    mongodb.update_language_list()
+    results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 

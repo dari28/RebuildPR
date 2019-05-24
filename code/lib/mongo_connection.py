@@ -35,6 +35,7 @@ class MongoConnection(object):
         self.pr_city = self.mongo_db[config['pr_city_collection']]
         self.entity = self.mongo_db[config['entity_collection']]
         self.default_entity = self.mongo_db[config['default_entity_collection']]
+        self.language = self.mongo_db[config['language_collection']]
 
     # def get_country_list(self):
     #     country_list = []
@@ -48,7 +49,7 @@ class MongoConnection(object):
     #
     #     return dict_country_list
 
-    def get_language_list(self):
+    def get_article_language_list(self):
         language_list = []
         for source in self.source.find({'deleted': False}):
             language_list.append(source['language'])
@@ -323,6 +324,17 @@ class MongoConnection(object):
 
         return list(self.default_entity.find(search_params))
 
+    def update_language_list(self):
+        language_list = []
+        langs = list(pycountry.languages)
+        for lang in langs:
+            lan = dict()
+            if hasattr(lang, 'alpha_2'):
+                lan['code'] = lang.alpha_2
+                lan['name'] = lang.name
+                language_list.append(lan)
+        self.language.insert(language_list)
+
 
     # def train_article(self, params):
     #     language = 'en' if 'language' not in params else params['language']
@@ -416,6 +428,19 @@ class MongoConnection(object):
         stat['tag_list'] = t[start:start + length]
         return stat
 
+    def show_language_list(self, params):
+        start = 0 if 'start' not in params else params['start']
+        length = 10 if 'length' not in params else params['length']
+        l_list = list(self.language.find().skip(start).limit(length + 1))
+        more = True if len(l_list) > length else False
+        return l_list[:length], more
+
+    def get_language(self, params):
+        if 'code' not in params:
+            raise EnvironmentError('Request must contain \'code\' field')
+        language = self.language.find_one({'code': params['code']})
+        return language
+
     def show_country_list(self, params):
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
@@ -437,13 +462,14 @@ class MongoConnection(object):
         more = True if len(pr_list) > length else False
         return pr_list[:length], more
 
-    def show_trained_article_list(self, params={'status': 'trained'}):
+    def show_trained_article_list(self, params):
         search_param = dict()
+        status = 'trained' if 'status' not in params else params['status']
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
         trained = self.entity.count({'trained': True})
         untrained = self.entity.count({'trained': False})
-        search_param['trained'] = True if params['status'] == 'trained' else False
+        search_param['trained'] = True if status == 'trained' else False
         articles = list(self.entity.find(search_param).skip(start).limit(length + 1))
         more = True if len(articles) > length else False
         return articles[:length], trained, untrained, more

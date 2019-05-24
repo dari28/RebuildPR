@@ -221,6 +221,7 @@ MONGO = dict(
     pr_city_collection='pr_city',
     entity_collection='entity',
     default_entity_collection='default_entity',
+    language_collection='language',
     # entity_collection='entity',
     # intent_collection='intent',
 )
