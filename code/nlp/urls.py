@@ -5,10 +5,10 @@ from lib.server_tuning import execution_at_startup
 urlpatterns = [
     url(r'^test_work/?$', views.test_work),
     url(r'^test_exception_work/?$', views.test_exception_work),
+    url(r'^get_server_calls/?$', views.get_server_calls),
 
     url(r'^tag_stat/?$', views.tag_stat),
 
-    # url(r'^get_country_list/?$', views.get_country_list),
     url(r'^get_language_list/?$', views.get_language_list),
     url(r'^update_country_list/?$', views.update_country_list),
     url(r'^update_state_list/?$', views.update_state_list),
@@ -40,7 +40,6 @@ urlpatterns = [
     url(r'^get_default_entity/?$', views.get_default_entity),
 
     url(r'^get_geoposition/?$', views.get_geoposition),
-    url(r'^add_geoposition_to_DB/?$', views.add_geoposition_to_DB),
     url(r'^fill_up_geolocation_country_list/?$', views.fill_up_geolocation_country_list),
     url(r'^fill_up_geolocation_state_list/?$', views.fill_up_geolocation_state_list),
     url(r'^fill_up_geolocation_pr_city_list/?$', views.fill_up_geolocation_pr_city_list),
