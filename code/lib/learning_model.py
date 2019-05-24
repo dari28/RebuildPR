@@ -261,12 +261,12 @@ def predict_entity_stanford_default(entities, data, language=None):
     """"""
     #"data" MUST BE str type(utf-8 encoding).
     entity_dict = tools.sort_model(entities, 'model')
-    try:
-        data = data.encode('utf8')
-    except UnicodeError:
-        pass
-    except AttributeError:
-        pass
+    # try:
+    #     data = data.encode('utf8')
+    # except UnicodeError:
+    #     pass
+    # except AttributeError:
+    #     pass
     data_predict, back_map = tools.adaptiv_remove_tab(data)
 
     annotation = stanford.Annotation(stanford.jString(data_predict))

@@ -27,8 +27,8 @@ PYINSTRUMENT_PROFILE_DIR = 'profiles'
 SECRET_KEY = '^1ae+k*1111(c+0sidyz#!$111^6=qk(t8+m8wsmh@k-11161a'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-# DEBUG = False
+# DEBUG = True
+DEBUG = False
 
 
 # ALLOWED_HOSTS = [gethostname(), gethostbyname(gethostname()), '127.0.0.1', 'localhost', '174.129.126.138']
@@ -57,13 +57,13 @@ MIDDLEWARE = [
 
 if DEBUG:
     MIDDLEWARE.extend([
-#         'django.middleware.security.SecurityMiddleware',
-#         'django.contrib.sessions.middleware.SessionMiddleware',
-#         'django.middleware.common.CommonMiddleware',
-#         'django.middleware.csrf.CsrfViewMiddleware',
-#  #       'django.contrib.auth.middleware.AuthenticationMiddleware',
-# #        'django.contrib.messages.middleware.MessageMiddleware',
-#         'django.middleware.clickjacking.XFrameOptionsMiddleware',
+        'django.middleware.security.SecurityMiddleware',
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'django.middleware.common.CommonMiddleware',
+        'django.middleware.csrf.CsrfViewMiddleware',
+ #       'django.contrib.auth.middleware.AuthenticationMiddleware',
+#        'django.contrib.messages.middleware.MessageMiddleware',
+        'django.middleware.clickjacking.XFrameOptionsMiddleware',
         'pyinstrument.middleware.ProfilerMiddleware'
     ])
 

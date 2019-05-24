@@ -59,16 +59,13 @@ class MongoConnection(object):
     # ***************************** GEOLOCATION ******************************** #
 
     def update_country_list(self):
-        country_list = get_country_names_list()
-        self.country.insert(country_list)
+        self.country.insert(get_country_names_list())
 
     def update_state_list(self):
-        states_list = get_us_state_list()
-        self.state.insert(states_list)
+        self.state.insert(get_us_state_list())
 
     def update_pr_city_list(self):
-        pr_city_list = get_pr_city_list()
-        self.pr_city.insert(pr_city_list)
+        self.pr_city.insert(get_pr_city_list())
 
     @staticmethod
     def fill_up_geolocation(table, field):
@@ -364,5 +361,5 @@ class MongoConnection(object):
         articles = list(self.entity.find(search_param).skip(start).limit(length + 1))
         more = True if len(articles) > length else False
         return articles[:length], trained, untrained, more
-    
+
 
