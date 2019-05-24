@@ -99,6 +99,11 @@ def train_on_default_list(request):
     params = request.data
     tasks.train_on_default_list(params=params)
     results = {'status': True, 'response': {}, 'error': {}}
+
+def get_article_language_list(request):
+    mongodb = mongo.MongoConnection()
+    languages = mongodb.get_article_language_list()
+    results = {'status': True, 'response': {'languages': languages}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 # ***************************** SOURCES ******************************** #
@@ -297,6 +302,15 @@ def tag_stat(request):
 
 
 @api_view(['POST'])
+def show_language_list(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    response, more = mongodb.show_language_list(params=params)
+    results = {'status': True, 'response': {'language': response, 'more': more}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
 def show_country_list(request):
     params = request.data
     mongodb = mongo.MongoConnection()
@@ -330,3 +344,44 @@ def show_trained_article_list(request):
     articles, trained, untrained, more = mongodb.show_trained_article_list(params=params)
     results = {'status': True, 'response': {'trained count': trained, 'untrained count': untrained, 'trained articles': articles, 'more': more}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def predict_entity(request):
+    data = request.data
+    if 'entity' not in data:
+        raise EnvironmentError('Entity not defined')
+    if 'language' not in data:
+        raise EnvironmentError('The input format is not correct! The input data must contain the "language" field.')
+    if 'data' not in data:
+        raise EnvironmentError('The input format is not correct! The input data must contain the "data" field.')
+
+    entity_id = []
+    for entity in data['entity']:
+        try:
+            entity_id.append(ObjectId(entity))
+        except:
+            raise errors.InvalidId('Invalid value for "entity" = {0}'.format(entity))
+
+    predict_result = model.predict_entity(data=data['data'], set_entity=entity_id, language=data['language'])
+    results = {'status': True, 'response': {'predict': predict_result}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def get_language(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    response = mongodb.get_language(params=params)
+    results = {'status': True, 'response': response, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def update_language_list(request):
+    mongodb = mongo.MongoConnection()
+    mongodb.update_language_list()
+    results = {'status': True, 'response': {}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+

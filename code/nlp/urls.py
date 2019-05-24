@@ -9,7 +9,12 @@ urlpatterns = [
 
     url(r'^tag_stat/?$', views.tag_stat),
 
-    url(r'^get_language_list/?$', views.get_language_list),
+    url(r'^update_language_list/?$', views.update_language_list),
+    url(r'^show_language_list/?$', views.show_language_list),
+    url(r'^get_language/?$', views.get_language),
+
+    # url(r'^get_country_list/?$', views.get_country_list),
+    url(r'^get_article_language_list/?$', views.get_article_language_list),
     url(r'^update_country_list/?$', views.update_country_list),
     url(r'^update_state_list/?$', views.update_state_list),
     url(r'^update_pr_city_list/?$', views.update_pr_city_list),
