@@ -10,7 +10,7 @@ import json
 from wiki_parser import get_us_state_list, get_country_names_list, get_pr_city_list
 import geoposition as geo
 from collections import Counter
-
+import datetime
 
 class MongoConnection(object):
     """Connection class to mongoDB"""
@@ -20,6 +20,7 @@ class MongoConnection(object):
         config = dict(MONGO, **config) if config else MONGO
         mongo = pymongo.MongoClient(config['mongo_host'], connect=True)
         self.mongo_db = mongo[config['database']]
+        self.news_api_call = self.mongo_db[config['news_api_call_collection']]
         self.phrase = self.mongo_db[config['phrase_collection']]
         self.source = self.mongo_db[config['source_collection']]
         self.article = self.mongo_db[config['article_collection']]
@@ -55,6 +56,10 @@ class MongoConnection(object):
         sources = list(self.source.find(search_param).skip(start).limit(length + 1))
         more = True if len(sources) > length else False
         return sources[:length], more
+
+    def add_news_api_call(self, call):
+        call['start_time'] = datetime.datetime.utcnow()
+        return self.news_api_call.insert_one(call).inserted_id
 
     # ***************************** GEOLOCATION ******************************** #
 
@@ -131,11 +136,21 @@ class MongoConnection(object):
         return self.article.find({})
 
     def update_article_list_from_server(self, params):
-        #TO_DO: Make two collection. article_q should keep only ids of articles
+        # TO_DO: Make two collection. article_q should keep only ids of articles
         if 'q' not in params:
             raise EnvironmentError('Request must contain \'q\' field')
         q = params['q']
-        #TO_DO: Add check for time
+        # TO_DO: Add check for time
+        last_call = list(self.news_api_call.find({'q': q, 'type': 1}).sort('start_time').limit(1))
+        print(last_call)
+        if last_call:
+            print(last_call['start_time'] + datetime.timedelta(hours=1))
+        print(datetime.datetime.utcnow())
+        if last_call and last_call['start_time'] + datetime.timedelta(hours=1) > datetime.datetime.utcnow():
+            return
+
+        news_api_call_id = self.add_news_api_call({'q': q, 'type': 1})
+
         new_articles, _ = NewsCollection.get_everything(q)
         new_articles_hash = new_articles.copy()
         new_hash_list = []
@@ -170,6 +185,8 @@ class MongoConnection(object):
                                   "$currentDate": {"lastModified": True}},
                                  upsert=True)
 
+        self.news_api_call.update_one({'_id': news_api_call_id}, {'$set': {'end_time': datetime.datetime.utcnow()}})
+
         return inserted_ids, deleted_ids
 
     def get_article_list(self, params):
@@ -195,14 +212,14 @@ class MongoConnection(object):
         search_param = dict()
         search_fields = ['id', 'name', 'language', 'country', 'category']
         search_param['_id'] = {"$in": articles['articles']}
-        #search_param['source'] = dict()
+        # search_param['source'] = dict()
         if params:
             for field in search_fields:
                 if field in params:
                     search_param['source.'+field] = params[field]
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
-        #full_artilces = list(self.article.find({'_id': {"$in": articles['articles']}}))
+        # full_artilces = list(self.article.find({'_id': {"$in": articles['articles']}}))
         full_articles = list(self.article.find(search_param).skip(start).limit(length + 1))
         more = True if len(full_articles) > length else False
         return full_articles[:length], more
