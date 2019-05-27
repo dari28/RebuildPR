@@ -141,7 +141,7 @@ class MongoConnection(object):
             raise EnvironmentError('Request must contain \'q\' field')
         q = params['q']
         # TO_DO: Add check for time
-        last_call = list(self.news_api_call.find({'q': q, 'type': 1}).sort('start_time').limit(1))
+        last_call = list(self.news_api_call.find({'q': q, 'type': 1}).sort('start_time').limit(1))[0]
         print(last_call)
         if last_call:
             print(last_call['start_time'] + datetime.timedelta(hours=1))

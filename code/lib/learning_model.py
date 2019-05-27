@@ -267,9 +267,16 @@ def predict_entity_stanford_default(entities, data, language=None):
     #     pass
     # except AttributeError:
     #     pass
-    data_predict, back_map = tools.adaptiv_remove_tab(data)
+    # data_predict, back_map = tools.adaptiv_remove_tab(data)  # SIDE Error ValueError: chr() arg not in range(0x110000) occurs
+    try:
+        j_data_predict = stanford.jString(data.encode('utf-8'))
+    except ValueError:
+        j_data_predict = stanford.jString(data)
 
-    annotation = stanford.Annotation(stanford.jString(data_predict))
+    # data_predict = data
+    # j_data_predict = stanford.jString(data_predict)
+
+    annotation = stanford.Annotation(j_data_predict)
     stanford.getTokenizerAnnotator(language).annotate(annotation)
     stanford.getWordsToSentencesAnnotator(language).annotate(annotation)
     stanford.getPOSTaggerAnnotator(language).annotate(annotation)
@@ -338,7 +345,7 @@ def predict_entity_stanford_default(entities, data, language=None):
     return result
 
 
-def predict_entity_stanford(entities, data, language=None, classifier_dict = {}):
+def predict_entity_stanford(entities, data, language=None, classifier_dict={}):
     """"""
     # "data" MUST BE str type(utf-8 encoding).
     result = {}

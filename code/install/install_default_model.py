@@ -3,10 +3,12 @@ import os
 from lib.mongo_connection import MongoConnection
 from lib.linguistic_functions import get_supported_languages
 from nlp.config import SERVER
+from polyglot.load import load_embeddings
 
 def add_polyglot_default():
     """Defining default polyglot models"""
     entities = []
+    load_embeddings()
     polyglot_model = [
         {
             'model_settings': {
@@ -79,15 +81,15 @@ def add_polyglot_default():
     for language in SERVER['language']:
         # Adding Entities
         for model in polyglot_model:
-            #full_name = Language.from_code(language).name
-            #if full_name in tools.list_decode(
+            # full_name = Language.from_code(language).name
+            # if full_name in tools.list_decode(
             #        downloader.supported_languages(model['model_settings']['polyglot_model'])
-            #):
+            # ):
             if language in get_supported_languages(model['model_settings']['polyglot_model']):
                 model['language'] = language
                 model['training'] = 'finished'
                 model['available'] = True
-               # model['user'] = DEFAULT_USER[language]
+                # model['user'] = DEFAULT_USER[language]
                 entities.append(model)
                 find_entity = model.copy()
                 del find_entity['description']
