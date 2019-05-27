@@ -84,7 +84,7 @@ def polyglot_default_install():
                     raise EnvironmentError(
                         'The {0} module for {1} was not found, to install this package,'
                         ' run "./install/install_polyglot.py"'.format('morph2', full_name))
-            #TO_DO: Fix problem with pos2
+
             if language in get_supported_languages('pos2'):
                 pos = True
                 # if not downloader.is_installed(unicode('pos2.' + language)):
@@ -157,8 +157,6 @@ def standford_default_install():
 #     mongo = MongoConnection()
 #     if not mongo.users.find_one({'_id': ADMIN_USER}):
 #         mongo.users.insert_one({'_id': ADMIN_USER})
-
-
 
 
 def execution_at_startup():

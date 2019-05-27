@@ -98,7 +98,13 @@ class MongoConnection(object):
         return MongoConnection.fill_up_geolocation(self.pr_city, 'name')
 
     def update_source_list_from_server(self):
-        # TO_DO: Refactor
+        """
+        Description: update source list from news collector (for scheduler)
+        It makes request to server and updates sources in db.
+        It adds new sources and deletes(change ‘deleted’ filed) not available sources. The ‘response’ field contains that ids.
+        Input: None
+        :return: inserted_ids and deleted_ids of sources
+        """
         new_sources, _ = NewsCollection.get_sources("")
         new_sources_hash = new_sources.copy()
         new_hash_list = []
@@ -137,11 +143,18 @@ class MongoConnection(object):
         return self.article.find({})
 
     def update_article_list_from_server(self, params):
-        # TO_DO: Make two collection. article_q should keep only ids of articles
+        """
+        Description: update article list from news collector (for scheduler)
+        It makes request to server and updates articles in db.
+        It adds new sources and deletes(change ‘deleted’ filed) not available sources. The ‘response’ field contains that ids.
+        :param params:
+        q - search word (str or list)
+        :return: inserted_ids and deleted_ids of article
+        """
         if 'q' not in params:
             raise EnvironmentError('Request must contain \'q\' field')
         q = params['q']
-        # TO_DO: Add check for time
+        # TO_DO: Change 1 hour to 24 hour
         last_call_list = list(self.news_api_call.find({'q': q, 'type': 1}).sort('start_time').limit(1))
         try:
             last_call = last_call_list.pop()

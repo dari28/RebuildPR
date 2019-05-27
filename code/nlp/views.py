@@ -12,6 +12,8 @@ from news import NewsCollection
 
 # ***************************** TEST FUNCTIONS ******************************** #
 
+# noinspection PyUnusedLocal
+
 
 @api_view(['POST'])
 def test_exception_work(request):
@@ -19,6 +21,8 @@ def test_exception_work(request):
     List all snippets, or create a new snippet.
     """
     raise EnvironmentError("My error")
+
+# noinspection PyUnusedLocal
 
 
 @api_view(['POST'])
@@ -28,6 +32,8 @@ def test_work(request):
     """
     results = {'status': True, 'response': 'IT Works', 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
+
+# noinspection PyUnusedLocal
 
 
 @api_view(['POST'])
@@ -43,6 +49,8 @@ def get_server_calls(request):
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 # ***************************** TASKS ******************************** #
+
+# noinspection PyUnusedLocal
 
 
 @api_view(['POST'])
@@ -60,6 +68,8 @@ def update_article_list_from_server(request):
 
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
+# noinspection PyUnusedLocal
+
 
 @api_view(['POST'])
 def fill_up_geolocation_country_list(request):
@@ -67,12 +77,16 @@ def fill_up_geolocation_country_list(request):
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
+# noinspection PyUnusedLocal
+
 
 @api_view(['POST'])
 def fill_up_geolocation_state_list(request):
     tasks.fill_up_geolocation_state_list()
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
+
+# noinspection PyUnusedLocal
 
 
 @api_view(['POST'])
@@ -102,11 +116,6 @@ def train_on_default_list(request):
     params = request.data
     tasks.train_on_default_list(params=params)
     results = {'status': True, 'response': {}, 'error': {}}
-
-def get_article_language_list(request):
-    mongodb = mongo.MongoConnection()
-    languages = mongodb.get_article_language_list()
-    results = {'status': True, 'response': {'languages': languages}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 # ***************************** SOURCES ******************************** #
@@ -150,6 +159,14 @@ def get_article_list(request):
     articles, more = mongodb.get_q_article_list(params=params)
 
     results = {'status': True, 'response': {'articles': articles, 'more': more}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def get_article_language_list(request):
+    mongodb = mongo.MongoConnection()
+    languages = mongodb.get_article_language_list()
+    results = {'status': True, 'response': {'languages': languages}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 # ***************************** ENTITY ******************************** #
@@ -204,8 +221,8 @@ def get_phrase_list(request):
     params = None
     try:
         params = request.data
-    except:
-        pass
+    except Exception as ex:
+        return JsonResponse({'status': False, 'response': [], 'error': ex}, encoder=JSONEncoderHttp)
     mongodb = mongo.MongoConnection()
     response = mongodb.get_phrases(params=params)
     results = {'status': True, 'response': response, 'error': {}}
