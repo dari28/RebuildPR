@@ -4,7 +4,7 @@ POLIGLOT = dict(
 
 STANFORD = dict(
     languages=['en', 'zh', 'de', 'es', 'fr', 'ar'],
-    #languages=['en'],
+    # languages=['en'],
     # # languages=[],
     crf_english_3class='../stanford_corenlp/classifiers/english.all.3class.distsim.crf.ser.gz',
     crf_english_4class='../stanford_corenlp/classifiers/english.conll.4class.distsim.crf.ser.gz',
@@ -18,7 +18,7 @@ STANFORD = dict(
     path_stanford_ner='../stanford_corenlp/stanford_update.jar',
 
 
-    #path_stanford_ner='../stanford_corenlp/stanford_update.jar',
+    # path_stanford_ner='../stanford_corenlp/stanford_update.jar',
 )
 
 STANDFORD_PACKAGE = {
@@ -37,7 +37,7 @@ STANDFORD_PACKAGE = {
 STANFORD_PREPOSSESSING = dict(
     en={
         'pos.model': '../stanford_corenlp/pos-tagger/english-left3words-distsim.tagger',
-        #'pos.model': '../stanford-postagger-full-2018-10-16/models/english-left3words-distsim.tagger',
+        # 'pos.model': '../stanford-postagger-full-2018-10-16/models/english-left3words-distsim.tagger',
         'tokenize.language': 'en',
         'tokenize.options': 'untokenizable=allKeep, invertible=true'
     },
@@ -123,7 +123,7 @@ stanford_models = [
 ]
 
 JAVA_CONFIG = dict(
-    #max_size='300000m',
+    # max_size='300000m',
     max_size='4096m',
     default_config_crf=dict(
         useClassFeature='true',
@@ -198,7 +198,7 @@ description_tag = {
 
 SERVER = dict(
     # language=['en', 'ru', 'de']
-    language=['en','ru']
+    language=['en', 'ru']
     # language=['pms', 'lmo', 'gan', 'scn', 'sco', 'ky', 'ps', 'ku', 'pt', 'kn', 'ko', 'km', 'kk', 'ilo', 'pl', 'pa',
     #          'ka', 'cv', 'als', 'cs', 'cy', 'ce', 'ca', 'se', 'sa', 'sl', 'jv', 'sk', 'sh', 'bar', 'sv', 'sw', 'su',
     #          'sr', 'sq', 'ja', 'fy', 'fr', 'fi', 'hsb', 'fo', 'fa', 'si', 'it', 'am', 'an', 'vo', 'is', 'sah', 'af',
@@ -210,8 +210,9 @@ SERVER = dict(
 )
 
 MONGO = dict(
-    mongo_host='mongodb://localhost', #149.28.85.111:27017
+    mongo_host='mongodb://localhost',  # 149.28.85.111:27017
     database='newsAPI',
+    news_api_call_collection='news_api_call',
     article_collection='article',
     q_article_collection='q_article',
     phrase_collection='phrase',
@@ -225,4 +226,3 @@ MONGO = dict(
     # entity_collection='entity',
     # intent_collection='intent',
 )
-

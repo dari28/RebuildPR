@@ -188,8 +188,8 @@ def predict_entity(set_entity=None, data=None, language='en'):
     results = []
     for document in data:
         document = document if isinstance(document, str) else document.encode('utf-8')
-        #document = tools.sample_strip(document) #SIDE DELETE
-        #document, back_map = tools.sample_remove_tabs(document) #SIDE DELETE
+        # document = tools.sample_strip(document) #SIDE DELETE
+        # document, back_map = tools.sample_remove_tabs(document) #SIDE DELETE
         results_document = {}
         for type_model in dict_entity:
             if type_model not in model_entity_predict:
@@ -207,7 +207,7 @@ def predict_entity(set_entity=None, data=None, language='en'):
 
 def predict_entity_polyglot(entities, data, language=None):
     """The predict function for an entity default_poliglot"""
-    #"data" MUST BE unicode type(unicode encoding).
+    # "data" MUST BE unicode type(unicode encoding).
     set_tag = [entity['model_settings']['tag'] for entity in entities]
     matches = []
 
@@ -259,7 +259,7 @@ def predict_entity_polyglot(entities, data, language=None):
 
 def predict_entity_stanford_default(entities, data, language=None):
     """"""
-    #"data" MUST BE str type(utf-8 encoding).
+    # "data" MUST BE str type(utf-8 encoding).
     entity_dict = tools.sort_model(entities, 'model')
     # try:
     #     data = data.encode('utf8')
@@ -340,13 +340,13 @@ def predict_entity_stanford_default(entities, data, language=None):
 
 def predict_entity_stanford(entities, data, language=None, classifier_dict = {}):
     """"""
-    #"data" MUST BE str type(utf-8 encoding).
+    # "data" MUST BE str type(utf-8 encoding).
     result = {}
-    #result = []
+    # result = []
     data = data if isinstance(data, str) else data.encode('utf8')
     for cur_tag in list(description_tag.keys()):
+        # for entity in stanford_models:
         for entity in entities:
-        #for entity in stanford_models:
             if 'model_settings' in entity:
                 settings = entity['model_settings']
             else:
@@ -468,6 +468,11 @@ def predict_entity_list(entities, data, language='en'):
         else:
             data_predict, back_map = tools.remove_tab(data_predict)
 
+        match_level = 0  # Add SIDE(normal_form)
+        # normal_form = True  # Add SIDE(normal_form)
+        # train_postags = True  # Add SIDE(normal_form)
+        side_normal = True  # Add SIDE(normal_form)
+
         data_text = Text(data_predict, hint_language_code=language)
         if train_postags:
             if language in pattern_language:
@@ -482,7 +487,7 @@ def predict_entity_list(entities, data, language='en'):
         i = 0
 
         for entry in train_list:
-            entry = entry.lower()  # Add SIDE(case_sensative)
+            entry = entry.lower()  # Add SIDE(case_sensitive)
             if match_level == 0 and not normal_form:
                 match_entry = [[m.start(), m.end() - 1] for m in re.finditer(tools.escape(entry), data_predict)]
 
@@ -491,7 +496,7 @@ def predict_entity_list(entities, data, language='en'):
 
                 for match_word in extend_matchto_word:
                     word, start_match, end_match, _, _, word_tag = match_word
-                    if word == entry:
+                    if side_normal or word == entry:
                         if train_postags and train_tags[i] != word_tag:
                             continue
                         match.append({
