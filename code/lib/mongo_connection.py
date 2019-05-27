@@ -152,7 +152,7 @@ class MongoConnection(object):
             print(last_call['start_time'] + datetime.timedelta(hours=1))
         print(datetime.datetime.utcnow())
         if last_call and last_call['start_time'] + datetime.timedelta(hours=1) > datetime.datetime.utcnow():
-            return
+            return [], []
 
         news_api_call_id = self.add_news_api_call({'q': q, 'type': 1})
 
