@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from lib import mongo_connection as mongo
 from lib.json_encoder import JSONEncoderHttp
-# from datetime import datetime, timedelta
+from datetime import datetime, timedelta
 import geoposition as geo
 from nlp import tasks
 from lib import learning_model as model
@@ -35,8 +35,11 @@ def get_server_calls(request):
     """
     List all snippets, or create a new snippet.
     """
-    server_calls = NewsCollection.get_calls()
-    results = {'status': True, 'response': {'server_calls': server_calls}, 'error': {}}
+    mongodb = mongo.MongoConnection()
+    all_calls = mongodb.news_api_call.count({})
+    server_calls_last_24_hour = mongodb.news_api_call.count({'start_time': {'$gte': datetime.utcnow() - timedelta(hours=24)}})
+    # server_calls = NewsCollection.get_calls()
+    results = {'status': True, 'response': {'all_calls': all_calls, 'server_calls_last_24_hour': server_calls_last_24_hour}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 # ***************************** TASKS ******************************** #

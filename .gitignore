@@ -11,3 +11,5 @@ code/nlp/__pycache__/
 code/newsAPI/__pycache__/
 *.pyc
 *.log
+code/profiles/
+code/*.html
