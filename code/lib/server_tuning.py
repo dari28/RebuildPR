@@ -18,6 +18,7 @@ from lib.linguistic_functions import get_supported_languages
 from lib.stanford_module import jString
 from install.install_default_model import add_polyglot_default
 from install_stanford import add_standford_default
+from lib.text import Text
 
 
 def load_models():
@@ -78,29 +79,29 @@ def polyglot_default_install():
 
             if language in get_supported_languages('morph2'):
                 morph = True
-                #if not downloader.is_installed(unicode('morph2.' + language)):
+                # if not downloader.is_installed(unicode('morph2.' + language)):
                 if not downloader.is_installed('morph2.' + language):
                     raise EnvironmentError(
                         'The {0} module for {1} was not found, to install this package,'
                         ' run "./install/install_polyglot.py"'.format('morph2', full_name))
             #TO_DO: Fix problem with pos2
-            # if language in get_supported_languages('pos2'):
-            #     pos = True
-            #     #if not downloader.is_installed(unicode('pos2.' + language)):
-            #     if not downloader.is_installed('pos2.' + language):
-            #         raise EnvironmentError(
-            #             'The {0} module for {1} was not found, to install this package,'
-            #             ' run "./install/install_polyglot.py"'.format('pos2', full_name))
-            #FOR POLYGLOT DOWNLOAD ON START SERVER
-            # if sentiment or entities or morph:
-            #     text_polyglot = Text('Testing and cashing', hint_language_code=language)
-            #     if sentiment:
-            #         _ = text_polyglot.words[0].polarity
-            #         _ = text_polyglot.sentences[0].polarity
-            #     if entities:
-            #         _ = text_polyglot.entities
-            #     if morph:
-            #         _ = text_polyglot.morphemes
+            if language in get_supported_languages('pos2'):
+                pos = True
+                # if not downloader.is_installed(unicode('pos2.' + language)):
+                if not downloader.is_installed('pos2.' + language):
+                    raise EnvironmentError(
+                        'The {0} module for {1} was not found, to install this package,'
+                        ' run "./install/install_polyglot.py"'.format('pos2', full_name))
+            # FOR POLYGLOT DOWNLOAD ON START SERVER
+            if sentiment or entities or morph:
+                text_polyglot = Text('Testing and cashing', hint_language_code=language)
+                if sentiment:
+                    _ = text_polyglot.words[0].polarity
+                    _ = text_polyglot.sentences[0].polarity
+                if entities:
+                    _ = text_polyglot.entities
+                if morph:
+                    _ = text_polyglot.morphemes
 
     except:
         ex_type, ex, tb = sys.exc_info()

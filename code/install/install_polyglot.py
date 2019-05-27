@@ -46,14 +46,24 @@ def install():
             if not downloader.is_installed('morph2.' + language):
                 downloader.download('morph2.' + language)
                 print('morph2.' + language + 'loaded')
-            # if not downloader.is_installed('pos2.' + language):
-            #     downloader.download('pos2.' + language)
+            try:
+                if not downloader.is_installed('pos2.' + language):
+                    downloader.download('pos2.' + language)
+                    print('pos2.' + language + 'loaded')
+            except Exception as ex:
+                print(ex)
+                print('pos2.' + language + 'don_t loaded')
             print(language)
-            # if not downloader.is_installed('transliteration2.' + language):
-            #     downloader.download('transliteration2.' + language)
-        # downloader.download('embeddings2.es')
-        # downloader.download('pos2.es')
-        # downloader.download('ner2.es')
+            try:
+                if not downloader.is_installed('transliteration2.' + language):
+                    downloader.download('transliteration2.' + language)
+                    print('transliteration2.' + language + 'loaded')
+            except Exception as ex:
+                print(ex)
+                print('transliteration2.' + language + 'don_t loaded')
+        downloader.download('embeddings2.es')
+        downloader.download('pos2.es')
+        downloader.download('ner2.es')
     except:
         ex_type, ex, tb = sys.exc_info()
         tools.message_box(str(ex) + 'TracebackError' + ''.join(traceback.format_exc()),
