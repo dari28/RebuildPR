@@ -55,7 +55,7 @@ def get_tags(text, language="en"):
     return union_res(result1, result2)
 
 
-def train_article(params):
+def get_tags_from_article(params):
     mongodb = MongoConnection()
 
     language = 'en' if 'language' not in params else params['language']
@@ -91,16 +91,15 @@ def train_article(params):
     return inserted_id
 
 
-def train_untrained_articles():
+def get_tags_from_untrained_articles():
     mongodb = MongoConnection()
 
     article_ids = [x['_id'] for x in mongodb.source.find({'deleted': False})]
     trained_article_ids = [ObjectId(x['article_id']) for x in mongodb.entity.find({'trained': True})]
     untrained_ids = list(set(article_ids)-set(trained_article_ids))
 
-    for id in untrained_ids:
-        # self.train_article({'article_id': id}
-        train_article({'article_id': id})
+    for article_id in untrained_ids:
+        get_tags_from_article({'article_id': article_id})
 
     return untrained_ids
 

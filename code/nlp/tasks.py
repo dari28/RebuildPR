@@ -55,9 +55,9 @@ def fill_up_geolocation_pr_city_list(self):
 @background(schedule=1)
 def train_on_list(train_text, name, language):
     try:
-        print("Background task train_article started")
+        print("Background task train_on_list started")
         ids = model.train_on_list(train_text, name, language)
-        print("Background task train_article finished. Response: \n{}".format(ids))
+        print("Background task train_on_list finished. Response: \n{}".format(ids))
     except:
         pass
 
@@ -65,29 +65,29 @@ def train_on_list(train_text, name, language):
 @background(schedule=1)
 def train_on_default_list(params):
     try:
-        print("Background task train_article started")
+        print("Background task train_on_default_list started")
         ids = model.train_on_default_list(params)
-        print("Background task train_article finished. Response: \n{}".format(ids))
+        print("Background task train_on_default_list finished. Response: \n{}".format(ids))
     except:
         pass
 
 
 @background(schedule=1)
-def train_article(params):
+def get_tags_from_article(params):
     try:
-        print("Background task train_article started")
-        ids = model.train_article(params)
-        print("Background task train_article finished. Response: \n{}".format(ids))
+        print("Background task get_tags_from_article started")
+        ids = model.get_tags_from_article(params)
+        print("Background task get_tags_from_article finished. Response: \n{}".format(ids))
     except:
         pass
 
 
 @background(schedule=1)
-def train_untrained_articles():
+def get_tags_from_untrained_articles():
     try:
-        print("Background task train_article started")
-        ids = model.train_untrained_articles()
-        print("Background task train_article finished. Response: \n{}".format(ids))
+        print("Background task get_tags_from_untrained_articles started")
+        ids = model.get_tags_from_untrained_articles()
+        print("Background task get_tags_from_untrained_articles finished. Response: \n{}".format(ids))
     except:
         pass
 

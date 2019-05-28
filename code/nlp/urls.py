@@ -11,13 +11,11 @@ urlpatterns = [
 
     url(r'^update_category/?$', views.update_category),
     url(r'^show_category/?$', views.show_category),
-    # url(r'^/?$', views.),
 
     url(r'^update_language_list/?$', views.update_language_list),
     url(r'^show_language_list/?$', views.show_language_list),
     url(r'^get_language/?$', views.get_language),
 
-    # url(r'^get_country_list/?$', views.get_country_list),
     url(r'^get_article_language_list/?$', views.get_article_language_list),
     url(r'^update_country_list/?$', views.update_country_list),
     url(r'^update_state_list/?$', views.update_state_list),
@@ -43,8 +41,8 @@ urlpatterns = [
     url(r'^delete_phrase_list/?$', views.delete_phrase_list),
     url(r'^delete_permanent_phrase_list/?$', views.delete_permanent_phrase_list),
 
-    url(r'^train_article/?$', views.train_article),
-    url(r'^train_untrained_articles/?$', views.train_untrained_articles),
+    url(r'^get_tags_from_article/?$', views.get_tags_from_article),
+    url(r'^get_tags_from_untrained_articles/?$', views.get_tags_from_untrained_articles),
     url(r'^train_on_default_list/?$', views.train_on_default_list),
     url(r'^get_default_entity/?$', views.get_default_entity),
 

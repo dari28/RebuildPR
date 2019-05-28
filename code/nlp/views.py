@@ -97,16 +97,18 @@ def fill_up_geolocation_pr_city_list(request):
 
 
 @api_view(['POST'])
-def train_article(request):
+def get_tags_from_article(request):
     params = request.data
-    tasks.train_article(params=params)
+    tasks.get_tags_from_article(params=params)
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
+# noinspection PyUnusedLocal
+
 
 @api_view(['POST'])
-def train_untrained_articles(request):
-    tasks.train_untrained_articles()
+def get_tags_from_untrained_articles(request):
+    tasks.get_tags_from_untrained_articles()
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -132,14 +134,6 @@ def get_source_list(request):
     results = {'status': True, 'response': {'sources': sources, 'more': more}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
-
-@api_view(['POST'])
-def get_language_list(request):
-    mongodb = mongo.MongoConnection()
-    languages = mongodb.get_language_list()
-    results = {'status': True, 'response': {'languages': languages}, 'error': {}}
-    return JsonResponse(results, encoder=JSONEncoderHttp)
-
 # ***************************** ARTILES ******************************** #
 
 
@@ -150,6 +144,8 @@ def get_article_list(request):
     articles, more = mongodb.get_q_article_list(params=params)
     results = {'status': True, 'response': {'articles': articles, 'more': more}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
+
+# noinspection PyUnusedLocal
 
 
 @api_view(['POST'])
@@ -208,14 +204,13 @@ def get_default_entity(request):
 
 @api_view(['POST'])
 def get_phrase_list(request):
-    params = None
     try:
         params = request.data
     except Exception as ex:
-        return JsonResponse({'status': False, 'response': [], 'error': ex}, encoder=JSONEncoderHttp)
+        return JsonResponse({'status': False, 'response': {}, 'error': ex}, encoder=JSONEncoderHttp)
     mongodb = mongo.MongoConnection()
-    response = mongodb.get_phrases(params=params)
-    results = {'status': True, 'response': response, 'error': {}}
+    phrases = mongodb.get_phrases(params=params)
+    results = {'status': True, 'response': {'phrases': phrases}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
@@ -233,10 +228,10 @@ def add_phrase_list(request):
     try:
         phrases = request.data['phrases']
     except Exception as ex:
-        return JsonResponse({'status': False, 'response': [], 'error': ex}, encoder=JSONEncoderHttp)
+        return JsonResponse({'status': False, 'response': {}, 'error': ex}, encoder=JSONEncoderHttp)
     mongodb = mongo.MongoConnection()
-    response = mongodb.add_phrases(phrases=phrases)
-    results = {'status': True, 'response': response, 'error': {}}
+    ids = mongodb.add_phrases(phrases=phrases)
+    results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
@@ -244,8 +239,8 @@ def add_phrase_list(request):
 def delete_phrase_list(request):
     phrases = request.data
     mongodb = mongo.MongoConnection()
-    response = mongodb.delete_phrases(phrases=phrases)
-    results = {'status': True, 'response': response, 'error': {}}
+    ids = mongodb.delete_phrases(phrases=phrases)
+    results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
@@ -253,8 +248,8 @@ def delete_phrase_list(request):
 def delete_permanent_phrase_list(request):
     params = request.data
     mongodb = mongo.MongoConnection()
-    response = mongodb.delete_permanent_phrases(params=params)
-    results = {'status': True, 'response': response, 'error': {}}
+    ids = mongodb.delete_permanent_phrases(params=params)
+    results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 # ***************************** GEOLOCATION ******************************** #
@@ -366,14 +361,21 @@ def predict_entity(request):
     if 'data' not in data:
         raise EnvironmentError('The input format is not correct! The input data must contain the "data" field.')
 
-    entity_id = []
+    entity_ids = []
+
+    if not isinstance(data['entity'], list):
+        data['entity'] = [data['entity']]
+
+    if not isinstance(data['data'], list):
+        data['data'] = [data['data']]
+
     for entity in data['entity']:
         try:
-            entity_id.append(ObjectId(entity))
+            entity_ids.append(ObjectId(entity))
         except:
             raise errors.InvalidId('Invalid value for "entity" = {0}'.format(entity))
 
-    predict_result = model.predict_entity(data=data['data'], set_entity=entity_id, language=data['language'])
+    predict_result = model.predict_entity(data=data['data'], set_entity=entity_ids, language=data['language'])
     results = {'status': True, 'response': {'predict': predict_result}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
