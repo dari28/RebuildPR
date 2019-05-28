@@ -404,4 +404,22 @@ def update_language_list(request):
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
+# **************************** CATEGORY ***************************
+
+@api_view(['POST'])
+def update_category(request):
+    mongodb = mongo.MongoConnection()
+    mongodb.update_category()
+    results = {'status': True, 'response': {}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def show_category(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    response, more = mongodb.show_category(params=params)
+    results = {'status': True, 'response': {'state': response, 'more': more}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
 
