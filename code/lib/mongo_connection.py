@@ -47,11 +47,22 @@ class MongoConnection(object):
         ''' parameters may be list or str '''
         search_param = dict()
         search_param['deleted'] = False
-        search_fields = ['deleted', 'language', 'country', 'name', 'id', 'category']
+
+        search_fields = ['deleted', 'name', 'id']
+        search_fields_list = ['language', 'country', 'category']
+        # Convert str to list
+        for field in params:
+            if field in search_fields_list:
+                if params[field] and not isinstance(params[field], list):
+                    params[field] = [params[field]]
+        # Fill up search_fields
         if params:
             for field in search_fields:
                 if field in params:
                     search_param[field] = params[field]
+            for field in search_fields_list:
+                if field in params:
+                    search_param[field] = {'$in': params[field]}
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
         sources = list(self.source.find(search_param).skip(start).limit(length + 1))
