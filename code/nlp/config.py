@@ -223,6 +223,7 @@ MONGO = dict(
     entity_collection='entity',
     default_entity_collection='default_entity',
     language_collection='language',
+    category_collection='category',
     # entity_collection='entity',
     # intent_collection='intent',
 )
