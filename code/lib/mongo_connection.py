@@ -143,10 +143,8 @@ class MongoConnection(object):
         adding_sources = [new_s for new_s in new_sources_hash if new_s['hash'] not in old_sources_hashes]
         inserted_ids = []
         for source in adding_sources:
-            # inserted_ids.append(self.source.insert_one(source).inserted_id)
+            source['articles'] = self.article.count({'source.id': source['id']})
             inserted_ids.append(self.source.update_one(source, {'$set': source}, upsert=True).upserted_id)
-            # a = self.source.update_one(source, {'$set': source}, upsert=True)
-            # print(a)
 
         deleted_ids = [x['_id'] for x in self.source.find({"hash": {"$nin": new_hash_list}})]
         self.delete_source_list_by_ids(deleted_ids)
@@ -450,5 +448,17 @@ class MongoConnection(object):
         articles = list(self.entity.find(search_param).skip(start).limit(length + 1))
         more = True if len(articles) > length else False
         return articles[:length], trained, untrained, more
+
+    # ***************************** Category ******************************** #
+
+    def update_category(self):
+        categories = self.source.distinct("category")
+
+        old_category = self.category.find({'deleted': False})
+        adding_category = [new_c for new_c in categories if new_c not in old_category]
+        for category in adding_category:
+            category['articles'] = self.article.count({'source.category': category})
+            category['sources'] = self.source.count({'source.category': category})
+            self.category.insert_one(category)
 
 
