@@ -12,6 +12,7 @@ import geoposition as geo
 from collections import Counter
 import datetime
 
+
 class MongoConnection(object):
     """Connection class to mongoDB"""
 
@@ -73,7 +74,7 @@ class MongoConnection(object):
         call['start_time'] = datetime.datetime.utcnow()
         return self.news_api_call.insert_one(call).inserted_id
 
-    # ***************************** GEOLOCATION ******************************** #
+# ***************************** GEOLOCATION ******************************** #
 
     def update_country_list(self):
         self.country.insert(get_country_names_list())
@@ -119,13 +120,12 @@ class MongoConnection(object):
         new_sources, _ = NewsCollection.get_sources("")
         new_sources_hash = new_sources.copy()
         new_hash_list = []
-        last_call_list = list(self.news_api_call.find({'type': 0}).sort('start_time', -1).limit(1))
+        last_call_list = list(self.news_api_call.find({'type': 0, 'end_time': {'$exists': True}}).sort('start_time', -1).limit(1))
         try:
             last_call = last_call_list.pop()
         except Exception as ex:
-            print(ex)
+            print("First call of update_source")
             last_call = None
-        print(last_call)
         if last_call and last_call['start_time'] + datetime.timedelta(hours=1) > datetime.datetime.utcnow():
             return [], []
 
@@ -162,32 +162,16 @@ class MongoConnection(object):
                 upsert=True
             )
         return ids
+
 # ***************************** ARTILES ******************************** #
-
-    def get_articles(self):
-        """Adding a user to the database"""
-        return self.article.find({})
-
-    def update_article_list_from_server(self, params):
-        """
-        Description: update article list from news collector (for scheduler)
-        It makes request to server and updates articles in db.
-        It adds new sources and deletes(change ‘deleted’ filed) not available sources. The ‘response’ field contains that ids.
-        :param params:
-        q - search word (str or list)
-        :return: inserted_ids and deleted_ids of article
-        """
-        if 'q' not in params:
-            raise EnvironmentError('Request must contain \'q\' field')
-        q = params['q']
+    def update_article_list_one_q(self, q):
         # TO_DO: Change 1 hour to 24 hour
-        last_call_list = list(self.news_api_call.find({'q': q, 'type': 1}).sort('start_time', -1).limit(1))
+        last_call_list = list(self.news_api_call.find({'q': q, 'type': 1, 'end_time': {'$exists': True}}).sort('start_time', -1).limit(1))
         try:
             last_call = last_call_list.pop()
         except Exception as ex:
-            print(ex)
+            print('First call of {}'.format(q))
             last_call = None
-        print(last_call)
         if last_call:
             print(last_call['start_time'] + datetime.timedelta(hours=1))
         print(datetime.datetime.utcnow())
@@ -219,49 +203,85 @@ class MongoConnection(object):
                 article['source']['country'] = source['country']
             inserted_ids.append(self.article.insert_one(article).inserted_id)
 
-        q_article = self.q_article.find_one({'q': q})
-        current_article_ids = q_article['articles']
+        q_article = [x for articles in self.q_article.find({'q': q}) for x in articles['articles']]
+        current_article_ids = q_article
         deleted_ids = [x['_id'] for x in self.article.find({"hash": {"$nin": new_hash_list}, '_id': {'$in': current_article_ids}, 'deleted': False})]
         self.delete_article_list_by_ids(deleted_ids)
 
         existing_article_ids = [x['_id'] for x in self.article.find({"hash": {"$in": new_hash_list}, 'deleted': False})]
         self.q_article.update_one({'q': q},
-                                 {'$set': {'articles': existing_article_ids},
-                                  "$currentDate": {"lastModified": True}},
-                                 upsert=True)
+                                  {'$set': {'articles': existing_article_ids},
+                                   "$currentDate": {"lastModified": True}},
+                                  upsert=True)
 
         self.news_api_call.update_one({'_id': news_api_call_id}, {'$set': {'end_time': datetime.datetime.utcnow()}})
 
         return inserted_ids, deleted_ids
 
-    def get_article_list(self, params):
+    def update_article_list_from_server(self, params):
+        """
+        Description: update article list from news collector (for scheduler)
+        It makes request to server and updates articles in db.
+        It adds new sources and deletes(change ‘deleted’ filed) not available sources. The ‘response’ field contains that ids.
+        :param params:
+        q - search word (str or list)
+        :return: inserted_ids and deleted_ids of article
+        """
         if 'q' not in params:
             raise EnvironmentError('Request must contain \'q\' field')
-        search_param = dict()
-        search_param['q'] = params['q']
-        search_fields = ['id', 'name', 'language', 'country', 'category']
-        if params:
-            for field in search_fields:
-                if field in params:
-                    search_param['source'][field] = params[field]
+        q = params['q']
+        if not isinstance(q, list):
+            q = [q]
 
-        return list(self.article.find(search_param))
+        for one_q in q:
+            inserted_ids, deleted_ids = self.update_article_list_one_q(one_q)
+            print(q)
+            print(inserted_ids)
+            print(deleted_ids)
+        return [], []
 
     def get_q_article_list(self, params):
         if 'q' not in params:
             raise EnvironmentError('Request must contain \'q\' field')
 
         q = params['q']
-        articles = self.q_article.find_one({'q': q})
+        # Convert str to list
+        if not isinstance(q, list):
+            q = [q]
+
+        case_sensitive = True
+        if 'case_sensitive' in params:
+            case_sensitive = params['case_sensitive']
+        if not case_sensitive:
+            q = [x.lower() for x in q]
+
+        deleted = False
+        if 'deleted' in params:
+            deleted = params['deleted']
 
         search_param = dict()
-        search_fields = ['id', 'name', 'language', 'country', 'category']
-        search_param['_id'] = {"$in": articles['articles']}
-        # search_param['source'] = dict()
+
+        search_fields = ['name', 'id']
+        search_fields_list = ['language', 'country', 'category']
+        # Convert str to list
+        for field in params:
+            if field in search_fields_list:
+                if params[field] and not isinstance(params[field], list):
+                    params[field] = [params[field]]
+        # Fill up search_fields
         if params:
             for field in search_fields:
                 if field in params:
                     search_param['source.'+field] = params[field]
+            for field in search_fields_list:
+                if field in params:
+                    search_param['source.'+field] = {'$in': params[field]}
+
+        articles = [x for articles in self.q_article.find({'q': {'$in': q}}, {'_id': 0, 'articles': 1}) for x in articles['articles']]
+        search_param['_id'] = {'$in': articles}
+
+        search_param['deleted'] = deleted
+
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
         # full_artilces = list(self.article.find({'_id': {"$in": articles['articles']}}))

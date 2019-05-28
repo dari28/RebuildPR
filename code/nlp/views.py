@@ -146,18 +146,8 @@ def get_language_list(request):
 @api_view(['POST'])
 def get_article_list(request):
     params = request.data
-
-    case_sensitive = True if 'case_sensitive' not in request.data else params['case_sensitive']
-
-    ans = []
-
     mongodb = mongo.MongoConnection()
-    q_article = mongodb.q_article.find_one({'q': params['q']})
-   # if not q_article or 'date' not in q_article or q_article['date'] < (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d"):
-    #    inserted_ids, deleted_ids = mongodb.update_article_list_from_server(params)
-    #articles = mongodb.get_article_list(params=params)
     articles, more = mongodb.get_q_article_list(params=params)
-
     results = {'status': True, 'response': {'articles': articles, 'more': more}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
