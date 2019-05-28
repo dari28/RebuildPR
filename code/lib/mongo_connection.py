@@ -121,7 +121,7 @@ class MongoConnection(object):
         inserted_ids = []
         for source in adding_sources:
             source['articles'] = self.article.count({'source.id': source['id']})
-            inserted_ids.append(self.source.update_one(source, {'$set': source}).inserted_id)
+            inserted_ids.append(self.source.update_one(source, {'$set': source}, upsert=True).upserted_id)
 
         deleted_ids = [x['_id'] for x in self.source.find({"hash": {"$nin": new_hash_list}})]
         self.delete_source_list_by_ids(deleted_ids)
