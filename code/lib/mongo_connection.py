@@ -108,6 +108,18 @@ class MongoConnection(object):
         new_sources, _ = NewsCollection.get_sources("")
         new_sources_hash = new_sources.copy()
         new_hash_list = []
+        last_call_list = list(self.news_api_call.find({'type': 0}).sort('start_time', -1).limit(1))
+        try:
+            last_call = last_call_list.pop()
+        except Exception as ex:
+            print(ex)
+            last_call = None
+        print(last_call)
+        if last_call and last_call['start_time'] + datetime.timedelta(hours=1) > datetime.datetime.utcnow():
+            return [], []
+
+        news_api_call_id = self.add_news_api_call({'type': 0})
+
         for ns in new_sources_hash:
             hasher = hashlib.md5()
             hasher.update(json.dumps(ns).encode('utf-8'))
@@ -120,10 +132,15 @@ class MongoConnection(object):
         adding_sources = [new_s for new_s in new_sources_hash if new_s['hash'] not in old_sources_hashes]
         inserted_ids = []
         for source in adding_sources:
-            inserted_ids.append(self.source.insert_one(source).inserted_id)
+            # inserted_ids.append(self.source.insert_one(source).inserted_id)
+            inserted_ids.append(self.source.update_one(source, {'$set': source}, upsert=True).upserted_id)
+            # a = self.source.update_one(source, {'$set': source}, upsert=True)
+            # print(a)
 
         deleted_ids = [x['_id'] for x in self.source.find({"hash": {"$nin": new_hash_list}})]
         self.delete_source_list_by_ids(deleted_ids)
+
+        self.news_api_call.update_one({'_id': news_api_call_id}, {'$set': {'end_time': datetime.datetime.utcnow()}})
 
         return inserted_ids, deleted_ids
 
@@ -155,7 +172,7 @@ class MongoConnection(object):
             raise EnvironmentError('Request must contain \'q\' field')
         q = params['q']
         # TO_DO: Change 1 hour to 24 hour
-        last_call_list = list(self.news_api_call.find({'q': q, 'type': 1}).sort('start_time').limit(1))
+        last_call_list = list(self.news_api_call.find({'q': q, 'type': 1}).sort('start_time', -1).limit(1))
         try:
             last_call = last_call_list.pop()
         except Exception as ex:
