@@ -31,6 +31,7 @@ class MongoConnection(object):
         self.entity = self.mongo_db[config['entity_collection']]
         self.default_entity = self.mongo_db[config['default_entity_collection']]
         self.language = self.mongo_db[config['language_collection']]
+        self.category = self.mongo_db[config['category_collection']]
 
     def get_article_language_list(self):
         language_list = []
@@ -446,8 +447,10 @@ class MongoConnection(object):
         old_category = self.category.find({'deleted': False})
         adding_category = [new_c for new_c in categories if new_c not in old_category]
         for category in adding_category:
-            category['articles'] = self.article.count({'source.category': category})
-            category['sources'] = self.source.count({'source.category': category})
-            self.category.insert_one(category)
+            cat = dict()
+            cat['name'] = category
+            cat['articles'] = self.article.count({'source.category': category})
+            cat['sources'] = self.source.count({'category': category})
+            self.category.insert_one(cat)
 
 
