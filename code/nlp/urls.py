@@ -52,6 +52,8 @@ urlpatterns = [
     url(r'^fill_up_geolocation_pr_city_list/?$', views.fill_up_geolocation_pr_city_list),
 
     url(r'^predict_entity/?$', views.predict_entity),
+    url(r'^download_articles_by_phrases/?$', views.download_articles_by_phrases),
+
 
 ]
 

@@ -225,12 +225,9 @@ def update_phrase_list(request):
 
 @api_view(['POST'])
 def add_phrase_list(request):
-    try:
-        phrases = request.data['phrases']
-    except Exception as ex:
-        return JsonResponse({'status': False, 'response': {}, 'error': ex}, encoder=JSONEncoderHttp)
+    params = request.data
     mongodb = mongo.MongoConnection()
-    ids = mongodb.add_phrases(phrases=phrases)
+    mongodb.add_phrases(params=params)
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -248,9 +245,19 @@ def delete_phrase_list(request):
 def delete_permanent_phrase_list(request):
     params = request.data
     mongodb = mongo.MongoConnection()
-    ids = mongodb.delete_permanent_phrases(params=params)
+    mongodb.delete_permanent_phrases(params=params)
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def download_articles_by_phrases(request):
+    # params = request.data
+    mongodb = mongo.MongoConnection()
+    mongodb.download_articles_by_phrases()
+    results = {'status': True, 'response': {}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
 
 # ***************************** GEOLOCATION ******************************** #
 

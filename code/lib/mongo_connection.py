@@ -165,59 +165,105 @@ class MongoConnection(object):
         return ids
 
 # ***************************** ARTILES ******************************** #
-    def update_article_list_one_q(self, q):
-        # TO_DO: Change 1 hour to 24 hour
-        last_call_list = list(self.news_api_call.find({'q': q, 'type': 1, 'end_time': {'$exists': True}}).sort('start_time', -1).limit(1))
-        try:
-            last_call = last_call_list.pop()
-        except Exception as ex:
-            print('First call of {}'.format(q))
-            last_call = None
-        if last_call:
-            print(last_call['start_time'] + datetime.timedelta(hours=1))
-        print(datetime.datetime.utcnow())
-        if last_call and last_call['start_time'] + datetime.timedelta(hours=1) > datetime.datetime.utcnow():
-            return [], []
+#     def update_article_list_one_q(self, q):
+#         # TO_DO: Change 1 hour to 24 hour
+#         last_call_list = list(self.news_api_call.find({'q': q, 'type': 1, 'end_time': {'$exists': True}}).sort('start_time', -1).limit(1))
+#         try:
+#             last_call = last_call_list.pop()
+#         except Exception as ex:
+#             print('First call of {}'.format(q))
+#             last_call = None
+#         if last_call:
+#             print(last_call['start_time'] + datetime.timedelta(hours=1))
+#         print(datetime.datetime.utcnow())
+#         if last_call and last_call['start_time'] + datetime.timedelta(hours=1) > datetime.datetime.utcnow():
+#             return [], []
+#
+#         news_api_call_id = self.add_news_api_call({'q': q, 'type': 1})
+#
+#         new_articles, _ = NewsCollection.get_everything(q)
+#         new_articles_hash = new_articles.copy()
+#         new_hash_list = []
+#         for ns in new_articles_hash:
+#             hasher = hashlib.md5()
+#             hasher.update(json.dumps(ns).encode('utf-8'))
+#             ns['hash'] = hasher.hexdigest()
+#             ns['deleted'] = False
+#             new_hash_list.append(ns['hash'])
+#
+#         old_articles = self.article.find({'deleted': False})
+#         old_sources_hashes = [x['hash'] for x in old_articles]
+#         adding_articles = [new_s for new_s in new_articles_hash if new_s['hash'] not in old_sources_hashes]
+#
+#         inserted_ids = []
+#         for article in adding_articles:
+#             source = self.source.find_one({'deleted': False, 'id': article['source']['id'], 'name': article['source']['name']})
+#             if source:
+#                 article['source']['language'] = source['language']
+#                 article['source']['category'] = source['category']
+#                 article['source']['country'] = source['country']
+#             inserted_ids.append(self.article.insert_one(article).inserted_id)
+#
+#         q_article = [x for articles in self.q_article.find({'q': q}) for x in articles['articles']]
+#         current_article_ids = q_article
+#         deleted_ids = [x['_id'] for x in self.article.find({"hash": {"$nin": new_hash_list}, '_id': {'$in': current_article_ids}, 'deleted': False})]
+#         self.delete_article_list_by_ids(deleted_ids)
+#
+#         existing_article_ids = [x['_id'] for x in self.article.find({"hash": {"$in": new_hash_list}, 'deleted': False})]
+#         self.q_article.update_one({'q': q},
+#                                   {'$set': {'articles': existing_article_ids},
+#                                    "$currentDate": {"lastModified": True}},
+#                                   upsert=True)
+#
+#         self.news_api_call.update_one({'_id': news_api_call_id}, {'$set': {'end_time': datetime.datetime.utcnow()}})
+#
+#         return inserted_ids, deleted_ids
 
-        news_api_call_id = self.add_news_api_call({'q': q, 'type': 1})
-
-        new_articles, _ = NewsCollection.get_everything(q)
+    def update_article_list_one_q(self, q, language, new_articles):
         new_articles_hash = new_articles.copy()
         new_hash_list = []
         for ns in new_articles_hash:
             hasher = hashlib.md5()
             hasher.update(json.dumps(ns).encode('utf-8'))
             ns['hash'] = hasher.hexdigest()
-            ns['deleted'] = False
             new_hash_list.append(ns['hash'])
 
-        old_articles = self.article.find({'deleted': False})
+        old_articles = self.article.find()
         old_sources_hashes = [x['hash'] for x in old_articles]
         adding_articles = [new_s for new_s in new_articles_hash if new_s['hash'] not in old_sources_hashes]
 
         inserted_ids = []
         for article in adding_articles:
-            source = self.source.find_one({'deleted': False, 'id': article['source']['id'], 'name': article['source']['name']})
+            # !!! Attention
+            # source = self.source.find_one({'deleted': False, 'id': article['source']['id'], 'name': article['source']['name']})
+            source = self.source.find_one({
+                'deleted': False,
+                '$or': [
+                    {'id': article['source']['id']},
+                    {'name': article['source']['name']}
+                ]
+            })
             if source:
                 article['source']['language'] = source['language']
                 article['source']['category'] = source['category']
                 article['source']['country'] = source['country']
             inserted_ids.append(self.article.insert_one(article).inserted_id)
 
-        q_article = [x for articles in self.q_article.find({'q': q}) for x in articles['articles']]
-        current_article_ids = q_article
-        deleted_ids = [x['_id'] for x in self.article.find({"hash": {"$nin": new_hash_list}, '_id': {'$in': current_article_ids}, 'deleted': False})]
-        self.delete_article_list_by_ids(deleted_ids)
+        current_article_ids = [x for articles in self.q_article.find({'q': q, 'language': language}) for x in articles['articles']]
 
-        existing_article_ids = [x['_id'] for x in self.article.find({"hash": {"$in": new_hash_list}, 'deleted': False})]
-        self.q_article.update_one({'q': q},
-                                  {'$set': {'articles': existing_article_ids},
-                                   "$currentDate": {"lastModified": True}},
+        # deleted_ids = [x['_id'] for x in self.article.find({'hash': {'$nin': new_hash_list}, '_id': {'$in': current_article_ids}, 'deleted': False})]
+        # self.delete_article_list_by_ids(deleted_ids)
+
+        new_article_ids = [x['_id'] for x in self.article.find({'hash': {'$in': new_hash_list}})]
+        article_ids = list(set(current_article_ids+new_article_ids))
+        self.q_article.update_one({'q': q, 'language': language},
+                                  {'$set': {'articles': article_ids},
+                                   '$currentDate': {'lastModified': True}},
                                   upsert=True)
 
-        self.news_api_call.update_one({'_id': news_api_call_id}, {'$set': {'end_time': datetime.datetime.utcnow()}})
+        # self.news_api_call.update_one({'_id': news_api_call_id}, {'$set': {'end_time': datetime.datetime.utcnow()}})
 
-        return inserted_ids, deleted_ids
+        # return inserted_ids, deleted_ids
 
     def update_article_list_from_server(self, params):
         """
@@ -235,10 +281,7 @@ class MongoConnection(object):
             q = [q]
 
         for one_q in q:
-            inserted_ids, deleted_ids = self.update_article_list_one_q(one_q)
-            print(q)
-            print(inserted_ids)
-            print(deleted_ids)
+            self.update_article_list_one_q(one_q)
         return [], []
 
     def get_q_article_list(self, params):
@@ -301,16 +344,34 @@ class MongoConnection(object):
         return ids
     # ***************************** Phrases ******************************** #
 
-    def add_phrases(self, phrases):
+    def add_phrases(self, params):
         """Adding phrase to the database"""
-        inserted_id = self.phrase.insert_one(
-            {
-                'phrases': phrases,
-                'deleted': False
-            },
-            #upsert=True
-        ).inserted_id
-        return inserted_id
+        if 'phrases' not in params:
+            raise EnvironmentError('Request must contain \'phrases\' field')
+        phrases = params['phrases']
+        if not isinstance(phrases, list):
+            phrases = [phrases]
+
+        language = 'en'
+        if 'language' in params:
+            language = params['language']
+
+        for phrase in phrases:
+            self.phrase.update_one(
+                {
+                    'phrase': phrase,
+                    'language': language,
+                    'deleted': False
+                },
+                {
+                    '$set': {
+                        'phrase': phrase,
+                        'language': language,
+                        'deleted': False
+                    }
+                },
+                upsert=True
+            )
 
     def delete_permanent_phrases(self, params):
         """Permanent delete phrase by the database"""
@@ -358,6 +419,53 @@ class MongoConnection(object):
             deleted = params['deleted']
 
         return list(self.phrase.find({'deleted': deleted}))
+
+    def download_articles_by_phrases(self):
+        new_phrases = list(self.phrase.find({'deleted': False, 'to': {'$exists': False}}))
+        old_phrases = list(self.phrase.find({'deleted': False, 'to': {'$exists': True}}))
+
+        for phrase in new_phrases:
+            _id = phrase['_id']
+            q = phrase['phrase']
+            language = phrase['language']
+            articles, _, status = NewsCollection.get_everything(q, language)  # Only first page
+            self.update_article_list_one_q(q, language, articles)
+            if articles:
+                published_at_list = sorted([article['publishedAt'] for article in articles])
+                date_from = published_at_list[0]
+                date_to = published_at_list[-1]
+                self.phrase.update_one({'_id': _id}, {'$set': {'to': date_to, 'from': date_from}})
+
+        for phrase in old_phrases:
+            _id = phrase['_id']
+            q = phrase['phrase']
+            language = phrase['language']
+            articles, total_count, status = NewsCollection.get_everything(q, language, from_date=phrase['to'])
+            for x in range(total_count // 100):
+                added, tc, status = NewsCollection.get_everything(q, language, from_date=phrase['to'], page=2+x)
+                if tc == 0:
+                    print("Добавить в дозагрузку")
+                articles = articles + added
+            self.update_article_list_one_q(q, language, articles)
+            if articles:
+                published_at_list = sorted([article['publishedAt'] for article in articles])
+                date_to = published_at_list[-1]
+                self.phrase.update_one({'_id': _id}, {'$set': {'to': date_to}})
+
+        phrases = self.phrase.find({'deleted': False})
+        # Download while we can
+        own_status = 'ok'
+        for phrase in phrases:
+            if own_status == 'ok':
+                _id = phrase['_id']
+                q = phrase['phrase']
+                language = phrase['language']
+                articles, total_count, status = NewsCollection.get_everything(q, language, to_date=phrase['from'])
+                self.update_article_list_one_q(q, language, articles)
+                if articles:
+                    published_at_list = sorted([article['publishedAt'] for article in articles])
+                    date_from = published_at_list[0]
+                    self.phrase.update_one({'_id': _id}, {'$set': {'from': date_from}})
 
     # ***************************** Train articles ******************************** #
 
@@ -483,5 +591,6 @@ class MongoConnection(object):
             cat['articles'] = self.article.count({'source.category': category})
             cat['sources'] = self.source.count({'category': category})
             self.category.insert_one(cat)
+
 
 
