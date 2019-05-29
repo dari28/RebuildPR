@@ -91,7 +91,6 @@ class NewsCollection:
             articles = []
             total_results = 0
 
-            datetime.strptime(from_date, '%b %d %Y %I:%M%p')
             from_date_str = '&from={}'.format(add_second(from_date)) if from_date else ''
             to_date_str = '&to={}'.format(remove_second(to_date)) if to_date else ''
             url = '{}?q={}&language={}&pageSize=100&page={}{}{}&apiKey={}'.format(EVERYTHING_URL, q, language, page, from_date_str, to_date_str, API_KEY)

@@ -216,9 +216,9 @@ def get_phrase_list(request):
 
 @api_view(['POST'])
 def update_phrase_list(request):
-    phrases = request.data
+    params = request.data
     mongodb = mongo.MongoConnection()
-    mongodb.update_phrases(phrases=phrases)
+    mongodb.update_phrases(params=params)
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -234,9 +234,9 @@ def add_phrase_list(request):
 
 @api_view(['POST'])
 def delete_phrase_list(request):
-    phrases = request.data
+    params = request.data
     mongodb = mongo.MongoConnection()
-    ids = mongodb.delete_phrases(phrases=phrases)
+    mongodb.delete_phrases(params=params)
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 

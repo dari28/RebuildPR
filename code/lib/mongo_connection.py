@@ -483,27 +483,41 @@ class MongoConnection(object):
             )
         return params
 
-    def delete_phrases(self, phrases):
+    def delete_phrases(self, params):
         """Delete phrase by the database"""
-        self.phrase.update_one(
-            {'_id': ObjectId(phrases['_id'])},
+        if 'ids' not in params:
+            raise EnvironmentError('Request must contain \'ids\' field')
+        ids = params['ids']
+        if isinstance(ids, str):
+            ids = list(ids)
+
+        ids = [ObjectId(_id) if not isinstance(_id, ObjectId) else _id for _id in ids]
+        self.phrase.update_many(
+            {'_id': {'$in': ids}},
             {'$set': {'deleted': True}},
             upsert=True
         )
-        return phrases
 
-    def update_phrases(self, phrases):
+    def update_phrases(self, params):
         """Updating phrase to the database"""
-        if not isinstance(phrases['_id'], ObjectId):
-            phrases['_id'] = ObjectId(phrases['_id'])
+        if 'ids' not in params:
+            raise EnvironmentError('Request must contain \'ids\' field')
+        ids = params['ids']
+        if isinstance(ids, str):
+            ids = list(ids)
 
-        if 'deleted' not in phrases:
-            phrases['deleted'] = False
+        ids = [ObjectId(_id) if not isinstance(_id, ObjectId) else _id for _id in ids]
 
-        self.phrase.update_one({'_id': phrases['_id']},
-                               {'$set': {'phrases': phrases['phrases'],'deleted': phrases['deleted']}},
-                               upsert=True)
-        return phrases['_id']
+        update_set = {}
+
+        if 'deleted' in params:
+            update_set['deleted'] = params['deleted']
+
+        self.phrase.update_many(
+            {'_id': {'$in': ids}},
+            {'$set': update_set},
+            upsert=True
+        )
 
     def get_phrases(self, params):
         """Getting phrase to the database"""
