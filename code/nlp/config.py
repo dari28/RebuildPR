@@ -224,6 +224,9 @@ MONGO = dict(
     default_entity_collection='default_entity',
     language_collection='language',
     category_collection='category',
+    location_collection='location',
+    iso639_collection='iso639',
+    iso3166_collection='iso3166',
     # entity_collection='entity',
     # intent_collection='intent',
 )

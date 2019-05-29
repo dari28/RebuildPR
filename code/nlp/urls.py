@@ -7,6 +7,8 @@ urlpatterns = [
     url(r'^test_exception_work/?$', views.test_exception_work),
     url(r'^get_server_calls/?$', views.get_server_calls),
 
+    url(r'^load_iso/?$', views.load_iso),
+
     url(r'^tag_stat/?$', views.tag_stat),
 
     url(r'^update_category/?$', views.update_category),

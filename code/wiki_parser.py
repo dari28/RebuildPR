@@ -4,7 +4,6 @@ import requests
 from bs4 import BeautifulSoup
 import pycountry
 
-
 def get_country_names_list():
     country_list = []
     url = requests.get('https://en.wikipedia.org/wiki/List_of_sovereign_states').text
@@ -20,31 +19,12 @@ def get_country_names_list():
         name = name.replace('[', '')
         common_name = name.split('–')[0].strip()
         official_name = name.split('–')[1].strip() if len(name.split('–')) > 1 else common_name.strip()
-        country_code = pycountry.countries.get(official_name=official_name) \
-            if pycountry.countries.get(official_name=official_name) \
-            else pycountry.countries.get(name=common_name.replace(', The', '').replace('The ', ''))
-        if country_code:
-            country_code = country_code.alpha_2
-        else:
-            country_code = pycountry.countries.get(name=official_name.replace(', The', '').replace('The ', ''))
-            if country_code:
-                country_code = country_code.alpha_2
-            else:
-                country_code = pycountry.countries.get(common_name=common_name.replace(', The', '').replace('The ', ''))
-                if country_code:
-                    country_code = country_code.alpha_2
-                else:
-                    country_code = pycountry.countries.get(common_name=common_name.replace(', The', '').replace('The ', ''))
-                    if country_code:
-                        country_code = country_code.alpha_2
-                    else:
-                        if common_name == 'Brunei':
-                            country_code = pycountry.countries.get(name="Brunei Darussalam").alpha_2
-                        else:
-                            country_code = "code is unknown"
+        country_code = mongodb.iso3166.find({'$or': [{'name': official_name}, {'name': common_name},
+                                                     {'official_name': official_name}, {'official_name': common_name}]})
+
         cntr['official_name'] = official_name
         cntr['common_name'] = common_name
-        cntr['code'] = country_code
+        cntr['code'] = country_code['alpha_2'] if country_code['alpha_2'] else country_code['alpha_3']
         country_list.append(cntr)
     return country_list
 
@@ -76,11 +56,11 @@ def get_us_state_list():
         description = []
         for desc in row.findAll('td')[2:]:
             d = desc.get_text().replace('\n', '').replace('\r', '').replace(u'\xa0', u'')
-            if d is not '':
+            if d is not ('' or r'\d'):
                 description.append(d)
         description = remove(description)
         # !!!ATTENTION!!! USA change to ID
-        st['country_id'] = '5cdc1484cde53353db41d8cd'
+        st['country_id'] = '5cee5f7a3458e6236b9b5e3e'
         st['name'] = state
         st['description'] = description
         us_states_list.append(st)
