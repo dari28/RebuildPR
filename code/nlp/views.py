@@ -415,3 +415,10 @@ def show_category(request):
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
+@api_view(['POST'])
+def load_iso(request):
+    mongodb = mongo.MongoConnection()
+    mongodb.load_iso()
+    results = {'status': True, 'response': {}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+

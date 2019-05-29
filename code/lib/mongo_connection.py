@@ -7,10 +7,22 @@ from news import NewsCollection
 from nlp.config import MONGO  # , TYPE_WITHOUT_FILE, SEND_POST_URL, ADMIN_USER, DEFAULT_USER
 import hashlib
 import json
+import re
+import requests
+from bs4 import BeautifulSoup
 from wiki_parser import get_us_state_list, get_country_names_list, get_pr_city_list
 import geoposition as geo
 from collections import Counter
 import datetime
+from lib import tools
+
+
+def remove(duplicate):
+    final_list = []
+    for num in duplicate:
+        if num not in final_list:
+            final_list.append(num)
+    return final_list
 
 
 class MongoConnection(object):
@@ -26,6 +38,7 @@ class MongoConnection(object):
         self.source = self.mongo_db[config['source_collection']]
         self.article = self.mongo_db[config['article_collection']]
         self.q_article = self.mongo_db[config['q_article_collection']]
+        self.location = self.mongo_db[config['location_collection']]
         self.country = self.mongo_db[config['country_collection']]
         self.state = self.mongo_db[config['state_collection']]
         self.pr_city = self.mongo_db[config['pr_city_collection']]
@@ -33,6 +46,8 @@ class MongoConnection(object):
         self.default_entity = self.mongo_db[config['default_entity_collection']]
         self.language = self.mongo_db[config['language_collection']]
         self.category = self.mongo_db[config['category_collection']]
+        self.iso639 = self.mongo_db[config['iso639_collection']]
+        self.iso3166 = self.mongo_db[config['iso3166_collection']]
 
     def get_article_language_list(self):
         language_list = []
@@ -75,16 +90,94 @@ class MongoConnection(object):
         call['start_time'] = datetime.datetime.utcnow()
         return self.news_api_call.insert_one(call).inserted_id
 
+    def load_iso(self):
+        with open(tools.get_abs_path('../data/iso639-3.json'), 'r') as f:
+            tree = json.load(f)
+        self.iso639.insert(tree['639-3'])
+        with open(tools.get_abs_path('../data/iso3166-1.json'), 'r') as f:
+            tree = json.load(f)
+        self.iso3166.insert(tree['3166-1'])
+
 # ***************************** GEOLOCATION ******************************** #
 
     def update_country_list(self):
-        self.country.insert(get_country_names_list())
+        country_list = []
+        url = requests.get('https://en.wikipedia.org/wiki/List_of_sovereign_states').text
+        soup = BeautifulSoup(url, 'lxml')
+        my_table = soup.find('table')
+        countries = my_table.findAll('td', style="vertical-align:top;")
+        for country in countries:
+            cntr = dict()
+            zzz = country.find('span', style="display:none")
+            name = country.get_text().replace(zzz.get_text(), '') if zzz else country.get_text()
+            name = name.replace('→', '–').replace('\n', '')
+            name = re.sub(r'[[a-z,0-9].]', '', name)
+            name = name.replace('[', '')
+            common_name = name.split('–')[0].strip()
+            official_name = name.split('–')[1].strip() if len(name.split('–')) > 1 else common_name.strip()
+            country_code = list(self.iso3166.find({'$or': [{'name': official_name}, {'name': common_name},
+                                                         {'official_name': official_name}, {'official_name': common_name}]}))
+            cntr['name'] = official_name
+            cntr['type'] = 'country'
+            cntr['common name'] = common_name
+            if len(country_code) > 0:
+                cntr['code'] = country_code[0]['alpha_2'] if country_code[0]['alpha_2'] else country_code[0]['alpha_3']
+            else:
+                cntr['code'] = 'unknown code'
+            cntr['location'] = None
+            try:
+                cntr['location'] = geo.get_geoposition({'text': cntr['name']})
+            except Exception:
+                pass
+            cntr['parent'] = None
+            country_list.append(cntr)
+        self.location.insert(country_list)
 
     def update_state_list(self):
-        self.state.insert(get_us_state_list())
+        us_states_list = []
+        url = requests.get('https://en.wikipedia.org/wiki/List_of_U.S._state_abbreviations').text
+        soup = BeautifulSoup(url, 'lxml')
+        table = soup.find('table', "wikitable sortable").findAll('tr')
+        for row in table[12:]:
+            st = dict()
+            state = row.find('td').get_text().replace('\n', '').replace('\r', '').replace(u'\xa0', u'')
+            state = re.sub(r'[[a-z,0-9].]', '', state)
+            description = []
+            for desc in row.findAll('td')[2:]:
+                d = desc.get_text().replace('\n', '').replace('\r', '').replace(u'\xa0', u'')
+                if d is not ('' or r'\d'):
+                    description.append(d)
+            description = remove(description)
+            country = self.location.find_one({'name': "United States of America"})
+            st['parent'] = country['_id'] if country else None
+            st['type'] = 'state'
+            st['name'] = state
+            st['description'] = description
+            st['location'] = None
+            try:
+                st['location'] = geo.get_geoposition({'text': st['name']})
+            except Exception:
+                pass
+            us_states_list.append(st)
+        self.location.insert(us_states_list)
 
     def update_pr_city_list(self):
-        self.pr_city.insert(get_pr_city_list())
+        pr_city_list = []
+        url = requests.get('https://suburbanstats.org/population/puerto-rico/list-of-counties-and-cities-in-puerto-rico').text
+        soup = BeautifulSoup(url, 'lxml')
+        pr_city = soup.findAll('a', title=re.compile('Population Demographics and Statistics'))
+        for city in pr_city:
+            ct = dict()
+            state = self.location.find_one({'name': "Puerto Rico"})
+            ct['parent'] = state['_id'] if state else None
+            ct['name'] = city.get_text()
+            ct['type'] = 'city'
+            try:
+                ct['location'] = geo.get_geoposition({'text': ct['name']})
+            except Exception:
+                pass
+            pr_city_list.append(ct)
+        self.location.insert(pr_city_list)
 
     @staticmethod
     def fill_up_geolocation(table, field):
@@ -373,14 +466,11 @@ class MongoConnection(object):
         return list(self.default_entity.find(search_params))
 
     def update_language_list(self):
-        language_list = []
-        langs = list(pycountry.languages)
-        for lang in langs:
-            lan = dict()
+        language_list = list(self.iso639.find({'$or': [{'alpha_2': {'$exists': False}}, {'alpha_2': {'$exists': False}}]}))
+        for lang in language_list:
             if hasattr(lang, 'alpha_2'):
-                lan['code'] = lang.alpha_2
-                lan['name'] = lang.name
-                language_list.append(lan)
+                lang['article'] = self.article.count_documents({'source.language': lang.alpha_2})
+                lang['source'] = self.source.count_documents({'language': lang.alpha_2})
         self.language.insert(language_list)
         
     def show_article_list(self, params):
