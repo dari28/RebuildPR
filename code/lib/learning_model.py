@@ -7,9 +7,9 @@ from lib.mongo_connection import MongoConnection
 from lib.linguistic_functions import tag, pattern_language, get_base_form_for_word
 
 from bson import ObjectId
-from nlp.config import description_tag, STANFORD, stanford_models
+from nlp.config import description_tag, STANFORD
 
-import jnius
+# import jnius
 import numpy as np
 
 
@@ -82,7 +82,7 @@ def get_tags_from_article(params):
     if mongodb.entity.find_one({'trained': True, 'article_id': article_id}):
         return None
 
-    article = mongodb.article.find_one({'deleted': False, '_id': article_id})
+    article = mongodb.article.find_one({'_id': article_id})
     if not article:
         return None
 
@@ -98,8 +98,7 @@ def get_tags_from_article(params):
             'tags': tags,
             'trained': True,
             'deleted': False
-        },
-        # upsert=True
+        }
     ).inserted_id
     return inserted_id
 
@@ -107,7 +106,7 @@ def get_tags_from_article(params):
 def get_tags_from_untrained_articles():
     mongodb = MongoConnection()
 
-    article_ids = [x['_id'] for x in mongodb.source.find({'deleted': False})]
+    article_ids = [x['_id'] for x in mongodb.article.find()]
     trained_article_ids = [ObjectId(x['article_id']) for x in mongodb.entity.find({'trained': True})]
     untrained_ids = list(set(article_ids)-set(trained_article_ids))
 
@@ -135,8 +134,7 @@ def train_on_list(train_text, name, language):
             'language': language,
             'type': 'list',
             'deleted': False
-        },
-        # upsert=True
+        }
     ).inserted_id
     return inserted_id
 
@@ -589,6 +587,8 @@ def fill_up_db_from_zero():
     })
     # Download articles from words in db.phrase and fill up db.article and db.q_article
     mongodb.download_articles_by_phrases()
+    # Fill up ??? by languages
+    mongodb.load_iso()
     # Fill up db.country from wiki_parser
     mongodb.update_country_list()
     mongodb.update_state_list()

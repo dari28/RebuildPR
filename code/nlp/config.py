@@ -212,7 +212,6 @@ SERVER = dict(
 MONGO = dict(
     mongo_host='mongodb://localhost',  # 149.28.85.111:27017
     database='newsAPI',
-    news_api_call_collection='news_api_call',
     article_collection='article',
     q_article_collection='q_article',
     phrase_collection='phrase',

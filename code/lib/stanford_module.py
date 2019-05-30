@@ -12,9 +12,10 @@ from lib.linguistic_functions import get_base_form_for_word, pattern_language, t
 import jnius_config
 
 jnius_config.add_options('-Xrs', '-Xmx{0}'.format(JAVA_CONFIG['max_size']))
-#jnius_config.add_classpath(tools.get_abs_path(SPHINX['path_sphinx']))
+# jnius_config.add_classpath(tools.get_abs_path(SPHINX['path_sphinx']))
 jnius_config.add_classpath(tools.get_abs_path(STANFORD['path_stanford_ner']))
-#jnius_config.add_classpath(tools.get_abs_path(MARY_TTS['path_mary_tts']))
+# jnius_config.add_classpath(tools.get_abs_path(MARY_TTS['path_mary_tts']))
+
 
 @memoize
 def GetJavaClass(name_class):
@@ -40,6 +41,7 @@ SystemJava = GetJavaClass('java.lang.System')
 jProperties = GetJavaClass('java.util.Properties')
 jArrayList = GetJavaClass('java.util.ArrayList')
 
+
 def to_prop(prop):
     properties = jProperties()
     for key in prop:
@@ -54,7 +56,7 @@ def to_prop(prop):
     return properties
 
 
-def annotation_polyglot(data, language, settings={}):
+def annotation_polyglot(data, language):
     # map_setting = {
     #     'part_of_speech': getPOSTaggerAnnotator
     # }
@@ -82,9 +84,21 @@ def getTokens(sentence, tokens, from_pos=0, save_inex=False, index_sentence=None
     end_pos = 0
     index = 1
     core_label = None
-    sentence = sentence #if isinstance(sentence, unicode) else sentence.decode('utf8')
+    # sentence = if isinstance(sentence, unicode) else sentence.decode('utf8')  # Delete SIDE(PY3)
+    try:
+        sentence = sentence.decode('utf8')  # Add SIDE(PY3)
+    except UnicodeError:
+        pass
+    except AttributeError:
+        pass
     for tok in tokens:
-        tok = tok #if isinstance(tok, unicode) else tok.decode('utf8')
+        # tok = if isinstance(tok, unicode) else tok.decode('utf8')  # Delete SIDE(PY3)
+        try:
+            tok = tok.decode('utf8')  # Add SIDE(PY3)
+        except UnicodeError:
+            pass
+        except AttributeError:
+            pass
         start_pos = sentence.find(tok, end_pos)
         before = sentence[end_pos: start_pos]
         if core_label:
@@ -93,7 +107,7 @@ def getTokens(sentence, tokens, from_pos=0, save_inex=False, index_sentence=None
         core_label = getCoreLabel(tok.encode('utf-8'), start_pos + from_pos, end_pos + from_pos - 1)
         core_label.setBefore(before)
         if index_sentence:
-            #core_label.setSentIndex(jInteger(index_sentence))
+            # core_label.setSentIndex(jInteger(index_sentence))
             core_label.setSentIndex(index_sentence)
         if save_inex:
             core_label.setIndex(index)
@@ -145,12 +159,14 @@ def getSentence(text):
 def load_stanford_models(key):
     return CRFClassifier.getClassifier(tools.get_abs_path(STANFORD[key]))
 
+
 def func(prop_ner_temp):
     result = []
     enamurate = prop_ner_temp.propertyNames()
     while enamurate.hasMoreElements():
         result.append(enamurate.nextElement())
     return result
+
 
 @memoize
 def load_stanford_ner(text, language):
@@ -174,6 +190,7 @@ def get_prop_for_language(language):
         return prop
     else:
         return None
+
 
 @memoize
 def getTokenizerAnnotator(language):
@@ -243,7 +260,7 @@ def get_anotation_row(token, settings):
     return result
 
 
-def annotation_stanford(data, language, settings={}):
+def annotation_stanford(data, language, settings):
     '''
     :param data:
     :param language:
@@ -253,13 +270,13 @@ def annotation_stanford(data, language, settings={}):
     map_setting = {
         'part_of_speech': getPOSTaggerAnnotator,
     }
-    #annotation = Annotation(data)
-    annotation = Annotation(jString(data))  #SIDE(NO DATA WITHOUT IT)
+    # annotation = Annotation(data)  # Delete SIDE(PY3)
+    annotation = Annotation(jString(data))  # Add SIDE(PY3)(NO DATA WITHOUT IT)
     getTokenizerAnnotator(language).annotate(annotation)
     getWordsToSentencesAnnotator(language).annotate(annotation)
     # getPOSTaggerAnnotator(language).annotate(annotation)
     for key in map_setting:
-        if key in settings and settings[key]:
+        if settings and key in settings and settings[key]:
             map_setting[key](language).annotate(annotation)
     return annotation
 
@@ -279,12 +296,26 @@ def polyglot_posttag(annotation, language, text=None, data=None):
     for i in range(jTokkens.size()):
         jTokken = jTokkens.get(i)
         word = jTokken.get(getClassAnnotation('TextAnnotation'))
-        if isinstance(word, str):
-            word = word.decode('utf-8')
+        # Delete SIDE(PY3)
+        # if isinstance(word, str):
+        #    word = word.decode('utf-8')
+        try:
+            word = word.decode('utf8')  # Add SIDE(PY3)
+        except UnicodeError:
+            pass
+        except AttributeError:
+            pass
         if word == tags[i][0]:
             tag_pos = tags[i][1]
-            if isinstance(tag_pos, str):
-                tag_pos = tag_pos.decode('utf-8')
+            # Delete SIDE(PY3)
+            # if isinstance(tag_pos, str):
+            #    tag_pos = tag_pos.decode('utf-8')
+            try:
+                tag_pos = tag_pos.decode('utf8')  # Add SIDE(PY3)
+            except UnicodeError:
+                pass
+            except AttributeError:
+                pass
             jTokken.set(getClassAnnotation('PartOfSpeechAnnotation'), jString(tag_pos))
         else:
             raise ValueError(('Error in stanford module: {0} not equals {1}'.format(word, tags[i][0])))
@@ -303,7 +334,7 @@ def polyglot_lemm(annotation, language, text=None, pos_tags=None):
 def annotation(data, language, settings):
     text = None
     if language in STANFORD_PREPOSSESSING:
-        annotation = annotation_stanford(data, language)
+        annotation = annotation_stanford(data, language, {})
     else:
         annotation = annotation_polyglot(data, language)
 

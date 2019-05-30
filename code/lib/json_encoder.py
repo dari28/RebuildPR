@@ -7,6 +7,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.utils import encoders
 from django.core.serializers.json import DjangoJSONEncoder
 
+
 class JSONEncoder(json.JSONEncoder):
     """JSONEncoder for import/export model"""
     def default(self, o):

@@ -11,12 +11,12 @@ import traceback
 from polyglot import load
 from polyglot.downloader import Downloader
 
-from nlp.config import POLIGLOT #, STANFORD, DEFAULT_USER, SERVER, STANDFORD_PACKAGE
-from nlp.config import description_tag, STANFORD, stanford_models
+from nlp.config import POLIGLOT  # , STANFORD, DEFAULT_USER, SERVER, STANDFORD_PACKAGE
 from lib import tools
-from lib.linguistic_functions import get_supported_languages
-from lib.text import Text
-from lib import learning_model
+# from lib.linguistic_functions import get_supported_languages
+# from lib.text import Text
+# from lib import learning_model
+
 
 def install():
     # nltk.download('wordnet')
@@ -74,4 +74,3 @@ def install():
 if __name__ == '__main__':
     os.path.sep = '/'
     install()
-

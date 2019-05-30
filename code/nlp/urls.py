@@ -5,7 +5,6 @@ from lib.server_tuning import execution_at_startup
 urlpatterns = [
     url(r'^test_work/?$', views.test_work),
     url(r'^test_exception_work/?$', views.test_exception_work),
-    url(r'^get_server_calls/?$', views.get_server_calls),
 
     url(r'^load_iso/?$', views.load_iso),
 
