@@ -6,7 +6,6 @@ _PATH = os.path.abspath(os.path.dirname(__file__))
 if _PATH not in sys.path:
     sys.path.append(_PATH)
 
-print(_PATH)
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "newsAPI.settings")
 django.setup()
 

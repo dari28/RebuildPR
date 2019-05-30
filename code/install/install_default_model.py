@@ -1,9 +1,8 @@
-import os
-
 from lib.mongo_connection import MongoConnection
 from lib.linguistic_functions import get_supported_languages
 from nlp.config import SERVER
 from polyglot.load import load_embeddings
+
 
 def add_polyglot_default():
     """Defining default polyglot models"""
@@ -98,7 +97,8 @@ def add_polyglot_default():
                     if '_id' in model:
                         del model['_id']
                     try:
-                        model_id = mongo.default_entity.insert(model)
+                        # model_id = mongo.default_entity.insert(model)
+                        mongo.default_entity.insert(model)
                     except Exception:
                         print(model)
                         raise
@@ -108,4 +108,3 @@ def add_polyglot_default():
                     #     upsert=True
                     # )
     return entities
-

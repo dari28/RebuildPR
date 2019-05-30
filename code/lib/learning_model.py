@@ -7,9 +7,9 @@ from lib.mongo_connection import MongoConnection
 from lib.linguistic_functions import tag, pattern_language, get_base_form_for_word
 
 from bson import ObjectId
-from nlp.config import description_tag, STANFORD, stanford_models
+from nlp.config import description_tag, STANFORD
 
-import jnius
+# import jnius
 import numpy as np
 
 
@@ -85,8 +85,7 @@ def get_tags_from_article(params):
             'tags': tags,
             'trained': True,
             'deleted': False
-        },
-        # upsert=True
+        }
     ).inserted_id
     return inserted_id
 
@@ -122,8 +121,7 @@ def train_on_list(train_text, name, language):
             'language': language,
             'type': 'list',
             'deleted': False
-        },
-        # upsert=True
+        }
     ).inserted_id
     return inserted_id
 

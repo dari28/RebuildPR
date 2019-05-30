@@ -241,59 +241,7 @@ class MongoConnection(object):
         return ids
 
 # ***************************** ARTILES ******************************** #
-#     def update_article_list_one_q(self, q):
-#         # TO_DO: Change 1 hour to 24 hour
-#         last_call_list = list(self.news_api_call.find({'q': q, 'type': 1, 'end_time': {'$exists': True}}).sort('start_time', -1).limit(1))
-#         try:
-#             last_call = last_call_list.pop()
-#         except Exception as ex:
-#             print('First call of {}'.format(q))
-#             last_call = None
-#         if last_call:
-#             print(last_call['start_time'] + datetime.timedelta(hours=1))
-#         print(datetime.datetime.utcnow())
-#         if last_call and last_call['start_time'] + datetime.timedelta(hours=1) > datetime.datetime.utcnow():
-#             return [], []
-#
-#         news_api_call_id = self.add_news_api_call({'q': q, 'type': 1})
-#
-#         new_articles, _ = NewsCollection.get_everything(q)
-#         new_articles_hash = new_articles.copy()
-#         new_hash_list = []
-#         for ns in new_articles_hash:
-#             hasher = hashlib.md5()
-#             hasher.update(json.dumps(ns).encode('utf-8'))
-#             ns['hash'] = hasher.hexdigest()
-#             ns['deleted'] = False
-#             new_hash_list.append(ns['hash'])
-#
-#         old_articles = self.article.find({'deleted': False})
-#         old_sources_hashes = [x['hash'] for x in old_articles]
-#         adding_articles = [new_s for new_s in new_articles_hash if new_s['hash'] not in old_sources_hashes]
-#
-#         inserted_ids = []
-#         for article in adding_articles:
-#             source = self.source.find_one({'deleted': False, 'id': article['source']['id'], 'name': article['source']['name']})
-#             if source:
-#                 article['source']['language'] = source['language']
-#                 article['source']['category'] = source['category']
-#                 article['source']['country'] = source['country']
-#             inserted_ids.append(self.article.insert_one(article).inserted_id)
-#
-#         q_article = [x for articles in self.q_article.find({'q': q}) for x in articles['articles']]
-#         current_article_ids = q_article
-#         deleted_ids = [x['_id'] for x in self.article.find({"hash": {"$nin": new_hash_list}, '_id': {'$in': current_article_ids}, 'deleted': False})]
-#         self.delete_article_list_by_ids(deleted_ids)
-#
-#         existing_article_ids = [x['_id'] for x in self.article.find({"hash": {"$in": new_hash_list}, 'deleted': False})]
-#         self.q_article.update_one({'q': q},
-#                                   {'$set': {'articles': existing_article_ids},
-#                                    "$currentDate": {"lastModified": True}},
-#                                   upsert=True)
-#
-#         self.news_api_call.update_one({'_id': news_api_call_id}, {'$set': {'end_time': datetime.datetime.utcnow()}})
-#
-#         return inserted_ids, deleted_ids
+
 
     def update_article_list_one_q(self, q, language, new_articles):
         new_articles_hash = new_articles.copy()
@@ -685,5 +633,7 @@ class MongoConnection(object):
             cat['sources'] = self.source.count({'category': category})
             self.category.insert_one(cat)
 
+    def show_category(self, params):
+        raise Exception("Function in progress")
 
 

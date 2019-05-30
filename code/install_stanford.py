@@ -65,8 +65,9 @@ def add_standford_default():
                         del entity['_id']
                     try:
                         model_id = mongo.default_entity.insert(entity)
-                    except Exception:
+                    except Exception as ex:
                         print(entity)
+                        print(ex)
                         raise
                     # mongodb.users.update_one(
                     #     {'_id':  DEFAULT_USER[model['language']]},

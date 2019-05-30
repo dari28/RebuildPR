@@ -4,11 +4,9 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from lib import mongo_connection as mongo
 from lib.json_encoder import JSONEncoderHttp
-from datetime import datetime, timedelta
 import geoposition as geo
 from nlp import tasks
 from lib import learning_model as model
-from news import NewsCollection
 
 # ***************************** TEST FUNCTIONS ******************************** #
 
@@ -235,19 +233,21 @@ def delete_permanent_phrase_list(request):
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
+# noinspection PyUnusedLocal
+
 
 @api_view(['POST'])
 def download_articles_by_phrases(request):
-    # params = request.data
     mongodb = mongo.MongoConnection()
     mongodb.download_articles_by_phrases()
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
+# noinspection PyUnusedLocal
+
 
 @api_view(['POST'])
 def fill_up_db_from_zero(request):
-    # params = request.data
     model.fill_up_db_from_zero()
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
@@ -255,14 +255,17 @@ def fill_up_db_from_zero(request):
 
 # ***************************** GEOLOCATION ******************************** #
 
+# noinspection PyUnusedLocal
+
 
 @api_view(['POST'])
 def update_country_list(request):
     mongodb = mongo.MongoConnection()
     mongodb.update_country_list()
-    # tasks.update_country_list()
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
+
+# noinspection PyUnusedLocal
 
 
 @api_view(['POST'])
@@ -271,6 +274,8 @@ def update_state_list(request):
     mongodb.update_state_list()
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
+
+# noinspection PyUnusedLocal
 
 
 @api_view(['POST'])
@@ -389,6 +394,8 @@ def get_language(request):
     results = {'status': True, 'response': response, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
+# noinspection PyUnusedLocal
+
 
 @api_view(['POST'])
 def update_language_list(request):
@@ -398,6 +405,9 @@ def update_language_list(request):
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 # **************************** CATEGORY ***************************
+
+# noinspection PyUnusedLocal
+
 
 @api_view(['POST'])
 def update_category(request):
@@ -411,9 +421,12 @@ def update_category(request):
 def show_category(request):
     params = request.data
     mongodb = mongo.MongoConnection()
+    # FUNCTION IN PROGRESS
     response, more = mongodb.show_category(params=params)
     results = {'status': True, 'response': {'state': response, 'more': more}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
+
+# noinspection PyUnusedLocal
 
 
 @api_view(['POST'])
@@ -422,4 +435,3 @@ def load_iso(request):
     mongodb.load_iso()
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
-

@@ -11,9 +11,9 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
-import sys
+# import sys
 import datetime
-from socket import gethostname, gethostbyname, gethostbyname_ex
+# from socket import gethostname, gethostbyname, gethostbyname_ex
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -51,19 +51,19 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'nlp.middleware.LoggingMiddleware',
-   #'django.contrib.auth.middleware.AuthenticationMiddleware',
-   #'django.contrib.messages.middleware.MessageMiddleware',
+    # 'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # 'django.contrib.messages.middleware.MessageMiddleware',
 ]
 
 if DEBUG:
     MIDDLEWARE.extend([
-#         'django.middleware.security.SecurityMiddleware',
-#         'django.contrib.sessions.middleware.SessionMiddleware',
-#         'django.middleware.common.CommonMiddleware',
-#         'django.middleware.csrf.CsrfViewMiddleware',
-#  #       'django.contrib.auth.middleware.AuthenticationMiddleware',
-# #        'django.contrib.messages.middleware.MessageMiddleware',
-#         'django.middleware.clickjacking.XFrameOptionsMiddleware',
+        #  'django.middleware.security.SecurityMiddleware',
+        #  'django.contrib.sessions.middleware.SessionMiddleware',
+        #  'django.middleware.common.CommonMiddleware',
+        #  'django.middleware.csrf.CsrfViewMiddleware',
+        #  'django.contrib.auth.middleware.AuthenticationMiddleware',
+        #  'django.contrib.messages.middleware.MessageMiddleware',
+        #  'django.middleware.clickjacking.XFrameOptionsMiddleware',
         'pyinstrument.middleware.ProfilerMiddleware'
     ])
 

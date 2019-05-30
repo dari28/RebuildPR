@@ -4,13 +4,13 @@ import os
 import sys
 import traceback
 
-import iso639
+# import iso639
 import requests
-import json
+# import json
 import numpy
 import difflib
 
-import string
+# import string
 import ctypes
 
 from itertools import permutations, product
@@ -654,7 +654,9 @@ class ParseMatchesUnitsBack(object):
                 utf8_units = self.units[n_word]
                 try:
                     utf8_units = utf8_units.decode('utf8')
-                except:
+                except UnicodeError:
+                    pass
+                except AttributeError:
                     pass
                 ini_pos = self.origin_text.find(utf8_units, end_pos)
                 end_pos = ini_pos + len(utf8_units)
@@ -844,67 +846,3 @@ def escape(pattern):
         if c in re_special:
             s[i] = " \{}".format(c)
     return pattern[:0].join(s)
-
-# if __name__ == '__main__':
-#     # mongo = MongoConnection()
-#     # entity_standford = list(mongo.entity.find({'type': 'default_stanford'}))
-#     # set_id = [entity['_id'] for entity in entity_standford]
-#     # result = export_data(entities=set_id)
-#     # print result
-#     #a = check_skip_string('124', '1234')
-#     #print a
-#     #b = {'string': 'as   df ', 'matches': [{'start_match': 0, 'length_match': 2}, {'start_match': 5, 'length_match': 2}]}
-#     #a = fixe_samples_match('asdf', b['string'], b['matches'])
-#     #p rint a
-#     #a = check_skip_string('as .. df', 'as      \n.  df')
-#     #print a
-#     # text, back_map = adaptiv_remove_tab('asd.\n\n vbn\r\n.  \n  \n\r.\r\n')
-#     # test_text = 'asd. vbn . . . '
-#     # result = text == test_text
-#     # print text
-#     pass
-#
-# ####################################################
-# #"""TEST delete_in_sample(sample, start, count)"""
-#     # sample = {u'matches': [
-#     #     {u'length_match': 7, u'start_match': 10}
-#     # ], u'string': u'\xbfPor qu\xe9 mi WiFi entra y sale? '}
-#     # new_sample0 = delete_in_sample(sample, 0, 1)  # LEFT
-#     #
-#     # new_sample1 = delete_in_sample(sample, 1, 1)  #LEFT
-#     # # {u'length_match': 7, u'start_match': 9}
-#     # new_sample2 = delete_in_sample(sample, 6, 3)
-#     # # {u'length_match': 7, u'start_match': 7}
-#     # new_sample3 = delete_in_sample(sample, 6, 4)
-#     # # {u'length_match': 7, u'start_match': 6}
-#     # new_sample4 = delete_in_sample(sample, 6, 7)
-#     # # {u'length_match': 4, u'start_match': 6}
-#     # new_sample5 = delete_in_sample(sample, 10, 3)
-#     # # {u'length_match': 4, u'start_match': 10}
-#     # new_sample6 = delete_in_sample(sample, 10, 7)
-#     # # {}
-#     # new_sample7 = delete_in_sample(sample, 10, 10)
-#     # # {}
-#     # new_sample8 = delete_in_sample(sample, 12, 2)
-#     # # {u'length_match': 5, u'start_match': 10}
-#     # new_sample9 = delete_in_sample(sample, 12, 8)
-#     # # {u'length_match': 2, u'start_match': 10}
-#     # new_sample10 = delete_in_sample(sample, 17, 3) #RIGHT
-#     # # {u'length_match': 7, u'start_match': 10}
-#     # new_sample11 = delete_in_sample(sample, 0, 31)
-#     # # {'matches': [], 'string': u''}
-#     # print(new_sample4)
-# #######################################################
-#     #string = "  Hello   "
-#     #string = " Mi WiFi gotas en mi sala de estar.\u00a0"
-#     # string = u" Mi WiFi gotas en mi sala de estar.\u00a0"
-#     # print(type(string))
-#     # len_string = len(string)
-#     # zeros_all = len_string - len(string.strip())
-#     # print(len(string))
-#     # zeros_left = len_string - len(string.lstrip())
-#     # print(len(string))
-#     # zeros_right = len_string - len(string.rstrip())
-#     # print(len(string))
-#     ###################################################
-
