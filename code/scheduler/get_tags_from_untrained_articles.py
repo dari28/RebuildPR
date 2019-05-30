@@ -17,6 +17,6 @@ django.setup()
 logger.info('DJANGO START\n **************************')
 
 from lib import learning_model as model
-logger.info('train_untrained_article STARTED')
+logger.info('get_tags_from_untrained_articles STARTED')
 model.get_tags_from_untrained_articles()
-logger.info('train_untrained_article FINISHED')
+logger.info('get_tags_from_untrained_articles FINISHED')

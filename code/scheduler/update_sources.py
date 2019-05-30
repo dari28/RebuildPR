@@ -21,5 +21,5 @@ mongodb = mongo.MongoConnection()
 logger.info("SCHEDULAR UPDATE SOURCES STARTED")
 inserted_ids, deleted_ids = mongodb.update_source_list_from_server()
 
-logger.info('Count of updated: \n {} \n {}'.format(inserted_ids.count(), deleted_ids.count()))
+logger.info('\n {} \n {}'.format(inserted_ids, deleted_ids))
 logger.info("SCHEDULAR UPDATE SOURCES FINISHED")
