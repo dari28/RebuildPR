@@ -33,20 +33,6 @@ def test_work(request):
     results = {'status': True, 'response': 'IT Works', 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
-# noinspection PyUnusedLocal
-
-
-@api_view(['POST'])
-def get_server_calls(request):
-    """
-    List all snippets, or create a new snippet.
-    """
-    mongodb = mongo.MongoConnection()
-    all_calls = mongodb.news_api_call.count({})
-    server_calls_last_24_hour = mongodb.news_api_call.count({'start_time': {'$gte': datetime.utcnow() - timedelta(hours=24)}})
-    # server_calls = NewsCollection.get_calls()
-    results = {'status': True, 'response': {'all_calls': all_calls, 'server_calls_last_24_hour': server_calls_last_24_hour}, 'error': {}}
-    return JsonResponse(results, encoder=JSONEncoderHttp)
 
 # ***************************** TASKS ******************************** #
 

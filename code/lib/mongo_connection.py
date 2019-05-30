@@ -33,7 +33,6 @@ class MongoConnection(object):
         config = dict(MONGO, **config) if config else MONGO
         mongo = pymongo.MongoClient(config['mongo_host'], connect=True)
         self.mongo_db = mongo[config['database']]
-        self.news_api_call = self.mongo_db[config['news_api_call_collection']]
         self.phrase = self.mongo_db[config['phrase_collection']]
         self.source = self.mongo_db[config['source_collection']]
         self.article = self.mongo_db[config['article_collection']]
@@ -85,10 +84,6 @@ class MongoConnection(object):
         sources = list(self.source.find(search_param).skip(start).limit(length + 1))
         more = True if len(sources) > length else False
         return sources[:length], more
-
-    def add_news_api_call(self, call):
-        call['start_time'] = datetime.datetime.utcnow()
-        return self.news_api_call.insert_one(call).inserted_id
 
     def load_iso(self):
         with open(tools.get_abs_path('../data/iso639-3.json'), 'r') as f:
@@ -214,16 +209,6 @@ class MongoConnection(object):
         new_sources, _ = NewsCollection.get_sources("")
         new_sources_hash = new_sources.copy()
         new_hash_list = []
-        last_call_list = list(self.news_api_call.find({'type': 0, 'end_time': {'$exists': True}}).sort('start_time', -1).limit(1))
-        try:
-            last_call = last_call_list.pop()
-        except Exception as ex:
-            print("First call of update_source")
-            last_call = None
-        if last_call and last_call['start_time'] + datetime.timedelta(hours=1) > datetime.datetime.utcnow():
-            return [], []
-
-        news_api_call_id = self.add_news_api_call({'type': 0})
 
         for ns in new_sources_hash:
             hasher = hashlib.md5()
@@ -242,8 +227,6 @@ class MongoConnection(object):
 
         deleted_ids = [x['_id'] for x in self.source.find({"hash": {"$nin": new_hash_list}})]
         self.delete_source_list_by_ids(deleted_ids)
-
-        self.news_api_call.update_one({'_id': news_api_call_id}, {'$set': {'end_time': datetime.datetime.utcnow()}})
 
         return inserted_ids, deleted_ids
 
@@ -541,7 +524,7 @@ class MongoConnection(object):
                 published_at_list = sorted([article['publishedAt'] for article in articles])
                 date_from = published_at_list[0]
                 date_to = published_at_list[-1]
-                self.phrase.update_one({'_id': _id}, {'$set': {'to': date_to, 'from': date_from}})
+                self.phrase.update_one({'_id': _id}, {'$set': {'to': date_to, 'from': date_from, 'updated_all_old_article': False}})
 
         for phrase in old_phrases:
             _id = phrase['_id']
@@ -550,8 +533,6 @@ class MongoConnection(object):
             articles, total_count, status = NewsCollection.get_everything(q, language, from_date=phrase['to'])
             for x in range(total_count // 100):
                 added, tc, status = NewsCollection.get_everything(q, language, from_date=phrase['to'], page=2+x)
-                if tc == 0:
-                    print("Добавить в дозагрузку")
                 articles = articles + added
             self.update_article_list_one_q(q, language, articles)
             if articles:
@@ -559,28 +540,36 @@ class MongoConnection(object):
                 date_to = published_at_list[-1]
                 self.phrase.update_one({'_id': _id}, {'$set': {'to': date_to}})
 
-        phrases = self.phrase.find({'deleted': False})
-        # Download while we can
-        own_status = 'ok'
-        for phrase in phrases:
-            if own_status == 'ok':
+        self.download_old_articles_by_phrases_while_we_can()
+
+    def download_old_articles_by_phrases_while_we_can(self):
+        we_can_download = True
+        i = 500
+        k = self.phrase.count({'deleted': False, 'updated_all_old_article': False})
+        while we_can_download and i > 0 and k > 0:
+            i -= k
+            for phrase in self.phrase.find({'deleted': False, 'updated_all_old_article': False}):
                 _id = phrase['_id']
                 q = phrase['phrase']
                 language = phrase['language']
-                articles, total_count, status = NewsCollection.get_everything(q, language, to_date=phrase['from'])
+                from_date = phrase['from']
+                articles, total_count, status = NewsCollection.get_everything(q, language, to_date=from_date)
+                if status != 'ok':
+                    we_can_download = False
+                if status == 'ok' and total_count == 0:
+                    self.phrase.update_one({'_id': _id}, {'$set': {'updated_all_old_article': True}})
                 self.update_article_list_one_q(q, language, articles)
                 if articles:
                     published_at_list = sorted([article['publishedAt'] for article in articles])
-                    date_from = published_at_list[0]
-                    self.phrase.update_one({'_id': _id}, {'$set': {'from': date_from}})
+                    self.phrase.update_one({'_id': _id}, {'$set': {'from': published_at_list[0]}})
 
+            k = self.phrase.count({'deleted': False, 'updated_all_old_article': False})
     # ***************************** Train articles ******************************** #
 
     def get_default_entity(self, params):
         search_params = {}
         if params and 'type' in params:
             search_params['type'] = params['type']
-
 
         search_params['language'] = 'en'
         if params and 'language' in params:

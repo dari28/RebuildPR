@@ -576,6 +576,8 @@ def fill_up_db_from_zero():
     })
     # Download articles from words in db.phrase and fill up db.article and db.q_article
     mongodb.download_articles_by_phrases()
+    # Fill up ??? by languages
+    mongodb.load_iso()
     # Fill up db.country from wiki_parser
     mongodb.update_country_list()
     mongodb.update_state_list()
