@@ -8,11 +8,16 @@ if _PATH not in sys.path:
 
 print(_PATH)
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "../newsAPI.settings")
-django.setup()
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "newsAPI.settings")
 
 import logging
 logger = logging.getLogger()
+logger.info(_PATH)
+
+django.setup()
+
+# import logging
+# logger = logging.getLogger()
 logger.info('DJANGO START\n **************************')
 
 from lib import mongo_connection as mongo
