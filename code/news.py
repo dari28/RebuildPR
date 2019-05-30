@@ -1,14 +1,23 @@
-from news_const import API_KEY, TOP_HEADLINES_URL, EVERYTHING_URL, SOURCES_URL
 import requests
 from datetime import datetime, timedelta
 
+API_KEY = 'aa5ed9dc9edb4b49b3fe02edc73eca22'  # '886e070469344e0381be2fc5cdf24830'
 
-# def counted(f):
-#     def wrapped(*args, **kwargs):
-#         wrapped.calls += 1
-#         return f(*args, **kwargs)
-#     wrapped.calls = 0
-#     return wrapped
+TOP_HEADLINES_URL = 'https://newsapi.org/v2/top-headlines'
+EVERYTHING_URL = 'https://newsapi.org/v2/everything'
+SOURCES_URL = 'https://newsapi.org/v2/sources'
+
+countries = {
+    'ae', 'ar', 'at', 'au', 'be', 'bg', 'br', 'ca', 'ch', 'cn', 'co', 'cu', 'cz', 'de', 'eg', 'fr', 'gb', 'gr', 'hk',
+    'hu', 'id', 'ie', 'il', 'in', 'it', 'jp', 'kr', 'lt', 'lv', 'ma', 'mx', 'my', 'ng', 'nl', 'no', 'nz', 'ph', 'pl',
+    'pt', 'ro', 'rs', 'ru', 'sa', 'se', 'sg', 'si', 'sk', 'th', 'tr', 'tw', 'ua', 'us', 've', 'za'
+}
+
+languages = {'ar', 'en', 'cn', 'de', 'es', 'fr', 'he', 'it', 'nl', 'no', 'pt', 'ru', 'sv', 'ud'}
+
+categories = {'business', 'entertainment', 'general', 'health', 'science', 'sports', 'technology'}
+
+sort_method = {'relevancy', 'popularity', 'publishedAt'}
 
 
 def add_second(str_datatime):
@@ -23,11 +32,6 @@ def remove_second(str_datatime):
 
 class NewsCollection:
     @staticmethod
-    def get_calls():
-        return NewsCollection.get_sources.calls + NewsCollection.get_everything.calls
-
-    @staticmethod
-    # @counted
     def get_top_headliners(q):
         """
         Original TOP_HEADLINES_URL request required any of the following parameters: sources, q, language, country, category.
@@ -65,7 +69,6 @@ class NewsCollection:
         return headline_list, errors
 
     @staticmethod
-    # @counted
     def get_everything(q, language='en', page=1, from_date=None, to_date=None):
         """
             Original EVERYTHING_URL request required any of the following parameters: sources, q, language, country, category.
@@ -107,7 +110,6 @@ class NewsCollection:
         return articles, total_results, status
 
     @staticmethod
-    # @counted
     def get_sources(q):
         """
             Original EVERYTHING_URL request required any of the following parameters: sources, q, language, country, category.
