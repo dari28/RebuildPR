@@ -8,7 +8,7 @@ if _PATH not in sys.path:
 
 print(_PATH)
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "newsAPI.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "../newsAPI.settings")
 django.setup()
 
 import logging
