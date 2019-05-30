@@ -10,7 +10,6 @@ import json
 import re
 import requests
 from bs4 import BeautifulSoup
-from wiki_parser import get_us_state_list, get_country_names_list, get_pr_city_list
 import geoposition as geo
 from collections import Counter
 import datetime

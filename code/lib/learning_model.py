@@ -21,7 +21,9 @@ def union_res(result1, result2):
             if isinstance(v, np.int64):
                 v = int(v)
             if r1 in union_dict:
-                union_dict[r1].append(v)
+                for elem in v:
+                    if elem in union_dict[r1]:
+                        union_dict[r1].append(elem)
             else:
                 union_dict[r1] = list(v)
     for r2 in result2:
@@ -30,7 +32,10 @@ def union_res(result1, result2):
             if isinstance(v, np.int64):
                 v = int(v)
             if r2 in union_dict:
-                union_dict[r2].append(v)
+                for elem in v:
+                    lst = union_dict[r2]
+                    if len(list(filter(lambda lst: lst['start_match'] == elem['start_match'], lst))) > 0:
+                        union_dict[r2].append(elem)
             else:
                 union_dict[r2] = list(v)
 
@@ -45,13 +50,21 @@ def get_tags(text, language="en"):
         entities1,
         text,
         language)
-
+    res1 = result1.copy()
+    for tg in res1:
+        result1[tg.lower()] = result1.pop(tg)
     entities2 = mongodb.get_default_entity({"type": "default_stanford", "language": language})
     result2 = predict_entity_stanford_default(
         entities2,
         text,
         language)
+    res2 = result2.copy()
+    for tg in res2:
+        result2[tg.lower()] = result2.pop(tg)
 
+    result1['location'] = result1.pop('detects locations')
+    result1['person'] = result1.pop('detects persons')
+    result1['organization'] = result1.pop('detects organizations')
     return union_res(result1, result2)
 
 
