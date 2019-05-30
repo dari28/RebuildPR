@@ -69,7 +69,7 @@ def get_tags_from_article(params):
     if mongodb.entity.find_one({'trained': True, 'article_id': article_id}):
         return None
 
-    article = mongodb.article.find_one({'deleted': False, '_id': article_id})
+    article = mongodb.article.find_one({'_id': article_id})
     if not article:
         return None
 
@@ -94,7 +94,7 @@ def get_tags_from_article(params):
 def get_tags_from_untrained_articles():
     mongodb = MongoConnection()
 
-    article_ids = [x['_id'] for x in mongodb.source.find({'deleted': False})]
+    article_ids = [x['_id'] for x in mongodb.article.find()]
     trained_article_ids = [ObjectId(x['article_id']) for x in mongodb.entity.find({'trained': True})]
     untrained_ids = list(set(article_ids)-set(trained_article_ids))
 
