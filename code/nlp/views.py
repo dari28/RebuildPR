@@ -259,6 +259,14 @@ def download_articles_by_phrases(request):
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
+@api_view(['POST'])
+def fill_up_db_from_zero(request):
+    # params = request.data
+    model.fill_up_db_from_zero()
+    results = {'status': True, 'response': {}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
 # ***************************** GEOLOCATION ******************************** #
 
 

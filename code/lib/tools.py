@@ -315,10 +315,11 @@ class ParsePolyglot(object):
 
     def __iter__(self):
         # end_pos = 0  # Delete SIDE
+        end_pos = {'I-ORG': 0, 'I-PER': 0, 'I-LOC': 0}  # Add SIDE
         for word_class in self.classification:
             try:
                 if word_class.tag in self.set_tags:
-                    end_pos = 0  # Add SIDE
+                    # end_pos = 0  # Add SIDE
                     for i in range(word_class.start, word_class.end):
                         utf8_units = self.text_class.words[i]
                         try:
@@ -327,13 +328,21 @@ class ParsePolyglot(object):
                             pass
                         except AttributeError:
                             pass
-                        if i == word_class.start:
-                            start_pos = self.origin_text.find(utf8_units, end_pos)
-                        end_pos = self.origin_text.find(utf8_units, end_pos) + len(utf8_units)
+                        # if i == word_class.start:
+                        #     start_pos = self.origin_text.find(utf8_units, end_pos)
+                        # end_pos = self.origin_text.find(utf8_units, end_pos) + len(utf8_units)
 
+                        if i == word_class.start:
+                            start_pos = self.origin_text.find(utf8_units, end_pos[word_class.tag])
+                        end_pos[word_class.tag] = self.origin_text.find(utf8_units, end_pos[word_class.tag]) + len(utf8_units)
+
+                    # yield {'match': {'start_match': start_pos,
+                    #                  'length_match': len(self.origin_text[start_pos: end_pos]),
+                    #                  'word': self.origin_text[start_pos: end_pos]},
+                    #        'tag': word_class.tag}
                     yield {'match': {'start_match': start_pos,
-                                     'length_match': len(self.origin_text[start_pos: end_pos]),
-                                     'word': self.origin_text[start_pos: end_pos]},
+                                     'length_match': len(self.origin_text[start_pos: end_pos[word_class.tag]]),
+                                     'word': self.origin_text[start_pos: end_pos[word_class.tag]]},
                            'tag': word_class.tag}
             except:
                 pass

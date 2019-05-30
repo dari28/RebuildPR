@@ -55,6 +55,7 @@ urlpatterns = [
 
     url(r'^predict_entity/?$', views.predict_entity),
     url(r'^download_articles_by_phrases/?$', views.download_articles_by_phrases),
+    url(r'^fill_up_db_from_zero/?$', views.fill_up_db_from_zero),
 
 
 ]

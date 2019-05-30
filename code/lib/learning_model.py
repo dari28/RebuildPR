@@ -565,6 +565,31 @@ def predict_entity_list(entities, data, language='en'):
     return matches
 
 
+def fill_up_db_from_zero():
+    mongodb = MongoConnection()
+    # Download sources and fill up db.source
+    mongodb.update_source_list_from_server()
+    # Add start phrases and fill up db.phrase
+    mongodb.add_phrases(params={
+        "phrases": ["Puerto Rico", "Puerto Rican"],
+        "language": "en"
+    })
+    # Download articles from words in db.phrase and fill up db.article and db.q_article
+    mongodb.download_articles_by_phrases()
+    # Fill up db.country from wiki_parser
+    mongodb.update_country_list()
+    mongodb.update_state_list()
+    mongodb.update_pr_city_list()
+    # Add to db.country values geolocations
+    mongodb.fill_up_geolocation_country_list()
+    mongodb.fill_up_geolocation_state_list()
+    mongodb.fill_up_geolocation_pr_city_list()
+    # Fill up db.default_entity by entity_list from locations
+    train_on_default_list({"language": "en"})
+    # Fill up db.entity by tags in articles
+    get_tags_from_untrained_articles()
+
+
 class NormalForm(object):
     _normal_text = None
     _normal_words = None

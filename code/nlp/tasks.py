@@ -118,24 +118,7 @@ def update_source_list_from_server():
         pass
 
 
-@background(schedule=1)
-def fill_up_db_from_zero():
-    mongodb = mongo.MongoConnection()
-    # Download sources and fill up db.source
-    mongodb.update_source_list_from_server()
-    # Add start phrases and fill up db.phrase
-    mongodb.add_phrases(phrases=['Puerto rico', 'Puerto ricans'])
-    # Download articles from words in db.phrase and fill up db.article and db.q_article
-    for q in mongodb.phrase.find({}):
-        mongodb.update_article_list_from_server({'q': q['q']})
-    # Fill up db.country from wiki_parser
-    mongodb.update_country_list()
-    mongodb.update_state_list()
-    mongodb.update_pr_city_list()
-    # Add to db.country values geolocations
-    mongodb.fill_up_geolocation_country_list()
-    mongodb.fill_up_geolocation_state_list()
-    mongodb.fill_up_geolocation_pr_city_list()
-    # Fill up db.language
+# @background(schedule=1)
+
 
 
