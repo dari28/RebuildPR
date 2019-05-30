@@ -32,7 +32,6 @@ urlpatterns = [
     url(r'^update_source_list_from_server/?$', views.update_source_list_from_server),
 
     url(r'^get_article_list/?$', views.get_article_list),
-    url(r'^update_article_list_from_server/?$', views.update_article_list_from_server),
 
     url(r'^get_tag_list/?$', views.get_tag_list),
 

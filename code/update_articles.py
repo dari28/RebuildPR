@@ -1,15 +1,18 @@
 import os
 import sys
+import django
+_PATH = os.path.abspath(os.path.dirname(__file__))
+
+if _PATH not in sys.path:
+    sys.path.append(_PATH)
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "newsAPI.settings")
+django.setup()
+
 import logging
 from lib import mongo_connection as mongo
-
-phrases = ["Puerto Rico", "Puerto Rican"]
 mongodb = mongo.MongoConnection()
-print("SCHEDULAR UPDATE ARTICLES STARTED")
+print("SCHEDULAR download_articles_by_phrases STARTED")
 logger = logging.getLogger()
-logger.info('SCHEDULAR ARTICLES SOURCES:\n **************************')
-for q in phrases:
-    inserted_ids, deleted_ids = mongodb.update_article_list_from_server({'q': q})
-    logger.info('{}\n **************************'.format(q))
-
-print("SCHEDULAR UPDATE ARTICLES FINISHED")
+mongodb.download_articles_by_phrases()
+print("SCHEDULAR download_articles_by_phrases FINISHED")

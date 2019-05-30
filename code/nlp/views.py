@@ -44,14 +44,6 @@ def update_source_list_from_server(request):
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
-@api_view(['POST'])
-def update_article_list_from_server(request):
-    params = request.data
-    tasks.update_article_list_from_server(params)
-    results = {'status': True, 'response': {}, 'error': {}}
-
-    return JsonResponse(results, encoder=JSONEncoderHttp)
-
 # noinspection PyUnusedLocal
 
 

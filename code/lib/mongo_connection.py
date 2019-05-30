@@ -242,7 +242,6 @@ class MongoConnection(object):
 
 # ***************************** ARTILES ******************************** #
 
-
     def update_article_list_one_q(self, q, language, new_articles):
         new_articles_hash = new_articles.copy()
         new_hash_list = []
@@ -288,25 +287,6 @@ class MongoConnection(object):
         # self.news_api_call.update_one({'_id': news_api_call_id}, {'$set': {'end_time': datetime.datetime.utcnow()}})
 
         # return inserted_ids, deleted_ids
-
-    def update_article_list_from_server(self, params):
-        """
-        Description: update article list from news collector (for scheduler)
-        It makes request to server and updates articles in db.
-        It adds new sources and deletes(change ‘deleted’ filed) not available sources. The ‘response’ field contains that ids.
-        :param params:
-        q - search word (str or list)
-        :return: inserted_ids and deleted_ids of article
-        """
-        if 'q' not in params:
-            raise EnvironmentError('Request must contain \'q\' field')
-        q = params['q']
-        if not isinstance(q, list):
-            q = [q]
-
-        for one_q in q:
-            self.update_article_list_one_q(one_q)
-        return [], []
 
     def get_q_article_list(self, params):
         if 'q' not in params:

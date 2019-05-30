@@ -103,18 +103,6 @@ def get_tags_from_untrained_articles():
 
 
 @background(schedule=1)
-def update_article_list_from_server(params):
-    mongodb = mongo.MongoConnection()
-    try:
-        print("Background task update_article_list_from_server started")
-        inserted_ids, deleted_ids = mongodb.update_article_list_from_server(params)
-        print("Background task update_article_list_from_server finished. Response: \n{} \n{}".format(inserted_ids, deleted_ids))
-    except Exception as ex:
-        print(ex)
-        pass
-
-
-@background(schedule=1)
 def update_source_list_from_server():
     mongodb = mongo.MongoConnection()
     try:
