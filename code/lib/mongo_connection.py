@@ -12,7 +12,6 @@ import requests
 from bs4 import BeautifulSoup
 import geoposition as geo
 from collections import Counter
-import datetime
 from lib import tools
 
 

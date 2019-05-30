@@ -10,6 +10,9 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "newsAPI.settings")
 django.setup()
 
 import logging
+logger = logging.getLogger()
+logger.info('DJANGO START\n **************************')
+
 from lib import mongo_connection as mongo
 mongodb = mongo.MongoConnection()
 print("SCHEDULAR download_articles_by_phrases STARTED")
