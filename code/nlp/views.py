@@ -412,9 +412,10 @@ def load_iso(request):
 
 
 @api_view(['POST'])
-def add_article_locations(request):
+def find_articles_by_locations(request):
+    params = request.data
     mongodb = mongo.MongoConnection()
-    mongodb.add_article_locations()
-    results = {'status': True, 'response': {}, 'error': {}}
+    articles = mongodb.find_articles_by_locations(params=params)
+    results = {'status': True, 'response': {'count': articles['count'], 'articles': articles['articles_list']}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 

@@ -245,6 +245,16 @@ class MongoConnection(object):
             locations.append(location)
         self.article.update({'article_id': article_id}, {'$set': {'locations': locations}})
 
+    def find_articles_by_locations(self, params):
+        if 'location' not in params:
+            raise EnvironmentError('Request must contain \'location\' field')
+        location = params['location']
+        locations = dict()
+        locations_list = list(self.article.find({'location': {'$in': location}}))
+        locations['locations_list'] = locations_list
+        locations['count'] = len(locations_list)
+        return locations
+
 # ***************************** ARTILES ******************************** #
 
     def update_article_list_one_q(self, q, language, new_articles):
