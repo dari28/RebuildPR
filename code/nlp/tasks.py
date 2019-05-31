@@ -20,39 +20,6 @@ def update_country_list():
         print(ex)
         pass
 
-
-@background(schedule=1)
-def fill_up_geolocation_country_list(self):
-    try:
-        print("Background task fill_up_geolocation_country_list started")
-        ids = mongo.MongoConnection.fill_up_geolocation(self.country, 'official_name')
-        print("Background task fill_up_geolocation_country_list finished. Response: \n{}".format(ids))
-    except Exception as ex:
-        print(ex)
-        pass
-
-
-@background(schedule=1)
-def fill_up_geolocation_state_list(self):
-    try:
-        print("Background task fill_up_geolocation_state_list started")
-        ids = mongo.MongoConnection.fill_up_geolocation(self.state, 'name')
-        print("Background task fill_up_geolocation_state_list finished. Response: \n{}".format(ids))
-    except Exception as ex:
-        print(ex)
-        pass
-
-
-@background(schedule=1)
-def fill_up_geolocation_pr_city_list(self):
-    try:
-        print("Background task fill_up_geolocation_pr_city_list started")
-        ids = mongo.MongoConnection.fill_up_geolocation(self.pr_city, 'name')
-        print("Background task fill_up_geolocation_pr_city_list finished. Response: \n{}".format(ids))
-    except Exception as ex:
-        print(ex)
-        pass
-
 # ***************************** ENTITY ******************************** #
 
 

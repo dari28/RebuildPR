@@ -71,6 +71,19 @@ def get_tags(text, language="en"):
     return union_res(result1, result2)
 
 
+def add_article_locations(params):
+    mongodb = MongoConnection()
+
+    language = 'en' if 'language' not in params else params['language']
+
+    if 'article_id' not in params:
+        raise EnvironmentError('Request must contain \'article_id\' field')
+    article_id = params['article_id']
+    if not isinstance(article_id, ObjectId):
+        article_id = ObjectId(article_id)
+    mongodb.add_article_locations(article_id=article_id)
+
+
 def get_tags_from_article(params):
     mongodb = MongoConnection()
 
@@ -91,9 +104,13 @@ def get_tags_from_article(params):
 
     if 'content' in article and article['content']:
         tags = get_tags(article['content'], language)
-    else:
+    elif 'description' in article and article['description']:
         tags = get_tags(article['description'], language)
-
+    elif 'title' in article and article['title']:
+        tags = get_tags(article['title'], language)
+    else:
+        tags = []
+        
     inserted_id = mongodb.entity.insert_one(
         {
             'article_id': str(article_id),
@@ -117,6 +134,15 @@ def get_tags_from_untrained_articles():
         get_tags_from_article({'article_id': article_id})
 
     return untrained_ids
+
+
+def add_locations_to_untrained_articles():
+    mongodb = MongoConnection()
+
+    article_ids = [x['_id'] for x in mongodb.article.find({'locations': {'$exists': False}})]
+
+    for article_id in article_ids:
+        add_article_locations({'article_id': article_id})
 
 
 def train_on_list(train_text, name, language):
@@ -597,13 +623,12 @@ def fill_up_db_from_zero():
     mongodb.update_state_list()
     mongodb.update_pr_city_list()
     # Add to db.country values geolocations
-    mongodb.fill_up_geolocation_country_list()
-    mongodb.fill_up_geolocation_state_list()
-    mongodb.fill_up_geolocation_pr_city_list()
+    mongodb.fill_up_geolocation(mongodb.location, 'name')
     # Fill up db.default_entity by entity_list from locations
     train_on_default_list({"language": "en"})
     # Fill up db.entity by tags in articles
     get_tags_from_untrained_articles()
+    add_locations_to_untrained_articles()
 
 
 class NormalForm(object):

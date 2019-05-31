@@ -32,6 +32,7 @@ urlpatterns = [
     url(r'^update_source_list_from_server/?$', views.update_source_list_from_server),
 
     url(r'^get_article_list/?$', views.get_article_list),
+    url(r'^get_article_by_id/?$', views.get_article_by_id),
 
     url(r'^get_tag_list/?$', views.get_tag_list),
 
@@ -47,11 +48,7 @@ urlpatterns = [
     url(r'^get_default_entity/?$', views.get_default_entity),
 
     url(r'^get_geoposition/?$', views.get_geoposition),
-    url(r'^fill_up_geolocation_country_list/?$', views.fill_up_geolocation_country_list),
-    url(r'^fill_up_geolocation_state_list/?$', views.fill_up_geolocation_state_list),
-    url(r'^fill_up_geolocation_pr_city_list/?$', views.fill_up_geolocation_pr_city_list),
-    url(r'^add_article_locations/?$', views.add_article_locations),
-
+    url(r'^find_articles_by_locations/?$', views.find_articles_by_locations),
 
     url(r'^predict_entity/?$', views.predict_entity),
     url(r'^download_articles_by_phrases/?$', views.download_articles_by_phrases),

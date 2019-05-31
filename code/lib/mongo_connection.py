@@ -101,8 +101,8 @@ class MongoConnection(object):
         countries = my_table.findAll('td', style="vertical-align:top;")
         for country in countries:
             cntr = dict()
-            zzz = country.find('span', style="display:none")
-            name = country.get_text().replace(zzz.get_text(), '') if zzz else country.get_text()
+            c_span = country.find('span', style="display:none")
+            name = country.get_text().replace(c_span.get_text(), '') if c_span else country.get_text()
             name = name.replace('→', '–').replace('\n', '')
             name = re.sub(r'[[a-z,0-9].]', '', name)
             name = name.replace('[', '')
@@ -186,15 +186,6 @@ class MongoConnection(object):
                 pass
             table.update_one({'_id': _id}, {'$set': table_item})
         return updated_ids
-
-    def fill_up_geolocation_country_list(self):
-        return MongoConnection.fill_up_geolocation(self.country, 'official_name')
-
-    def fill_up_geolocation_state_list(self):
-        return MongoConnection.fill_up_geolocation(self.state, 'name')
-
-    def fill_up_geolocation_pr_city_list(self):
-        return MongoConnection.fill_up_geolocation(self.pr_city, 'name')
 
     def update_source_list_from_server(self):
         """
@@ -361,6 +352,10 @@ class MongoConnection(object):
                 upsert=True
             )
         return ids
+
+    def get_article_by_id(self, params):
+        print(1)
+
     # ***************************** Phrases ******************************** #
 
     def add_phrases(self, params):

@@ -44,34 +44,6 @@ def update_source_list_from_server(request):
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
-# noinspection PyUnusedLocal
-
-
-@api_view(['POST'])
-def fill_up_geolocation_country_list(request):
-    tasks.fill_up_geolocation_country_list()
-    results = {'status': True, 'response': {}, 'error': {}}
-    return JsonResponse(results, encoder=JSONEncoderHttp)
-
-# noinspection PyUnusedLocal
-
-
-@api_view(['POST'])
-def fill_up_geolocation_state_list(request):
-    tasks.fill_up_geolocation_state_list()
-    results = {'status': True, 'response': {}, 'error': {}}
-    return JsonResponse(results, encoder=JSONEncoderHttp)
-
-# noinspection PyUnusedLocal
-
-
-@api_view(['POST'])
-def fill_up_geolocation_pr_city_list(request):
-    tasks.fill_up_geolocation_pr_city_list()
-    results = {'status': True, 'response': {}, 'error': {}}
-    return JsonResponse(results, encoder=JSONEncoderHttp)
-
-
 @api_view(['POST'])
 def get_tags_from_article(request):
     params = request.data
@@ -130,6 +102,16 @@ def get_article_language_list(request):
     languages = mongodb.get_article_language_list()
     results = {'status': True, 'response': {'languages': languages}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def get_article_by_id(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    article = mongodb.get_article_by_id(params=params)
+    results = {'status': True, 'response': {'article': article}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
 
 # ***************************** ENTITY ******************************** #
 
