@@ -80,6 +80,8 @@ class MongoConnection(object):
         length = 10 if 'length' not in params else params['length']
         sources = list(self.source.find(search_param).skip(start).limit(length + 1))
         more = True if len(sources) > length else False
+        for source in sources:
+            source["articles"] = self.article.count({'source.name': source['name']})
         return sources[:length], more
 
     def load_iso(self):
@@ -117,10 +119,10 @@ class MongoConnection(object):
             else:
                 cntr['code'] = 'unknown code'
             cntr['location'] = None
-            try:
-                cntr['location'] = geo.get_geoposition({'text': cntr['name']})
-            except Exception:
-                pass
+            # try:
+            #     cntr['location'] = geo.get_geoposition({'text': cntr['name']})
+            # except Exception:
+            #     pass
             cntr['parent'] = None
             country_list.append(cntr)
         self.location.insert(country_list)
@@ -146,10 +148,10 @@ class MongoConnection(object):
             st['name'] = state
             st['description'] = description
             st['location'] = None
-            try:
-                st['location'] = geo.get_geoposition({'text': st['name']})
-            except Exception:
-                pass
+            # try:
+            #     st['location'] = geo.get_geoposition({'text': st['name']})
+            # except Exception:
+            #     pass
             us_states_list.append(st)
         self.location.insert(us_states_list)
 
@@ -164,16 +166,17 @@ class MongoConnection(object):
             ct['parent'] = state['_id'] if state else None
             ct['name'] = city.get_text()
             ct['type'] = 'city'
-            try:
-                ct['location'] = geo.get_geoposition({'text': ct['name']})
-            except Exception:
-                pass
+            ct['location'] = None
+            # try:
+            #     ct['location'] = geo.get_geoposition({'text': ct['name']})
+            # except Exception:
+            #     pass
             pr_city_list.append(ct)
         self.location.insert(pr_city_list)
 
     @staticmethod
     def fill_up_geolocation(table, field):
-        table_list = table.find({'location': {'$exists': False}})
+        table_list = table.find({'location': {'$or': [{'$exists': False}, {'$eq': None}]}})
         updated_ids = []
         for table_item in table_list:
             _id = table_item['_id']
@@ -210,7 +213,7 @@ class MongoConnection(object):
         adding_sources = [new_s for new_s in new_sources_hash if new_s['hash'] not in old_sources_hashes]
         inserted_ids = []
         for source in adding_sources:
-            source['articles'] = self.article.count({'source.id': source['id']})
+            # source['articles'] = self.article.count({'source.id': source['id']})
             inserted_ids.append(self.source.update_one(source, {'$set': source}, upsert=True).upserted_id)
 
         deleted_ids = [x['_id'] for x in self.source.find({"hash": {"$nin": new_hash_list}})]

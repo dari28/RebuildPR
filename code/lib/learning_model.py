@@ -151,26 +151,15 @@ def train_on_default_list(params):
 
     language = 'en' if 'language' not in params else params['language']
     # Add country
-    countries = mongodb.country.find()
-    common_names = [x['common_name'].lower() for x in countries]
-    common_names = list(set(common_names))
-    official_names = [x['official_name'].lower() for x in countries]
-    official_names = list(set(official_names))
-    train_on_list(train_text=common_names, name='country_common_names', language=language)
-    train_on_list(train_text=official_names, name='country_official_names', language=language)
-    # Add state
-    states = mongodb.state.find()
-    names = [x['name'].lower() for x in states]
+    locations = mongodb.location.find()
+    names = [x['name'].lower() for x in locations]
     names = list(set(names))
-    descriptions = [item.lower() for sublist in states for item in sublist['description']]
-    descriptions = list(set(descriptions))
-    train_on_list(train_text=names, name='state_names', language=language)
-    train_on_list(train_text=descriptions, name='state_descriptions', language=language)
-    # Add pr_city
-    pr_cities = mongodb.pr_city.find()
-    pr_city_names = [x['name'].lower() for x in pr_cities]
-    pr_city_names = list(set(pr_city_names))
-    train_on_list(train_text=pr_city_names, name='pr_city_names', language=language)
+
+    common_names = [x['common_names'].lower() for x in locations]
+    common_names = list(set(common_names))
+
+    train_on_list(train_text=names, name='names', language=language)
+    train_on_list(train_text=common_names, name='common_names', language=language)
 
 
 def predict_entity(set_entity=None, data=None, language='en'):
