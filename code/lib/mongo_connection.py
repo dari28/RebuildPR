@@ -291,10 +291,6 @@ class MongoConnection(object):
         if not case_sensitive:
             q = [x.lower() for x in q]
 
-        deleted = False
-        if 'deleted' in params:
-            deleted = params['deleted']
-
         search_param = dict()
 
         search_fields = ['name', 'id']
@@ -316,8 +312,6 @@ class MongoConnection(object):
         articles = [x for articles in self.q_article.find({'q': {'$in': q}}, {'_id': 0, 'articles': 1}) for x in articles['articles']]
         search_param['_id'] = {'$in': articles}
 
-        search_param['deleted'] = deleted
-
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
         # full_artilces = list(self.article.find({'_id': {"$in": articles['articles']}}))
@@ -337,7 +331,22 @@ class MongoConnection(object):
             except (errors.InvalidId, TypeError):
                 raise EnvironmentError('\'_id\' field is not a valid ObjectId, it must be a 12-byte input or a 24-character hex string')
 
-        return self.article.find_one({'_id': _id})
+        return self.article.find_one({'_id': _id, 'content': {'$ne': None}})
+#         return list(self.article.aggregate([
+#     {
+#            '$lookup': {
+#                 'from': 'entity',
+#                 'localField': '_id',
+#                 'foreignField': 'article_id',
+#                 'as': 'tags'
+#             }
+#         },
+#               {'$match':
+#                   {
+#                       '_id': ObjectId('5cef87325350b82f045db467')
+#                   }
+#               }
+# ]))
 
     # ***************************** Phrases ******************************** #
 
