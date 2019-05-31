@@ -62,9 +62,12 @@ def get_tags(text, language="en"):
     for tg in res2:
         result2[tg.lower()] = result2.pop(tg)
 
-    result1['location'] = result1.pop('detects locations')
-    result1['person'] = result1.pop('detects persons')
-    result1['organization'] = result1.pop('detects organizations')
+    if 'detects locations' in result1:
+        result1['location'] = result1.pop('detects locations')
+    if 'detects persons' in result1:
+        result1['person'] = result1.pop('detects persons')
+    if 'detects organizations' in result1:
+        result1['organization'] = result1.pop('detects organizations')
     return union_res(result1, result2)
 
 
