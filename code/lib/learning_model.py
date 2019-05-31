@@ -6,7 +6,7 @@ from lib.dictionary import defix_name_field
 from lib.mongo_connection import MongoConnection
 from lib.linguistic_functions import tag, pattern_language, get_base_form_for_word
 
-from bson import ObjectId
+from bson import ObjectId, errors
 from nlp.config import description_tag, STANFORD
 
 # import jnius
@@ -93,7 +93,10 @@ def get_tags_from_article(params):
         raise EnvironmentError('Request must contain \'article_id\' field')
     article_id = params['article_id']
     if not isinstance(article_id, ObjectId):
-        article_id = ObjectId(article_id)
+        try:
+            article_id = ObjectId(article_id)
+        except (errors.InvalidId, TypeError):
+            raise EnvironmentError('\'article_id\' field is not a valid ObjectId, it must be a 12-byte input or a 24-character hex string')
 
     if mongodb.entity.find_one({'trained': True, 'article_id': article_id}):
         return None
@@ -110,10 +113,10 @@ def get_tags_from_article(params):
         tags = get_tags(article['title'], language)
     else:
         tags = []
-        
+
     inserted_id = mongodb.entity.insert_one(
         {
-            'article_id': str(article_id),
+            'article_id': article_id,
             'model': 'default_stanford',
             'tags': tags,
             'trained': True,
