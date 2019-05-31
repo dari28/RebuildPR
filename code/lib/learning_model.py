@@ -15,31 +15,68 @@ import numpy as np
 
 def union_res(result1, result2):
     union_dict = dict()
-    for r1 in result1:
-        if result1[r1]:
-            v = result1[r1]
+    union_dict2 = dict()
+    tuple_tags = list(result1.items()) + list(result2.items())
+    # Union the tags
+    for (tuple_tag_key,tuple_tag_value) in tuple_tags:
+        if tuple_tag_value:
+            v = tuple_tag_value
             if isinstance(v, np.int64):
                 v = int(v)
-            if r1 in union_dict:
+            if tuple_tag_key in union_dict2:
                 for elem in v:
-                    if elem in union_dict[r1]:
-                        union_dict[r1].append(elem)
+                    if elem not in union_dict2[tuple_tag_key]:
+                        union_dict2[tuple_tag_key].append(elem)
             else:
-                union_dict[r1] = list(v)
-    for r2 in result2:
-        if result2[r2]:
-            v = result2[r2]
-            if isinstance(v, np.int64):
-                v = int(v)
-            if r2 in union_dict:
-                for elem in v:
-                    lst = union_dict[r2]
-                    if len(list(filter(lambda lst: lst['start_match'] == elem['start_match'], lst))) > 0:
-                        union_dict[r2].append(elem)
-            else:
-                union_dict[r2] = list(v)
+                union_dict2[tuple_tag_key] = list(v)
 
-    return union_dict
+    for tag in union_dict2:
+        v = union_dict2[tag]
+        filter_dict = dict()
+        for x in v:
+            start_match = x['start_match']
+            length_match = x['length_match']
+            word = x['word']
+            if not start_match in filter_dict:
+                filter_dict[start_match] = (length_match, word)
+            else:
+                if length_match > filter_dict[start_match][0]:
+                    filter_dict[start_match] = (length_match, word)
+        # list(filter(lambda v: v['start_match'] == 57 and v['length_match'] == max([int(x['length_match']) for x in v]), v))
+        # print(filter_dict)
+
+        vv = []
+        for sv in filter_dict:
+            vv.append({'start_match': sv, 'length_match': filter_dict[sv][0], 'word': filter_dict[sv][1]})
+
+        # print(vv)
+        union_dict2[tag] = vv
+
+    # for r1 in result1:
+    #     if result1[r1]:
+    #         v = result1[r1]
+    #         if isinstance(v, np.int64):
+    #             v = int(v)
+    #         if r1 in union_dict:
+    #             for elem in v:
+    #                 if elem in union_dict[r1]:
+    #                     union_dict[r1].append(elem)
+    #         else:
+    #             union_dict[r1] = list(v)
+    # for r2 in result2:
+    #     if result2[r2]:
+    #         v = result2[r2]
+    #         if isinstance(v, np.int64):
+    #             v = int(v)
+    #         if r2 in union_dict:
+    #             for elem in v:
+    #                 lst = union_dict[r2]
+    #                 if len(list(filter(lambda lst: lst['start_match'] == elem['start_match'], lst))) > 0:
+    #                     union_dict[r2].append(elem)
+    #         else:
+    #             union_dict[r2] = list(v)
+
+    return union_dict2
 
 
 def get_tags(text, language="en"):
@@ -50,16 +87,18 @@ def get_tags(text, language="en"):
         entities1,
         text,
         language)
-    res1 = result1.copy()
-    for tg in res1:
+
+    for tg in [tg for tg in result1]:
         result1[tg.lower()] = result1.pop(tg)
+
     entities2 = mongodb.get_default_entity({"type": "default_stanford", "language": language})
     result2 = predict_entity_stanford_default(
         entities2,
         text,
         language)
-    res2 = result2.copy()
-    for tg in res2:
+    # res2 = result2.copy()
+    # for tg in res2:
+    for tg in [tg for tg in result2]:
         result2[tg.lower()] = result2.pop(tg)
 
     result1['location'] = result1.pop('detects locations')

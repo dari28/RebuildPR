@@ -278,6 +278,15 @@ def get_geoposition(request):
 
 
 @api_view(['POST'])
+def fill_up_geolocation(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    mongodb.fill_up_geolocation(mongodb.location, 'name')
+    results = {'status': True, 'response': {}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
 def tag_stat(request):
     params = request.data
     mongodb = mongo.MongoConnection()
