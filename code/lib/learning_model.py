@@ -288,11 +288,15 @@ def predict_entity_stanford_default(entities, data, language=None):
     stanford.getPOSTaggerAnnotator(language).annotate(annotation)
 
     result = {}
+    tags_already_used = []
     for entity_model in entity_dict:
         matches = []
         set_tag = []
         for entity in entity_dict[entity_model]:
-            set_tag.append(entity['model_settings']['tag'])
+            tag = entity['model_settings']['tag']
+            if not tag in tags_already_used:
+                set_tag.append(tag)
+                tags_already_used.append(tag)
 
         stanford.load_stanford_ner(entity_model, language).annotate(annotation)
         jTokkenens = annotation.get(stanford.getClassAnnotation('TokensAnnotation'))
@@ -329,12 +333,13 @@ def predict_entity_stanford_default(entities, data, language=None):
         dict_tag = {}
 
         for entity in entity_dict[entity_model]:
-            # dict_tag[entity['model_settings']['tag']] = entity['_id'] #SIDE DELETE
+            # dict_tag[entity['model_settings']['tag']] = entity['_id']  # SIDE DELETE
             dict_tag[entity['model_settings']['tag']] = entity['name']  # SIDE ADD
 
         for tag in dict_tag:
             # result[dict_tag[tag]] = []
-            result[tag] = []
+            if not tag in result:
+                result[tag] = []
 
         for match in matches:
             # result[dict_tag[match['tag']]].append(match['match'])
@@ -345,6 +350,7 @@ def predict_entity_stanford_default(entities, data, language=None):
             #     del result[dict_tag[tag]]
             if not result[tag]:
                 del result[tag]
+
     # stanford.SystemJava.gc()
     # for key in result:
     #     result[key] = tools.sample_update_matches(back_map, data, result[key])
