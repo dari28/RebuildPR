@@ -88,9 +88,13 @@ def get_tags_from_article(params):
 
     if 'content' in article and article['content']:
         tags = get_tags(article['content'], language)
-    else:
+    elif 'description' in article and article['description']:
         tags = get_tags(article['description'], language)
-
+    elif 'title' in article and article['title']:
+        tags = get_tags(article['title'], language)
+    else:
+        tags = []
+        
     inserted_id = mongodb.entity.insert_one(
         {
             'article_id': str(article_id),
@@ -594,9 +598,7 @@ def fill_up_db_from_zero():
     mongodb.update_state_list()
     mongodb.update_pr_city_list()
     # Add to db.country values geolocations
-    mongodb.fill_up_geolocation_country_list()
-    mongodb.fill_up_geolocation_state_list()
-    mongodb.fill_up_geolocation_pr_city_list()
+    mongodb.fill_up_geolocation(mongodb.location, 'name')
     # Fill up db.default_entity by entity_list from locations
     train_on_default_list({"language": "en"})
     # Fill up db.entity by tags in articles
