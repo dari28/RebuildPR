@@ -176,7 +176,7 @@ class MongoConnection(object):
 
     @staticmethod
     def fill_up_geolocation(table, field):
-        table_list = table.find({'location': {'$or': [{'$exists': False}, {'$eq': None}]}})
+        table_list = table.find({'location':  {'$eq': None}})
         updated_ids = []
         for table_item in table_list:
             _id = table_item['_id']
