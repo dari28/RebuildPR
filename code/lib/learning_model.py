@@ -100,7 +100,7 @@ def get_tags_from_article(params):
 
     inserted_id = mongodb.entity.insert_one(
         {
-            'article_id': str(article_id),
+            'article_id': article_id,
             'model': 'default_stanford',
             'tags': tags,
             'trained': True,
