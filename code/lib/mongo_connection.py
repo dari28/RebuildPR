@@ -238,6 +238,23 @@ class MongoConnection(object):
             )
         return ids
 
+    def add_article_locations(self, article_id):
+        """Return tag stat by location
+        location -- 2 elem tuple (latitude, longitude)
+        """
+
+        tags = self.entity.find_one({'article_id': article_id})['tags']
+        tags = tags["location"]
+        locations = []
+        for tag in list(tags):
+            location = None
+            try:
+                location = geo.get_geoposition({'text': tag['word']})
+            except Exception:
+                pass
+            locations.append(location)
+        self.article.update({'article_id': article_id}, {'$set': {'locations': locations}})
+
 # ***************************** ARTILES ******************************** #
 
     def update_article_list_one_q(self, q, language, new_articles):

@@ -427,3 +427,12 @@ def load_iso(request):
     mongodb.load_iso()
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def add_article_locations(request):
+    mongodb = mongo.MongoConnection()
+    mongodb.add_article_locations()
+    results = {'status': True, 'response': {}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
