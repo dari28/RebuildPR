@@ -2,7 +2,7 @@
 
 import pymongo
 import pycountry
-from bson import ObjectId
+from bson import ObjectId, errors
 from news import NewsCollection
 from nlp.config import MONGO  # , TYPE_WITHOUT_FILE, SEND_POST_URL, ADMIN_USER, DEFAULT_USER
 import hashlib
@@ -13,7 +13,6 @@ from bs4 import BeautifulSoup
 import geoposition as geo
 from collections import Counter
 from lib import tools
-
 
 def remove(duplicate):
     final_list = []
@@ -223,7 +222,7 @@ class MongoConnection(object):
         """Delete sources by the database"""
         for id in ids:
             self.source.update_one(
-                {'_id': ObjectId(id)},
+                {'_id': ObjectId(id) if not isinstance(id, ObjectId) else id},
                 {'$set': {'deleted': True}},
                 upsert=True
             )
@@ -326,18 +325,19 @@ class MongoConnection(object):
         more = True if len(full_articles) > length else False
         return full_articles[:length], more
 
-    def delete_article_list_by_ids(self, ids):
-        """Delete sources by the database"""
-        for id in ids:
-            self.article.update_one(
-                {'_id': ObjectId(id)},
-                {'$set': {'deleted': True}},
-                upsert=True
-            )
-        return ids
-
     def get_article_by_id(self, params):
-        print(1)
+        if '_id' not in params:
+            raise EnvironmentError('Request must contain \'_id\' field')
+
+        _id = params['_id']
+
+        if not isinstance(_id, ObjectId):
+            try:
+                _id = ObjectId(_id)
+            except (errors.InvalidId, TypeError):
+                raise EnvironmentError('\'_id\' field is not a valid ObjectId, it must be a 12-byte input or a 24-character hex string')
+
+        return self.article.find_one({'_id': _id})
 
     # ***************************** Phrases ******************************** #
 
