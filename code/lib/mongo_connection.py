@@ -386,7 +386,7 @@ class MongoConnection(object):
 
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
-        count_articles = list(self.entity.aggregate([
+        count_articles = len(list(self.entity.aggregate([
             {'$lookup': {
                 'from': "article",
                 'localField': "article_id",
@@ -398,8 +398,7 @@ class MongoConnection(object):
                 'tags.{}.word'.format(tag): tag_word,
                 'article.content': {'$ne': None}
             }},
-            {'$count': "total"}
-        ]))[0]['total']
+        ])))
 
         full_articles = list(self.entity.aggregate([
             {'$lookup': {
