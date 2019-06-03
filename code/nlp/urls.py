@@ -6,6 +6,8 @@ urlpatterns = [
     url(r'^test_work/?$', views.test_work),
     url(r'^test_exception_work/?$', views.test_exception_work),
 
+    url(r'^get_unlocated_articles/?$', views.get_unlocated_articles),
+
     url(r'^tag_stat/?$', views.tag_stat),
 
     url(r'^update_category/?$', views.update_category),
@@ -44,6 +46,7 @@ urlpatterns = [
     url(r'^get_default_entity/?$', views.get_default_entity),
 
     url(r'^get_geoposition/?$', views.get_geoposition),
+    url(r'^find_articles_by_locations/?$', views.find_articles_by_locations),
 
     url(r'^predict_entity/?$', views.predict_entity),
 

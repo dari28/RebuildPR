@@ -323,6 +323,15 @@ def show_language_list(request):
 
 
 @api_view(['POST'])
+def get_unlocated_articles(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    response, more = mongodb.get_unlocated_articles(params=params)
+    results = {'status': True, 'response': {'articles': response, 'more': more}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
 def show_country_list(request):
     params = request.data
     mongodb = mongo.MongoConnection()
@@ -436,3 +445,13 @@ def load_iso(request):
     mongodb.load_iso()
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def find_articles_by_locations(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    articles = mongodb.find_articles_by_locations(params=params)
+    results = {'status': True, 'response': {'count': articles['count'], 'articles': articles['articles_list']}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+

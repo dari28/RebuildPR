@@ -144,7 +144,7 @@ class MongoConnection(object):
                     description.append(d)
             description = remove(description)
             country = self.location.find_one({'name': "United States of America"})
-            st['parent'] = country['_id'] if country else None
+            st['parent'] = list(country['_id']).append(list(self.location.find_one({'_id': country['_id']})['parent'])) if country else None
             st['type'] = 'state'
             st['name'] = state
             st['description'] = description
@@ -164,7 +164,7 @@ class MongoConnection(object):
         for city in pr_city:
             ct = dict()
             state = self.location.find_one({'name': "Puerto Rico"})
-            ct['parent'] = state['_id'] if state else None
+            ct['parent'] = list(state['_id']).append(list(self.location.find_one({'_id': state['_id']})['parent'])) if state else None
             ct['name'] = city.get_text()
             ct['type'] = 'city'
             ct['location'] = None
@@ -231,6 +231,53 @@ class MongoConnection(object):
                 upsert=True
             )
         return ids
+
+    def add_article_locations(self, article_id):
+        """Return tag stat by location
+        location -- 2 elem tuple (latitude, longitude)
+        """
+
+        article = self.entity.find_one({'article_id': article_id})
+        if hasattr(article, 'tags.location'):
+            tags = article["tags.location"]
+            locations = []
+            for tag in list(tags):
+                location = None
+                try:
+                    location = geo.get_geoposition({'text': tag['word']})
+                except Exception:
+                    pass
+                [locations.append(location) if location is not None else None]
+            self.article.update({'article_id': article_id}, {'$set': {'locations': locations}})
+
+    def find_articles_by_locations(self, params):
+        if 'location' not in params:
+            raise EnvironmentError('Request must contain \'location\' field')
+        location = params['location']
+        articles = dict()
+        articles_list = list(self.article.find({'location': {'$in': location}}))
+        articles['articles_list'] = articles_list
+        articles['count'] = len(articles_list)
+        return articles
+
+    def aggregate_articles_by_location(self, params):
+        if 'location' not in params:
+            locations = self.location.find({'parent': None})
+            out = []
+            for loc in locations:
+                articles = self.find_articles_by_locations(loc['location'])
+                out.append({'count': articles['count'], 'article_list': articles['articles_list']})
+        else:
+            articles = self.find_articles_by_locations(params['location'])
+            out = {'count': articles['count'], 'article_list': articles['articles_list']}
+        return out
+
+    def get_unlocated_articles(self, params):
+        start = 0 if 'start' not in params else params['start']
+        length = 10 if 'length' not in params else params['length']
+        articles = self.entity.find({'locations': {'$exist': False}}).skip(start).limit(length + 1)
+        more = True if len(articles) > length else False
+        return articles[:length], more
 
 # ***************************** ARTILES ******************************** #
 
@@ -579,8 +626,8 @@ class MongoConnection(object):
         query['$or'] = query_list
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
-        list_to_show = list(self.entity.find(query).skip(start).limit(length))
-        more = True if len(list_to_show) > start + length else False
+        list_to_show = list(self.entity.find(query).skip(start).limit(length + 1))
+        more = True if len(list_to_show) > length else False
         return list_to_show[:length], more
 
     def tag_stat(self, params):
