@@ -106,6 +106,15 @@ def get_article_list(request):
 
 
 @api_view(['POST'])
+def get_article_list_by_tag(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    articles, more = mongodb.get_article_list_by_tag(params=params)
+    results = {'status': True, 'response': {'articles': articles, 'more': more}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
 def get_article_language_list(request):
     mongodb = mongo.MongoConnection()
     languages = mongodb.get_article_language_list()
