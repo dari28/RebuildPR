@@ -66,6 +66,17 @@ def get_tags_from_untrained_articles():
         print(ex)
         pass
 
+
+@background(schedule=1)
+def get_tags_from_all_articles():
+    try:
+        print("Background task get_tags_from_untrained_articles started")
+        ids = model.get_tags_from_all_articles()
+        print("Background task get_tags_from_untrained_articles finished. Response: \n{}".format(ids))
+    except Exception as ex:
+        print(ex)
+        pass
+
 # ***************************** UPDATE ******************************** #
 
 

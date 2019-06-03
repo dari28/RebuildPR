@@ -60,6 +60,15 @@ def get_tags_from_untrained_articles(request):
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
+# noinspection PyUnusedLocal
+
+
+@api_view(['POST'])
+def get_tags_from_all_articles(request):
+    tasks.get_tags_from_all_articles()
+    results = {'status': True, 'response': {}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
 
 @api_view(['POST'])
 def train_on_default_list(request):
