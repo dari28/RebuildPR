@@ -237,17 +237,18 @@ class MongoConnection(object):
         location -- 2 elem tuple (latitude, longitude)
         """
 
-        tags = self.entity.find_one({'article_id': article_id})['tags']
-        tags = tags["location"]
-        locations = []
-        for tag in list(tags):
-            location = None
-            try:
-                location = geo.get_geoposition({'text': tag['word']})
-            except Exception:
-                pass
-            locations.append(location)
-        self.article.update({'article_id': article_id}, {'$set': {'locations': locations}})
+        article = self.entity.find_one({'article_id': article_id})
+        if hasattr(article, 'tags.location'):
+            tags = article["tags.location"]
+            locations = []
+            for tag in list(tags):
+                location = None
+                try:
+                    location = geo.get_geoposition({'text': tag['word']})
+                except Exception:
+                    pass
+                [locations.append(location) if location is not None else None]
+            self.article.update({'article_id': article_id}, {'$set': {'locations': locations}})
 
     def find_articles_by_locations(self, params):
         if 'location' not in params:
