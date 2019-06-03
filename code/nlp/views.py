@@ -314,6 +314,15 @@ def show_language_list(request):
 
 
 @api_view(['POST'])
+def get_unlocated_articles(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    response, more = mongodb.get_unlocated_articles(params=params)
+    results = {'status': True, 'response': {'articles': response, 'more': more}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
 def show_country_list(request):
     params = request.data
     mongodb = mongo.MongoConnection()
