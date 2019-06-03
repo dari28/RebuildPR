@@ -254,11 +254,23 @@ class MongoConnection(object):
         if 'location' not in params:
             raise EnvironmentError('Request must contain \'location\' field')
         location = params['location']
-        locations = dict()
-        locations_list = list(self.article.find({'location': {'$in': location}}))
-        locations['locations_list'] = locations_list
-        locations['count'] = len(locations_list)
-        return locations
+        articles = dict()
+        articles_list = list(self.article.find({'location': {'$in': location}}))
+        articles['articles_list'] = articles_list
+        articles['count'] = len(articles_list)
+        return articles
+
+    def aggregate_articles_by_location(self, params):
+        if 'location' not in params:
+            locations = self.location.find({'parent': None})
+            out = []
+            for loc in locations:
+                articles = self.find_articles_by_locations(loc['location'])
+                out.append({'count': articles['count'], 'article_list': articles['articles_list']})
+        else:
+            articles = self.find_articles_by_locations(params['location'])
+            out = {'count': articles['count'], 'article_list': articles['articles_list']}
+        return out
 
 # ***************************** ARTILES ******************************** #
 
