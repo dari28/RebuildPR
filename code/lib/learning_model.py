@@ -15,31 +15,68 @@ import numpy as np
 
 def union_res(result1, result2):
     union_dict = dict()
-    for r1 in result1:
-        if result1[r1]:
-            v = result1[r1]
+    union_dict2 = dict()
+    tuple_tags = list(result1.items()) + list(result2.items())
+    # Union the tags
+    for (tuple_tag_key,tuple_tag_value) in tuple_tags:
+        if tuple_tag_value:
+            v = tuple_tag_value
             if isinstance(v, np.int64):
                 v = int(v)
-            if r1 in union_dict:
+            if tuple_tag_key in union_dict2:
                 for elem in v:
-                    if elem in union_dict[r1]:
-                        union_dict[r1].append(elem)
+                    if elem not in union_dict2[tuple_tag_key]:
+                        union_dict2[tuple_tag_key].append(elem)
             else:
-                union_dict[r1] = list(v)
-    for r2 in result2:
-        if result2[r2]:
-            v = result2[r2]
-            if isinstance(v, np.int64):
-                v = int(v)
-            if r2 in union_dict:
-                for elem in v:
-                    lst = union_dict[r2]
-                    if len(list(filter(lambda lst: lst['start_match'] == elem['start_match'], lst))) > 0:
-                        union_dict[r2].append(elem)
-            else:
-                union_dict[r2] = list(v)
+                union_dict2[tuple_tag_key] = list(v)
 
-    return union_dict
+    for tag in union_dict2:
+        v = union_dict2[tag]
+        filter_dict = dict()
+        for x in v:
+            start_match = x['start_match']
+            length_match = x['length_match']
+            word = x['word']
+            if not start_match in filter_dict:
+                filter_dict[start_match] = (length_match, word)
+            else:
+                if length_match > filter_dict[start_match][0]:
+                    filter_dict[start_match] = (length_match, word)
+        # list(filter(lambda v: v['start_match'] == 57 and v['length_match'] == max([int(x['length_match']) for x in v]), v))
+        # print(filter_dict)
+
+        vv = []
+        for sv in filter_dict:
+            vv.append({'start_match': sv, 'length_match': filter_dict[sv][0], 'word': filter_dict[sv][1].lower()})
+
+        # print(vv)
+        union_dict2[tag] = vv
+
+    # for r1 in result1:
+    #     if result1[r1]:
+    #         v = result1[r1]
+    #         if isinstance(v, np.int64):
+    #             v = int(v)
+    #         if r1 in union_dict:
+    #             for elem in v:
+    #                 if elem in union_dict[r1]:
+    #                     union_dict[r1].append(elem)
+    #         else:
+    #             union_dict[r1] = list(v)
+    # for r2 in result2:
+    #     if result2[r2]:
+    #         v = result2[r2]
+    #         if isinstance(v, np.int64):
+    #             v = int(v)
+    #         if r2 in union_dict:
+    #             for elem in v:
+    #                 lst = union_dict[r2]
+    #                 if len(list(filter(lambda lst: lst['start_match'] == elem['start_match'], lst))) > 0:
+    #                     union_dict[r2].append(elem)
+    #         else:
+    #             union_dict[r2] = list(v)
+
+    return union_dict2
 
 
 def get_tags(text, language="en"):
@@ -50,16 +87,18 @@ def get_tags(text, language="en"):
         entities1,
         text,
         language)
-    res1 = result1.copy()
-    for tg in res1:
+
+    for tg in [tg for tg in result1]:
         result1[tg.lower()] = result1.pop(tg)
+
     entities2 = mongodb.get_default_entity({"type": "default_stanford", "language": language})
     result2 = predict_entity_stanford_default(
         entities2,
         text,
         language)
-    res2 = result2.copy()
-    for tg in res2:
+    # res2 = result2.copy()
+    # for tg in res2:
+    for tg in [tg for tg in result2]:
         result2[tg.lower()] = result2.pop(tg)
 
     if 'detects locations' in result1:
@@ -176,26 +215,15 @@ def train_on_default_list(params):
 
     language = 'en' if 'language' not in params else params['language']
     # Add country
-    countries = mongodb.country.find()
-    common_names = [x['common_name'].lower() for x in countries]
-    common_names = list(set(common_names))
-    official_names = [x['official_name'].lower() for x in countries]
-    official_names = list(set(official_names))
-    train_on_list(train_text=common_names, name='country_common_names', language=language)
-    train_on_list(train_text=official_names, name='country_official_names', language=language)
-    # Add state
-    states = mongodb.state.find()
-    names = [x['name'].lower() for x in states]
+    locations = mongodb.location.find()
+    names = [x['name'].lower() for x in locations]
     names = list(set(names))
-    descriptions = [item.lower() for sublist in states for item in sublist['description']]
-    descriptions = list(set(descriptions))
-    train_on_list(train_text=names, name='state_names', language=language)
-    train_on_list(train_text=descriptions, name='state_descriptions', language=language)
-    # Add pr_city
-    pr_cities = mongodb.pr_city.find()
-    pr_city_names = [x['name'].lower() for x in pr_cities]
-    pr_city_names = list(set(pr_city_names))
-    train_on_list(train_text=pr_city_names, name='pr_city_names', language=language)
+
+    common_names = [x['common_names'].lower() for x in locations]
+    common_names = list(set(common_names))
+
+    train_on_list(train_text=names, name='names', language=language)
+    train_on_list(train_text=common_names, name='common_names', language=language)
 
 
 def predict_entity(set_entity=None, data=None, language='en'):
@@ -324,11 +352,15 @@ def predict_entity_stanford_default(entities, data, language=None):
     stanford.getPOSTaggerAnnotator(language).annotate(annotation)
 
     result = {}
+    tags_already_used = []
     for entity_model in entity_dict:
         matches = []
         set_tag = []
         for entity in entity_dict[entity_model]:
-            set_tag.append(entity['model_settings']['tag'])
+            tag = entity['model_settings']['tag']
+            if not tag in tags_already_used:
+                set_tag.append(tag)
+                tags_already_used.append(tag)
 
         stanford.load_stanford_ner(entity_model, language).annotate(annotation)
         jTokkenens = annotation.get(stanford.getClassAnnotation('TokensAnnotation'))
@@ -365,12 +397,13 @@ def predict_entity_stanford_default(entities, data, language=None):
         dict_tag = {}
 
         for entity in entity_dict[entity_model]:
-            # dict_tag[entity['model_settings']['tag']] = entity['_id'] #SIDE DELETE
+            # dict_tag[entity['model_settings']['tag']] = entity['_id']  # SIDE DELETE
             dict_tag[entity['model_settings']['tag']] = entity['name']  # SIDE ADD
 
         for tag in dict_tag:
             # result[dict_tag[tag]] = []
-            result[tag] = []
+            if not tag in result:
+                result[tag] = []
 
         for match in matches:
             # result[dict_tag[match['tag']]].append(match['match'])
@@ -381,6 +414,7 @@ def predict_entity_stanford_default(entities, data, language=None):
             #     del result[dict_tag[tag]]
             if not result[tag]:
                 del result[tag]
+
     # stanford.SystemJava.gc()
     # for key in result:
     #     result[key] = tools.sample_update_matches(back_map, data, result[key])
