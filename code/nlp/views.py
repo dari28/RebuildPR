@@ -109,8 +109,8 @@ def get_article_list(request):
 def get_article_list_by_tag(request):
     params = request.data
     mongodb = mongo.MongoConnection()
-    articles, more = mongodb.get_article_list_by_tag(params=params)
-    results = {'status': True, 'response': {'articles': articles, 'more': more}, 'error': {}}
+    articles, more, total = mongodb.get_article_list_by_tag(params=params)
+    results = {'status': True, 'response': {'articles': articles, 'more': more, 'total': total}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 

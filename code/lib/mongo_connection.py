@@ -374,7 +374,7 @@ class MongoConnection(object):
         if 'tag' not in params:
             raise EnvironmentError('Request must contain \'tag\' field')
 
-        tag = params['tag'].lower()
+        tag = params['tag'].lower()  # Case insensitive
 
         if tag not in ['person', 'location', 'organisation', 'date', 'time', 'misc', 'negative words', 'positive words']:
             raise EnvironmentError("\'Tag\' field must be in one of the words : "
@@ -382,30 +382,45 @@ class MongoConnection(object):
         if 'tag_word' not in params:
             raise EnvironmentError('Request must contain \'tag_word\' field')
 
-        tag_word = params['tag_word'].lower()
+        tag_word = params['tag_word'].lower()  # Case insensitive
+
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
-        full_articles = list(self.entity.aggregate([
-            {'$lookup':
-                {
-                    'from': "article",
-                    'localField': "article_id",
-                    'foreignField': "_id",
-                    'as': "article"
-                }},
+        count_articles = list(self.entity.aggregate([
+            {'$lookup': {
+                'from': "article",
+                'localField': "article_id",
+                'foreignField': "_id",
+                'as': "article"
+            }},
             {'$unwind': '$article'},
-            {'$match':
-                {
-                    'tags.{}.word'.format(tag): tag_word,
-                    'article.content': {'$ne': None}}},
-            {'$project':
-                {'article.author': 1, 'article.title': 1, 'article.publishedAt': 1}},
+            {'$match': {
+                'tags.{}.word'.format(tag): tag_word,
+                'article.content': {'$ne': None}
+            }},
+            {'$count': "total"}
+        ]))[0]['total']
+
+        full_articles = list(self.entity.aggregate([
+            {'$lookup': {
+                'from': "article",
+                'localField': "article_id",
+                'foreignField': "_id",
+                'as': "article"
+            }},
+            {'$unwind': '$article'},
+            {'$match': {
+                'tags.{}.word'.format(tag): tag_word,
+                'article.content': {'$ne': None}
+            }},
+            {'$project': {
+                '_id': 0, 'article.author': 1, 'article.title': 1, 'article.publishedAt': 1}},
             {'$skip': start},
             {'$limit': length + 1}
         ]))
 
         more = True if len(full_articles) > length else False
-        return full_articles[:length], more
+        return full_articles[:length], more, count_articles
 
     def get_article_by_id(self, params):
         if '_id' not in params:
