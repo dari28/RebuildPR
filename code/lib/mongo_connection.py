@@ -413,11 +413,18 @@ class MongoConnection(object):
                 'tags.{}.word'.format(tag): tag_word,
                 'article.content': {'$ne': None}
             }},
+            {'$sort': {'article.publishedAt': -1}},
             {'$project': {
                 '_id': 0, 'article.author': 1, 'article.title': 1, 'article.publishedAt': 1}},
             {'$skip': start},
             {'$limit': length + 1}
         ]))
+
+        for article in full_articles:
+            undefined_fields = ['title', 'author']
+            for field in undefined_fields:
+                if not article['article'][field]:
+                    article['article'][field] = '<undefined>'
 
         more = True if len(full_articles) > length else False
         return full_articles[:length], more, count_articles
