@@ -340,10 +340,13 @@ class ParsePolyglot(object):
                     #                  'length_match': len(self.origin_text[start_pos: end_pos]),
                     #                  'word': self.origin_text[start_pos: end_pos]},
                     #        'tag': word_class.tag}
-                    yield {'match': {'start_match': start_pos,
-                                     'length_match': len(self.origin_text[start_pos: end_pos[word_class.tag]]),
-                                     'word': self.origin_text[start_pos: end_pos[word_class.tag]]},
-                           'tag': word_class.tag}
+
+                    if (self.origin_text[start_pos: end_pos[word_class.tag]] != '' and
+                        self.origin_text[start_pos: end_pos[word_class.tag]] != '_'):  # Add SIDE
+                        yield {'match': {'start_match': start_pos,
+                                         'length_match': len(self.origin_text[start_pos: end_pos[word_class.tag]]),
+                                         'word': self.origin_text[start_pos: end_pos[word_class.tag]]},
+                               'tag': word_class.tag}
             except:
                 pass
 

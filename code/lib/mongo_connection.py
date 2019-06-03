@@ -334,8 +334,12 @@ class MongoConnection(object):
             except (errors.InvalidId, TypeError):
                 raise EnvironmentError('\'_id\' field is not a valid ObjectId, it must be a 12-byte input or a 24-character hex string')
 
-        return self.article.find_one({'_id': _id, 'content': {'$ne': None}})
-#         return list(self.article.aggregate([
+        article = self.article.find_one({'_id': _id, 'content': {'$ne': None}},{'source': 0, 'urlToImage': 0, 'hash': 0})
+        if article:
+            return article
+        else:
+            raise EnvironmentError('No article with \'_id\' {}'.format(_id))
+        #         return list(self.article.aggregate([
 #     {
 #            '$lookup': {
 #                 'from': 'entity',
