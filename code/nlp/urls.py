@@ -38,6 +38,8 @@ urlpatterns = [
     url(r'^delete_permanent_phrase_list/?$', views.delete_permanent_phrase_list),
 
     url(r'^get_tags_from_article/?$', views.get_tags_from_article),
+    url(r'^get_tags_from_all_articles/?$', views.get_tags_from_all_articles),
+
     url(r'^get_default_entity/?$', views.get_default_entity),
 
     url(r'^get_geoposition/?$', views.get_geoposition),

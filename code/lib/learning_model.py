@@ -152,6 +152,19 @@ def get_tags_from_article(params):
     return inserted_id
 
 
+def get_tags_from_all_articles():
+    mongodb = MongoConnection()
+
+    mongodb.entity.remove()
+
+    article_ids = [x['_id'] for x in mongodb.article.find()]
+
+    for article_id in article_ids:
+        get_tags_from_article({'article_id': article_id})
+
+    return article_ids
+
+
 def get_tags_from_untrained_articles():
     mongodb = MongoConnection()
 
@@ -632,17 +645,23 @@ def fill_up_db_from_zero():
     # Download articles from words in db.phrase and fill up db.article and db.q_article
     mongodb.download_articles_by_phrases()
     # Fill up ??? by languages
+    print('download_articles_by_phrases done')
     mongodb.load_iso()
     # Fill up db.country from wiki_parser
     mongodb.update_country_list()
     mongodb.update_state_list()
     mongodb.update_pr_city_list()
-    # Add to db.country values geolocations
-    mongodb.fill_up_geolocation(mongodb.location, 'name')
+    print('update_*_list done')
     # Fill up db.default_entity by entity_list from locations
     train_on_default_list({"language": "en"})
+    print('train_on_default_list done')
     # Fill up db.entity by tags in articles
     get_tags_from_untrained_articles()
+    print('get_tags_from_untrained_articles done')
+    # Add to db.country values geolocations
+    mongodb.fill_up_geolocation(mongodb.location, 'name')
+    print('fill_up_geolocation done')
+    print('all done')
 
 
 class NormalForm(object):
