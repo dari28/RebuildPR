@@ -13,6 +13,7 @@ from bs4 import BeautifulSoup
 import geoposition as geo
 from collections import Counter
 from lib import tools
+import operator
 
 def remove(duplicate):
     final_list = []
@@ -537,30 +538,53 @@ class MongoConnection(object):
         return list_to_show[:length], more
 
     def tag_stat(self, params):
-        if 'tag' not in params:
-            raise EnvironmentError('Request must contain \'tag\' field')
-        tag = params['tag']
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
-        phrase_list = []
-        stat = dict()
-        stat['tag'] = tag
-        ent = self.entity.find()
-        for article in ent:
-            a_tags = article['tags']
-            for a_t_k, a_t_v in a_tags.items():
-                if a_t_k == tag:
-                    phrase_list.append(a_t_v[0]['word'])
-        word_list = Counter(phrase_list).most_common()
-        t = []
-        for phrase in word_list:
-            d = dict()
-            d['phrase'] = phrase[0]
-            d['count'] = phrase[1]
-            t.append(d)
-        more = True if len(t) > start + length else False
-        stat['tag_list'] = t[start:start + length]
-        return stat
+        if 'tag' not in params:
+            result = []
+            tag_list = ['location', 'person', 'organization', 'money', 'percent', 'date', 'time']
+            for tag in tag_list:
+                phrase_list = []
+                stat = dict()
+                stat['tag'] = tag
+                ent = self.entity.find()
+                for article in ent:
+                    a_tags = article['tags']
+                    for a_t_k, a_t_v in a_tags.items():
+                        if a_t_k == tag:
+                            [phrase_list.append(operator.itemgetter('word')(i)) for i in a_t_v]
+                word_list = Counter(phrase_list).most_common()
+                t = []
+                for phrase in word_list:
+                    d = dict()
+                    d['phrase'] = phrase[0]
+                    d['count'] = phrase[1]
+                    t.append(d)
+                more = True if len(t) > start + length else False
+                stat['tag_list'] = t
+                result.append(stat)
+            return result
+        else:
+            phrase_list = []
+            stat = dict()
+            tag = params['tag']
+            stat['tag'] = tag
+            ent = self.entity.find()
+            for article in ent:
+                a_tags = article['tags']
+                for a_t_k, a_t_v in a_tags.items():
+                    if a_t_k == tag:
+                        [phrase_list.append(operator.itemgetter('word')(i)) for i in a_t_v]
+            word_list = Counter(phrase_list).most_common()
+            t = []
+            for phrase in word_list:
+                d = dict()
+                d['phrase'] = phrase[0]
+                d['count'] = phrase[1]
+                t.append(d)
+            more = True if len(t) > start + length else False
+            stat['tag_list'] = t[start:start + length]
+            return stat
 
     def show_language_list(self, params):
         start = 0 if 'start' not in params else params['start']

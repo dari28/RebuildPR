@@ -47,7 +47,7 @@ def union_res(result1, result2):
 
         vv = []
         for sv in filter_dict:
-            vv.append({'start_match': sv, 'length_match': filter_dict[sv][0], 'word': filter_dict[sv][1]})
+            vv.append({'start_match': sv, 'length_match': filter_dict[sv][0], 'word': filter_dict[sv][1].lower()})
 
         # print(vv)
         union_dict2[tag] = vv
@@ -101,9 +101,12 @@ def get_tags(text, language="en"):
     for tg in [tg for tg in result2]:
         result2[tg.lower()] = result2.pop(tg)
 
-    result1['location'] = result1.pop('detects locations')
-    result1['person'] = result1.pop('detects persons')
-    result1['organization'] = result1.pop('detects organizations')
+    if 'detects locations' in result1:
+        result1['location'] = result1.pop('detects locations')
+    if 'detects persons' in result1:
+        result1['person'] = result1.pop('detects persons')
+    if 'detects organizations' in result1:
+        result1['organization'] = result1.pop('detects organizations')
     return union_res(result1, result2)
 
 
