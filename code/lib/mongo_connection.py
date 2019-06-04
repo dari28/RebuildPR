@@ -13,6 +13,9 @@ from bs4 import BeautifulSoup
 import geoposition as geo
 from collections import Counter
 from lib import tools
+import time
+import random
+from geopy.geocoders import Nominatim
 import operator
 
 def remove(duplicate):
@@ -21,6 +24,60 @@ def remove(duplicate):
         if num not in final_list:
             final_list.append(num)
     return final_list
+
+def locator(text):
+    geolocator = Nominatim(user_agent="specify_your_app_name_here")
+    results = geolocator.geocode(text, exactly_one=False, limit=50, addressdetails=True)
+    return results
+
+def remove_codes(address):
+    if 'postcode' in address:
+        address.pop('postcode', None)
+    if 'country_code' in address:
+        address.pop('country_code', None)
+    return address
+
+def recursive_geodata_find(text):
+    time.sleep(random.randint(1, 30) / 10)
+    print(text)
+    mongodb = MongoConnection()
+    loc_list = []
+    locations = locator(text)
+    for location in locations:
+        if len(list(mongodb.location.find({'place_id': location.raw['place_id']}))) == 0:
+            address = location.raw['address']
+            address = remove_codes(address)
+            if len(address) == 1:
+                added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
+                                             'name': (location._address.split(',')[0]),
+                                            'location': {'latitude': location.latitude, 'longitude': location.longitude},
+                                            'parents': None}).inserted_id
+                return added_id
+            else:
+                mongodb.location.insert_one({'place_id': location.raw['place_id']})
+                parents = []
+                n = 0
+                m = len(address.values())
+                for k, v in address.items():
+                    if n > 0:
+                        level = m - n
+                        parents = locator(v)
+                        for p in parents:
+                            if (len(remove_codes(p.raw['address']).values()) == level) & (remove_codes(p.raw['address']).keys()[0] == k):
+                                parents.append(recursive_geodata_find(v))
+                            break
+                    n += 1
+                loc_list.append(parents)
+                added_id = mongodb.location.update_one({'place_id': location.raw['place_id']},
+                                                       {'$set': {{'name': location._address.split(',')[0]},
+                                                                 {'location': {'latitude': location.latitude, 'longitude': location.longitude}},
+                                                                 {'parents': parents}}},
+                                                       upsert=True).upserted_id
+
+    if len(locations) == 1:
+        loc_list.append(added_id)
+        print('id:', added_id)
+    return loc_list
 
 
 class MongoConnection(object):
@@ -779,4 +836,6 @@ class MongoConnection(object):
     def show_category(self, params):
         raise Exception("Function in progress")
 
+
+a = recursive_geodata_find("PuerTo rICO")
 
