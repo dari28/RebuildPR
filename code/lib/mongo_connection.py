@@ -386,6 +386,64 @@ class MongoConnection(object):
         more = True if len(full_articles) > length else False
         return full_articles[:length], more
 
+    def get_article_list_by_tag(self, params):
+        if 'tag' not in params:
+            raise EnvironmentError('Request must contain \'tag\' field')
+
+        tag = params['tag'].lower()  # Case insensitive
+
+        if tag not in ['person', 'location', 'organisation', 'date', 'time', 'misc', 'negative words', 'positive words']:
+            raise EnvironmentError("\'Tag\' field must be in one of the words : "
+                                   "(person', 'location', 'organisation', 'date', 'time', 'misc', 'negative words', 'positive words')")
+        if 'tag_word' not in params:
+            raise EnvironmentError('Request must contain \'tag_word\' field')
+
+        tag_word = params['tag_word'].lower()  # Case insensitive
+
+        start = 0 if 'start' not in params else params['start']
+        length = 10 if 'length' not in params else params['length']
+        count_articles = len(list(self.entity.aggregate([
+            {'$lookup': {
+                'from': "article",
+                'localField': "article_id",
+                'foreignField': "_id",
+                'as': "article"
+            }},
+            {'$unwind': '$article'},
+            {'$match': {
+                'tags.{}.word'.format(tag): tag_word,
+                'article.content': {'$ne': None}
+            }},
+        ])))
+
+        full_articles = list(self.entity.aggregate([
+            {'$lookup': {
+                'from': "article",
+                'localField': "article_id",
+                'foreignField': "_id",
+                'as': "article"
+            }},
+            {'$unwind': '$article'},
+            {'$match': {
+                'tags.{}.word'.format(tag): tag_word,
+                'article.content': {'$ne': None}
+            }},
+            {'$sort': {'article.publishedAt': -1}},
+            {'$project': {
+                '_id': 0, 'article.author': 1, 'article.title': 1, 'article.publishedAt': 1}},
+            {'$skip': start},
+            {'$limit': length + 1}
+        ]))
+
+        for article in full_articles:
+            undefined_fields = ['title', 'author']
+            for field in undefined_fields:
+                if not article['article'][field]:
+                    article['article'][field] = '<undefined>'
+
+        more = True if len(full_articles) > length else False
+        return full_articles[:length], more, count_articles
+
     def get_article_by_id(self, params):
         if '_id' not in params:
             raise EnvironmentError('Request must contain \'_id\' field')
@@ -398,8 +456,17 @@ class MongoConnection(object):
             except (errors.InvalidId, TypeError):
                 raise EnvironmentError('\'_id\' field is not a valid ObjectId, it must be a 12-byte input or a 24-character hex string')
 
-        article = self.article.find_one({'_id': _id, 'content': {'$ne': None}},{'source': 0, 'urlToImage': 0, 'hash': 0})
+        article = self.article.find_one({'_id': _id, 'content': {'$ne': None}}, {'source': 0, 'urlToImage': 0, 'hash': 0})
+        if not article:
+            raise EnvironmentError('Article with \'_id\' {} does not exist or has empty content'.format(_id))
+
+        undefined_fields = ['title', 'author']
+        for field in undefined_fields:
+            if not article[field]:
+                article[field] = "<undefined>"
         if article:
+            tags = self.entity.find_one({'article_id': _id})
+            article['tags'] = tags['tags']
             return article
         else:
             raise EnvironmentError('No article with \'_id\' {}'.format(_id))
