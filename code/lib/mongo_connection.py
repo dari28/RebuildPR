@@ -398,6 +398,8 @@ class MongoConnection(object):
                 'tags.{}.word'.format(tag): tag_word,
                 'article.content': {'$ne': None}
             }},
+            {'$project': {
+                '_id': 0, 'article.author': 1, 'article.title': 1, 'article.publishedAt': 1}},
         ])))
 
         full_articles = list(self.entity.aggregate([
@@ -415,6 +417,10 @@ class MongoConnection(object):
             {'$sort': {'article.publishedAt': -1}},
             {'$project': {
                 '_id': 0, 'article.author': 1, 'article.title': 1, 'article.publishedAt': 1}},
+            # {'$count': 'total'},
+            # {"$push": {"author": "$article.author", "title": "$article.title", "publishedAt": "$article.publishedAt"}},
+            #  {"$group": {"_id": None, "total": {"$sum": 1},
+            #              "articles": {"$push": {"author": "$article.author", "title": "$article.title", "article.publishedAt": "$article.publishedAt"}}}},
             {'$skip': start},
             {'$limit': length + 1}
         ]))
