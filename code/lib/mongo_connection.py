@@ -144,7 +144,13 @@ class MongoConnection(object):
                     description.append(d)
             description = remove(description)
             country = self.location.find_one({'name': "United States of America"})
-            st['parent'] = list(country['_id']).append(list(self.location.find_one({'_id': country['_id']})['parent'])) if country else None
+            if country:
+                p_list = [country['_id']]
+                if country['parent']:
+                    p_list.append(country['parent'])
+            else:
+                p_list = None
+            st['parent'] = p_list
             st['type'] = 'state'
             st['name'] = state
             st['description'] = description
@@ -164,7 +170,13 @@ class MongoConnection(object):
         for city in pr_city:
             ct = dict()
             state = self.location.find_one({'name': "Puerto Rico"})
-            ct['parent'] = list(state['_id']).append(list(self.location.find_one({'_id': state['_id']})['parent'])) if state else None
+            if state:
+                p_list = [state['_id']]
+                if state['parent']:
+                    p_list.append(state['parent'])
+            else:
+                p_list = None
+            ct['parent'] = p_list
             ct['name'] = city.get_text()
             ct['type'] = 'city'
             ct['location'] = None
@@ -214,7 +226,7 @@ class MongoConnection(object):
         adding_sources = [new_s for new_s in new_sources_hash if new_s['hash'] not in old_sources_hashes]
         inserted_ids = []
         for source in adding_sources:
-            # source['articles'] = self.article.count({'source.id': source['id']})
+            source['articles'] = self.article.count({'source.id': source['id']})
             inserted_ids.append(self.source.update_one(source, {'$set': source}, upsert=True).upserted_id)
 
         deleted_ids = [x['_id'] for x in self.source.find({"hash": {"$nin": new_hash_list}})]
@@ -238,17 +250,21 @@ class MongoConnection(object):
         """
 
         article = self.entity.find_one({'article_id': article_id})
-        if hasattr(article, 'tags.location'):
-            tags = article["tags.location"]
+        if 'location' in article['tags']:
+            tags = article["tags"]["location"]
             locations = []
             for tag in list(tags):
                 location = None
-                try:
-                    location = geo.get_geoposition({'text': tag['word']})
-                except Exception:
-                    pass
-                [locations.append(location) if location is not None else None]
-            self.article.update({'article_id': article_id}, {'$set': {'locations': locations}})
+                loc = self.location.find_one({'name': tag['word']})
+                if loc:
+                    location = loc['location']
+                else:
+                    try:
+                        location = geo.get_geoposition({'text': tag['word']})
+                    except Exception:
+                        pass
+                [locations.append({'location': location, 'name': tag['word']}) if location is not None else None]
+            self.article.update_one({'_id': article_id}, {'$set': {'locations': locations}})
 
     def find_articles_by_locations(self, params):
         if 'location' not in params:
