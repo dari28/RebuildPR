@@ -131,6 +131,14 @@ def get_article_by_id(request):
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
+@api_view(['POST'])
+def remove_dubles_articles(request):
+    # params = request.data
+    mongodb = mongo.MongoConnection()
+    mongodb.remove_dubles_articles()
+    results = {'status': True, 'response': {}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
 # ***************************** ENTITY ******************************** #
 
 

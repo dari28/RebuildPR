@@ -673,54 +673,116 @@ class MongoConnection(object):
         more = True if len(list_to_show) > length else False
         return list_to_show[:length], more
 
+    def remove_dubles_articles(self):
+        hashes = []
+        articles = list(self.article.find({}, {'_id': 1, 'hash': 1}))
+        for article in articles:
+            if article['hash'] in hashes:
+                self.article.delete_one({'_id': article['_id']})
+            else:
+                hashes.append(article['hash'])
+
+        entities = list(self.entity.find({}, {'_id': 1, 'article_id': 1, 'model': 1}))
+        entity_list = []
+        for entity in entities:
+            if (entity['article_id'], entity['model']) in entity_list:
+                self.entity.delete_one({'_id': entity['_id']})
+            else:
+                entity_list.append((entity['article_id'], entity['model']))
+
+    def pipeline_for_tag_stat(self, tag):
+        return [
+            {'$unwind': '$tags'},
+            {'$replaceRoot': {'newRoot': '$tags'}},
+            {'$unwind': '${}'.format(tag)},
+            {'$group': {'_id': '${}.word'.format(tag), 'count': {'$sum': 1}}},
+            {'$project': {'phrase': '$_id', 'count': 1, '_id': 0}},
+            {'$sort': {'count': -1}}
+        ]
+
+    def pipeline_for_tag_stat_with_paginate(self, tag, start, length):
+        return [
+            {'$unwind': '$tags'},
+            {'$replaceRoot': {'newRoot': '$tags'}},
+            {'$unwind': '${}'.format(tag)},
+            {'$group': {'_id': '${}.word'.format(tag), 'count': {'$sum': 1}}},
+            {'$project': {'phrase': '$_id', 'count': 1, '_id': 0}},
+            {'$sort': {'count': -1}},
+            {'$skip': start},
+            {'$limit': length + 1}
+        ]
+
     def tag_stat(self, params):
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
-        if 'tag' not in params:
-            result = []
-            tag_list = ['location', 'person', 'organization', 'money', 'percent', 'date', 'time']
-            for tag in tag_list:
-                phrase_list = []
-                stat = dict()
-                stat['tag'] = tag
-                ent = self.entity.find()
-                for article in ent:
-                    a_tags = article['tags']
-                    for a_t_k, a_t_v in a_tags.items():
-                        if a_t_k == tag:
-                            [phrase_list.append(operator.itemgetter('word')(i)) for i in a_t_v]
-                word_list = Counter(phrase_list).most_common()
-                t = []
-                for phrase in word_list:
-                    d = dict()
-                    d['phrase'] = phrase[0]
-                    d['count'] = phrase[1]
-                    t.append(d)
-                more = True if len(t) > start + length else False
-                stat['tag_list'] = t
-                result.append(stat)
-            return result
-        else:
-            phrase_list = []
+
+        tag_list = ['location', 'person', 'organization', 'money', 'percent', 'date', 'time']
+
+        result = []
+        if 'tag' in params:
+            tag = params['tag'].lower()
+            if not tag in tag_list:
+                raise EnvironmentError("Tag must be in ['location', 'person', 'organization', 'money', 'percent', 'date', 'time']")
+            pipeline = self.pipeline_for_tag_stat_with_paginate(tag, start, length)
+            res = list(self.entity.aggregate(pipeline))
             stat = dict()
-            tag = params['tag']
             stat['tag'] = tag
-            ent = self.entity.find()
-            for article in ent:
-                a_tags = article['tags']
-                for a_t_k, a_t_v in a_tags.items():
-                    if a_t_k == tag:
-                        [phrase_list.append(operator.itemgetter('word')(i)) for i in a_t_v]
-            word_list = Counter(phrase_list).most_common()
-            t = []
-            for phrase in word_list:
-                d = dict()
-                d['phrase'] = phrase[0]
-                d['count'] = phrase[1]
-                t.append(d)
-            more = True if len(t) > start + length else False
-            stat['tag_list'] = t[start:start + length]
-            return stat
+            stat['tag_list'] = res
+            result.append(stat)
+        else:
+            for tag in tag_list:
+                stat = dict()
+                res = list(self.entity.aggregate(self.pipeline_for_tag_stat(tag)))
+                stat['tag'] = tag
+                stat['tag_list'] = res
+                result.append(stat)
+
+        return result
+        # if 'tag' not in params:
+        #     result = []
+        #     tag_list = ['location', 'person', 'organization', 'money', 'percent', 'date', 'time']
+        #     for tag in tag_list:
+        #         phrase_list = []
+        #         stat = dict()
+        #         stat['tag'] = tag
+        #         ent = self.entity.find()
+        #         for article in ent:
+        #             a_tags = article['tags']
+        #             for a_t_k, a_t_v in a_tags.items():
+        #                 if a_t_k == tag:
+        #                     [phrase_list.append(operator.itemgetter('word')(i)) for i in a_t_v]
+        #         word_list = Counter(phrase_list).most_common()
+        #         t = []
+        #         for phrase in word_list:
+        #             d = dict()
+        #             d['phrase'] = phrase[0]
+        #             d['count'] = phrase[1]
+        #             t.append(d)
+        #         more = True if len(t) > start + length else False
+        #         stat['tag_list'] = t
+        #         result.append(stat)
+        #     return result
+        # else:
+        #     phrase_list = []
+        #     stat = dict()
+        #     tag = params['tag']
+        #     stat['tag'] = tag
+        #     ent = self.entity.find()
+        #     for article in ent:
+        #         a_tags = article['tags']
+        #         for a_t_k, a_t_v in a_tags.items():
+        #             if a_t_k == tag:
+        #                 [phrase_list.append(operator.itemgetter('word')(i)) for i in a_t_v]
+        #     word_list = Counter(phrase_list).most_common()
+        #     t = []
+        #     for phrase in word_list:
+        #         d = dict()
+        #         d['phrase'] = phrase[0]
+        #         d['count'] = phrase[1]
+        #         t.append(d)
+        #     more = True if len(t) > start + length else False
+        #     stat['tag_list'] = t[start:start + length]
+        #     return stat
 
     def show_language_list(self, params):
         start = 0 if 'start' not in params else params['start']

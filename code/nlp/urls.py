@@ -31,6 +31,8 @@ urlpatterns = [
     url(r'^get_article_list/?$', views.get_article_list),
     url(r'^get_article_list_by_tag/?$', views.get_article_list_by_tag),
     url(r'^get_article_by_id/?$', views.get_article_by_id),
+    url(r'^remove_dubles_articles/?$', views.remove_dubles_articles),
+
 
     url(r'^get_tag_list/?$', views.get_tag_list),
 
