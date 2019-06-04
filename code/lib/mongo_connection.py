@@ -690,7 +690,8 @@ class MongoConnection(object):
             else:
                 entity_list.append((entity['article_id'], entity['model']))
 
-    def pipeline_for_tag_stat(self, tag):
+    @staticmethod
+    def pipeline_for_tag_stat(tag):
         return [
             {'$unwind': '$tags'},
             {'$replaceRoot': {'newRoot': '$tags'}},
@@ -700,42 +701,32 @@ class MongoConnection(object):
             {'$sort': {'count': -1}}
         ]
 
-    def pipeline_for_tag_stat_with_paginate(self, tag, start, length):
-        return [
-            {'$unwind': '$tags'},
-            {'$replaceRoot': {'newRoot': '$tags'}},
-            {'$unwind': '${}'.format(tag)},
-            {'$group': {'_id': '${}.word'.format(tag), 'count': {'$sum': 1}}},
-            {'$project': {'phrase': '$_id', 'count': 1, '_id': 0}},
-            {'$sort': {'count': -1}},
-            {'$skip': start},
-            {'$limit': length + 1}
-        ]
-
     def tag_stat(self, params):
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
-
         tag_list = ['location', 'person', 'organization', 'money', 'percent', 'date', 'time']
-
+        is_paginate = 'tag' in params
         result = []
-        if 'tag' in params:
+        tags = []
+
+        if is_paginate:
             tag = params['tag'].lower()
-            if not tag in tag_list:
-                raise EnvironmentError("Tag must be in ['location', 'person', 'organization', 'money', 'percent', 'date', 'time']")
-            pipeline = self.pipeline_for_tag_stat_with_paginate(tag, start, length)
-            res = list(self.entity.aggregate(pipeline))
+            if tag not in tag_list:
+                raise EnvironmentError('Value of the field "tag" must be in {}'.format(tag_list))
+            tags += [tag]
+        if not tags:
+            tags = tag_list
+
+        for tag in tags:
+            pipeline = MongoConnection.pipeline_for_tag_stat(tag)
+            if is_paginate:
+                pipeline += [{'$skip': start}]
+                pipeline += [{'$limit': length + 1}]
             stat = dict()
+            res = list(self.entity.aggregate(pipeline))
             stat['tag'] = tag
             stat['tag_list'] = res
             result.append(stat)
-        else:
-            for tag in tag_list:
-                stat = dict()
-                res = list(self.entity.aggregate(self.pipeline_for_tag_stat(tag)))
-                stat['tag'] = tag
-                stat['tag_list'] = res
-                result.append(stat)
 
         return result
         # if 'tag' not in params:
