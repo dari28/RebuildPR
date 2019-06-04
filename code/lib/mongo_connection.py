@@ -271,7 +271,7 @@ class MongoConnection(object):
             raise EnvironmentError('Request must contain \'location\' field')
         location = params['location']
         articles = dict()
-        articles_list = list(self.article.find({'location': {'$in': location}}))
+        articles_list = list(self.article.find({'locations.location': {'$in': location}}))
         articles['articles_list'] = articles_list
         articles['count'] = len(articles_list)
         return articles
