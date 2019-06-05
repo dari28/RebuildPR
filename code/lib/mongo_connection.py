@@ -344,10 +344,10 @@ class MongoConnection(object):
         # return inserted_ids, deleted_ids
 
     def get_q_article_list(self, params):
-        if 'q' not in params:
-            raise EnvironmentError('Request must contain \'q\' field')
+        if 'used_filter_phrase' not in params:
+            raise EnvironmentError('Request must contain \'used_filter_phrase\' field')
 
-        q = params['q']
+        q = params['used_filter_phrase']
         # Convert str to list
         if not isinstance(q, list):
             q = [q]
