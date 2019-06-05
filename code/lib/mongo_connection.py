@@ -25,10 +25,20 @@ def remove(duplicate):
             final_list.append(num)
     return final_list
 
-def locator(text):
-    geolocator = Nominatim(user_agent="specify_your_app_name_here")
-    results = geolocator.geocode(text, exactly_one=False, limit=50, addressdetails=True)
+def locator(text, lang="en"):
+    geolocator = Nominatim(user_agent="specify_your_app_name_here", timeout=10)
+    trigger = True
+    while trigger:
+        try:
+            results = geolocator.geocode(text, exactly_one=False, addressdetails=True, limit=3)
+        except Exception as e:
+            print(e)
+            print('Sleep 10s')
+            time.sleep(10)
+        else:
+            trigger = False
     return results
+
 
 def remove_codes(address):
     if 'postcode' in address:
@@ -37,46 +47,72 @@ def remove_codes(address):
         address.pop('country_code', None)
     return address
 
-def recursive_geodata_find(text):
-    time.sleep(random.randint(1, 30) / 10)
+
+def find_family(location, lang="en"):
+    mongodb = MongoConnection()
+    loc_list = []
+    if len(list(mongodb.location.find({'place_id': location.raw['place_id']}))) == 0:
+        address = location.raw['address']
+        address = remove_codes(address)
+        addr_len = len(address.values())
+        if addr_len == 1:
+            added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
+                                                    'name': (location._address.split(',')[0]),
+                                                    'location': {'latitude': location.latitude, 'longitude': location.longitude},
+                                                    'parents': None, 'level': addr_len}).inserted_id
+            loc_list.append(added_id)
+            loc_list = remove(loc_list)
+            return loc_list
+        else:
+            parents = []
+            keys = list(address.keys())
+            addr = location._address.split(',', 1)[1]
+            level = addr_len - 1
+            parent = locator(addr)
+            for p in parent:
+                if (len(remove_codes(p.raw['address']).values()) == level) & (list(remove_codes(p.raw['address']).keys())[0] == keys[1]):
+                    parents.extend(find_family(p, lang))
+            loc_list.extend(parents)
+            added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
+                                                    'name': (location._address.split(',')[0]),
+                                                    'location': {'latitude': location.latitude, 'longitude': location.longitude},
+                                                    'parents': parents, 'level': addr_len}).inserted_id
+            loc_list.append(added_id)
+            loc_list = remove(loc_list)
+            return loc_list
+    else:
+        added_id = list(mongodb.location.find({'place_id': location.raw['place_id']}))[0]['_id']
+        loc_list.append(added_id)
+        loc_list = remove(loc_list)
+        return loc_list
+
+
+def recursive_geodata_find(params):
+    if 'text' not in params:
+        raise EnvironmentError('Request must contain \'phrases\' field')
+    text = params['text']
+    lang = params['lang']
+    time.sleep(0.01)
     print(text)
     mongodb = MongoConnection()
     loc_list = []
-    locations = locator(text)
+    locations = locator(text, lang)
     for location in locations:
         if len(list(mongodb.location.find({'place_id': location.raw['place_id']}))) == 0:
             address = location.raw['address']
             address = remove_codes(address)
-            if len(address) == 1:
-                added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
-                                             'name': (location._address.split(',')[0]),
-                                            'location': {'latitude': location.latitude, 'longitude': location.longitude},
-                                            'parents': None}).inserted_id
-                return added_id
-            else:
-                mongodb.location.insert_one({'place_id': location.raw['place_id']})
-                parents = []
-                n = 0
-                m = len(address.values())
-                for k, v in address.items():
-                    if n > 0:
-                        level = m - n
-                        parents = locator(v)
-                        for p in parents:
-                            if (len(remove_codes(p.raw['address']).values()) == level) & (remove_codes(p.raw['address']).keys()[0] == k):
-                                parents.append(recursive_geodata_find(v))
-                            break
-                    n += 1
-                loc_list.append(parents)
-                added_id = mongodb.location.update_one({'place_id': location.raw['place_id']},
-                                                       {'$set': {{'name': location._address.split(',')[0]},
-                                                                 {'location': {'latitude': location.latitude, 'longitude': location.longitude}},
-                                                                 {'parents': parents}}},
-                                                       upsert=True).upserted_id
+            addr_len = len(address.values())
+            parents = find_family(location, lang)
+            loc_list.extend(parents)
+            added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
+                                                    'name': (location._address.split(',')[0]),
+                                                    'location': {'latitude': location.latitude, 'longitude': location.longitude},
+                                                    'parents': parents, 'level': addr_len, 'tags': [text]}).inserted_id
 
-    if len(locations) == 1:
-        loc_list.append(added_id)
-        print('id:', added_id)
+    else:
+        added_id = mongodb.location.update_one({'place_id': location.raw['place_id']}, {'$addToSet': {'tags': text}}).upserted_id
+    loc_list.append(added_id)
+    loc_list = remove(loc_list)
     return loc_list
 
 
@@ -896,5 +932,5 @@ class MongoConnection(object):
         raise Exception("Function in progress")
 
 
-a = recursive_geodata_find("PuerTo rICO")
+a = recursive_geodata_find({'text': "PuerTo rICO", 'lang': "en"})
 
