@@ -113,8 +113,6 @@ def get_tags(text, language="en"):
 def add_article_locations(params):
     mongodb = MongoConnection()
 
-    language = 'en' if 'language' not in params else params['language']
-
     if 'article_id' not in params:
         raise EnvironmentError('Request must contain \'article_id\' field')
     article_id = params['article_id']
@@ -194,7 +192,7 @@ def get_tags_from_untrained_articles():
 def add_locations_to_untrained_articles():
     mongodb = MongoConnection()
 
-    article_ids = [x['_id'] for x in mongodb.article.find({'locations': {'$exists': False}})]
+    article_ids = [x['_id'] for x in mongodb.entity.find({'locations': {'$exists': False}})]
 
     for article_id in article_ids:
         add_article_locations({'article_id': article_id})

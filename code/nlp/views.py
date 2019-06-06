@@ -331,10 +331,10 @@ def show_language_list(request):
 
 
 @api_view(['POST'])
-def get_unlocated_articles(request):
+def get_location_by_level(request):
     params = request.data
     mongodb = mongo.MongoConnection()
-    response, more = mongodb.get_unlocated_articles(params=params)
+    response, more = mongodb.get_location_by_level(params=params)
     results = {'status': True, 'response': {'articles': response, 'more': more}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 

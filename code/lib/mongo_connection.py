@@ -18,6 +18,7 @@ import random
 from geopy.geocoders import Nominatim
 import operator
 
+
 def remove(duplicate):
     final_list = []
     for num in duplicate:
@@ -25,18 +26,21 @@ def remove(duplicate):
             final_list.append(num)
     return final_list
 
-def locator(text, lang="en"):
+
+def locator(text, lang="en", limit=1):
     geolocator = Nominatim(user_agent="specify_your_app_name_here", timeout=10)
     trigger = True
+    print('Location search: ', text)
     while trigger:
         try:
-            results = geolocator.geocode(text, exactly_one=False, addressdetails=True, limit=3)
+            results = geolocator.geocode(text, exactly_one=False, addressdetails=True, limit=limit, language=lang)
         except Exception as e:
             print(e)
             print('Sleep 10s')
             time.sleep(10)
         else:
             trigger = False
+            print('Success')
     return results
 
 
@@ -48,69 +52,100 @@ def remove_codes(address):
     return address
 
 
-def find_family(location, lang="en"):
+def find_family(location, addr, lang="en"):
     mongodb = MongoConnection()
-    loc_list = []
+    p_list = []
     if len(list(mongodb.location.find({'place_id': location.raw['place_id']}))) == 0:
         address = location.raw['address']
         address = remove_codes(address)
         addr_len = len(address.values())
-        if addr_len == 1:
+        keys = list(address.keys())
+        tp = keys[0]
+        if (addr_len == 1) or (len(addr.split(',')) == 1):
             added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
                                                     'name': (location._address.split(',')[0]),
                                                     'location': {'latitude': location.latitude, 'longitude': location.longitude},
-                                                    'parents': None, 'level': addr_len}).inserted_id
-            loc_list.append(added_id)
-            loc_list = remove(loc_list)
-            return loc_list
+                                                    'parents': None, 'type': tp, 'level': 0}).inserted_id
+            p_list.append(added_id)
+            p_list = remove(p_list)
+            return p_list
         else:
             parents = []
-            keys = list(address.keys())
-            addr = location._address.split(',', 1)[1]
+            addr = addr.split(',', 1)[1]
             level = addr_len - 1
-            parent = locator(addr)
+            parent = locator(addr, lang=lang, limit=3)
             for p in parent:
-                if (len(remove_codes(p.raw['address']).values()) == level) & (list(remove_codes(p.raw['address']).keys())[0] == keys[1]):
-                    parents.extend(find_family(p, lang))
-            loc_list.extend(parents)
+                if (len(remove_codes(p.raw['address']).values()) == level) & (list(remove_codes(p.raw['address']).keys())[0] <= keys[1]):
+                    parents.extend(find_family(location=location, addr=addr, lang=lang))
+            if (len(parents) == 0):
+                parents.extend(find_family(location=location, addr=addr, lang=lang))
+            p_list.extend(parents)
             added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
                                                     'name': (location._address.split(',')[0]),
                                                     'location': {'latitude': location.latitude, 'longitude': location.longitude},
-                                                    'parents': parents, 'level': addr_len}).inserted_id
-            loc_list.append(added_id)
-            loc_list = remove(loc_list)
-            return loc_list
+                                                    'parents': parents, 'type': tp, 'level': len(parents)}).inserted_id
+            p_list.append(added_id)
+            p_list = remove(p_list)
     else:
         added_id = list(mongodb.location.find({'place_id': location.raw['place_id']}))[0]['_id']
-        loc_list.append(added_id)
-        loc_list = remove(loc_list)
-        return loc_list
+        p_list.append(added_id)
+        p_list = remove(p_list)
+    return p_list
 
 
 def recursive_geodata_find(params):
-    if 'text' not in params:
-        raise EnvironmentError('Request must contain \'phrases\' field')
-    text = params['text']
-    lang = params['lang']
+    if 'tag' not in params:
+        raise EnvironmentError('Request must contain \'tag\' field')
+    tag = params['tag'].lower()
+    if 'lang' not in params:
+        lang = "en"
+    else:
+        lang = params['lang']
     time.sleep(0.01)
-    print(text)
     mongodb = MongoConnection()
+    location_list = list(mongodb.location.find({'tags': {'$in': [tag]}}))
     loc_list = []
-    locations = locator(text, lang)
+    if len(location_list) > 0:
+        for loc in location_list:
+            loc_list.append(loc['_id'])
+            if loc['parents']:
+                loc_list.extend(loc['parents'])
+        return loc_list
+    locations = locator(tag, lang, limit=3)
+    if len(locations) == 0:
+        return None
     for location in locations:
         if len(list(mongodb.location.find({'place_id': location.raw['place_id']}))) == 0:
             address = location.raw['address']
             address = remove_codes(address)
             addr_len = len(address.values())
-            parents = find_family(location, lang)
-            loc_list.extend(parents)
-            added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
-                                                    'name': (location._address.split(',')[0]),
-                                                    'location': {'latitude': location.latitude, 'longitude': location.longitude},
-                                                    'parents': parents, 'level': addr_len, 'tags': [text]}).inserted_id
+            keys = list(address.keys())
+            tp = keys[0]
+            if addr_len == 1:
+                added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
+                                                        'name': (location._address.split(',')[0]),
+                                                        'location': {'latitude': location.latitude, 'longitude': location.longitude},
+                                                        'parents': None, 'type': tp, 'level': 0, 'tags': [tag]}).inserted_id
+                loc_list.append(added_id)
+            else:
+                parents = []
+                level = addr_len - 1
+                addr = location._address.split(',', 1)[1]
+                parent = locator(addr, lang=lang, limit=3)
+                if (len(parent) == 1) & (len(remove_codes(parent[0].raw['address']).values()) == level):
+                    parents.extend(find_family(location=location, addr=addr, lang=lang))
+                else:
+                    for p in parent:
+                        if (len(remove_codes(p.raw['address']).values()) == level) & (list(remove_codes(p.raw['address']).keys())[0] <= keys[1]):
+                            parents.extend(find_family(location=location, addr=addr, lang=lang))
+                loc_list.extend(parents)
+                added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
+                                                        'name': (location._address.split(',')[0]),
+                                                        'location': {'latitude': location.latitude, 'longitude': location.longitude},
+                                                        'parents': parents, 'type': tp, 'level': len(parents), 'tags': [tag]}).inserted_id
 
-    else:
-        added_id = mongodb.location.update_one({'place_id': location.raw['place_id']}, {'$addToSet': {'tags': text}}).upserted_id
+        else:
+            added_id = mongodb.location.update_one({'place_id': location.raw['place_id']}, {'$addToSet': {'tags': tag}}).upserted_id
     loc_list.append(added_id)
     loc_list = remove(loc_list)
     return loc_list
@@ -189,13 +224,13 @@ class MongoConnection(object):
 # ***************************** GEOLOCATION ******************************** #
 
     def update_country_list(self):
-        country_list = []
+        # country_list = []
         url = requests.get('https://en.wikipedia.org/wiki/List_of_sovereign_states').text
         soup = BeautifulSoup(url, 'lxml')
         my_table = soup.find('table')
         countries = my_table.findAll('td', style="vertical-align:top;")
         for country in countries:
-            cntr = dict()
+            # cntr = dict()
             c_span = country.find('span', style="display:none")
             name = country.get_text().replace(c_span.get_text(), '') if c_span else country.get_text()
             name = name.replace('→', '–').replace('\n', '')
@@ -203,26 +238,31 @@ class MongoConnection(object):
             name = name.replace('[', '')
             common_name = name.split('–')[0].strip()
             official_name = name.split('–')[1].strip() if len(name.split('–')) > 1 else common_name.strip()
-            country_code = list(self.iso3166.find({'$or': [{'name': official_name}, {'name': common_name},
-                                                         {'official_name': official_name}, {'official_name': common_name}]}))
-            cntr['name'] = official_name
-            cntr['type'] = 'country'
-            cntr['common name'] = common_name
-            if len(country_code) > 0:
-                cntr['code'] = country_code[0]['alpha_2'] if country_code[0]['alpha_2'] else country_code[0]['alpha_3']
+            if common_name:
+                recursive_geodata_find({'tag': common_name})
             else:
-                cntr['code'] = 'unknown code'
-            cntr['location'] = None
-            # try:
-            #     cntr['location'] = geo.get_geoposition({'text': cntr['name']})
-            # except Exception:
-            #     pass
-            cntr['parent'] = None
-            country_list.append(cntr)
-        self.location.insert(country_list)
+                recursive_geodata_find({'tag': official_name})
+        #     country_code = list(self.iso3166.find({'$or': [{'name': official_name}, {'name': common_name},
+        #                                                    {'official_name': official_name}, {'official_name': common_name}]}))
+        #
+        #     cntr['name'] = official_name
+        #     cntr['type'] = 'country'
+        #     cntr['common name'] = common_name
+        #     if len(country_code) > 0:
+        #         cntr['code'] = country_code[0]['alpha_2'] if country_code[0]['alpha_2'] else country_code[0]['alpha_3']
+        #     else:
+        #         cntr['code'] = 'unknown code'
+        #     cntr['location'] = None
+        #     # try:
+        #     #     cntr['location'] = geo.get_geoposition({'text': cntr['name']})
+        #     # except Exception:
+        #     #     pass
+        #     cntr['parent'] = None
+        #     country_list.append(cntr)
+        # self.location.insert(country_list)
 
     def update_state_list(self):
-        us_states_list = []
+        # us_states_list = []
         url = requests.get('https://en.wikipedia.org/wiki/List_of_U.S._state_abbreviations').text
         soup = BeautifulSoup(url, 'lxml')
         table = soup.find('table', "wikitable sortable").findAll('tr')
@@ -230,55 +270,57 @@ class MongoConnection(object):
             st = dict()
             state = row.find('td').get_text().replace('\n', '').replace('\r', '').replace(u'\xa0', u'')
             state = re.sub(r'[[a-z,0-9].]', '', state)
-            description = []
-            for desc in row.findAll('td')[2:]:
-                d = desc.get_text().replace('\n', '').replace('\r', '').replace(u'\xa0', u'')
-                if d is not ('' or r'\d'):
-                    description.append(d)
-            description = remove(description)
-            country = self.location.find_one({'name': "United States of America"})
-            if country:
-                p_list = [country['_id']]
-                if country['parent']:
-                    p_list.append(country['parent'])
-            else:
-                p_list = None
-            st['parent'] = p_list
-            st['type'] = 'state'
-            st['name'] = state
-            st['description'] = description
-            st['location'] = None
-            # try:
-            #     st['location'] = geo.get_geoposition({'text': st['name']})
-            # except Exception:
-            #     pass
-            us_states_list.append(st)
-        self.location.insert(us_states_list)
+            recursive_geodata_find({'tag': state})
+        #     description = []
+        #     for desc in row.findAll('td')[2:]:
+        #         d = desc.get_text().replace('\n', '').replace('\r', '').replace(u'\xa0', u'')
+        #         if d is not ('' or r'\d'):
+        #             description.append(d)
+        #     description = remove(description)
+        #     country = self.location.find_one({'name': "United States of America"})
+        #     if country:
+        #         p_list = [country['_id']]
+        #         if country['parent']:
+        #             p_list.append(country['parent'])
+        #     else:
+        #         p_list = None
+        #     st['parent'] = p_list
+        #     st['type'] = 'state'
+        #     st['name'] = state
+        #     st['description'] = description
+        #     st['location'] = None
+        #     # try:
+        #     #     st['location'] = geo.get_geoposition({'text': st['name']})
+        #     # except Exception:
+        #     #     pass
+        #     us_states_list.append(st)
+        # self.location.insert(us_states_list)
 
     def update_pr_city_list(self):
-        pr_city_list = []
+        # pr_city_list = []
         url = requests.get('https://suburbanstats.org/population/puerto-rico/list-of-counties-and-cities-in-puerto-rico').text
         soup = BeautifulSoup(url, 'lxml')
         pr_city = soup.findAll('a', title=re.compile('Population Demographics and Statistics'))
         for city in pr_city:
-            ct = dict()
-            state = self.location.find_one({'name': "Puerto Rico"})
-            if state:
-                p_list = [state['_id']]
-                if state['parent']:
-                    p_list.append(state['parent'])
-            else:
-                p_list = None
-            ct['parent'] = p_list
-            ct['name'] = city.get_text()
-            ct['type'] = 'city'
-            ct['location'] = None
-            # try:
-            #     ct['location'] = geo.get_geoposition({'text': ct['name']})
-            # except Exception:
-            #     pass
-            pr_city_list.append(ct)
-        self.location.insert(pr_city_list)
+            recursive_geodata_find({'tag': city.get_text()})
+        #     ct = dict()
+        #     state = self.location.find_one({'name': "Puerto Rico"})
+        #     if state:
+        #         p_list = [state['_id']]
+        #         if state['parent']:
+        #             p_list.append(state['parent'])
+        #     else:
+        #         p_list = None
+        #     ct['parent'] = p_list
+        #     ct['name'] = city.get_text()
+        #     ct['type'] = 'city'
+        #     ct['location'] = None
+        #     # try:
+        #     #     ct['location'] = geo.get_geoposition({'text': ct['name']})
+        #     # except Exception:
+        #     #     pass
+        #     pr_city_list.append(ct)
+        # self.location.insert(pr_city_list)
 
     @staticmethod
     def fill_up_geolocation(table, field):
@@ -342,51 +384,54 @@ class MongoConnection(object):
         location -- 2 elem tuple (latitude, longitude)
         """
 
-        article = self.entity.find_one({'article_id': article_id})
+        article = self.entity.find_one({'_id': article_id})
         if 'location' in article['tags']:
-            tags = article["tags"]["location"]
+            tags = article['tags.location']
+            lang = self.article.find_one({'_id': article['article_id']})['source.language']
             locations = []
             for tag in list(tags):
-                location = None
-                loc = self.location.find_one({'name': tag['word']})
-                if loc:
-                    location = loc['location']
-                else:
-                    try:
-                        location = geo.get_geoposition({'text': tag['word']})
-                    except Exception:
-                        pass
-                [locations.append({'location': location, 'name': tag['word']}) if location is not None else None]
-            self.article.update_one({'_id': article_id}, {'$set': {'locations': locations}})
+                location = recursive_geodata_find(tag, lang)
+                [locations.extend(location) if location is not None else None]
+            self.entity.update_one({'_id': article_id}, {'$set': {'locations': locations}})
 
-    def find_articles_by_locations(self, params):
+    def find_articles_by_location(self, params):
         if 'location' not in params:
             raise EnvironmentError('Request must contain \'location\' field')
         location = params['location']
         articles = dict()
-        articles_list = list(self.article.find({'locations.location': {'$in': location}}))
+        articles_list = list(self.entity.find({'locations': {'$in': [location]}}))
         articles['articles_list'] = articles_list
         articles['count'] = len(articles_list)
         return articles
 
-    def aggregate_articles_by_location(self, params):
-        if 'location' not in params:
-            locations = self.location.find({'parent': None})
-            out = []
-            for loc in locations:
-                articles = self.find_articles_by_locations(loc['location'])
-                out.append({'count': articles['count'], 'article_list': articles['articles_list']})
+    def aggregate_articles_by_locations(self, params):
+        if 'locations' not in params:
+            start = 0 if 'start' not in params else params['start']
+            length = 10 if 'length' not in params else params['length']
+            articles = self.entity.find({'locations': {'$exist': False}}).skip(start).limit(length + 1)
+            more = True if len(articles) > length else False
+            return articles[:length], more
         else:
-            articles = self.find_articles_by_locations(params['location'])
-            out = {'count': articles['count'], 'article_list': articles['articles_list']}
+            locations = params['locations']
+            count = 0
+            article_list = []
+            if isinstance(locations, list):
+                for location in locations:
+                    articles = self.find_articles_by_location(location)
+                    count += articles['count']
+                    article_list.extend(articles['articles_list'])
+                out = {'count': count, 'article_list': remove(article_list)}
+            else:
+                articles = self.find_articles_by_location(locations)
+                out = {'count': articles['count'], 'article_list': articles['articles_list']}
         return out
 
-    def get_unlocated_articles(self, params):
-        start = 0 if 'start' not in params else params['start']
-        length = 10 if 'length' not in params else params['length']
-        articles = self.entity.find({'locations': {'$exist': False}}).skip(start).limit(length + 1)
-        more = True if len(articles) > length else False
-        return articles[:length], more
+    def get_location_by_level(self, params):
+        locations = self.entity.find({'parent': None})
+        out = []
+        for loc in locations:
+            articles = self.find_articles_by_locations(loc['location'])
+            out.append({'count': articles['count'], 'article_list': articles['articles_list']})
 
 # ***************************** ARTILES ******************************** #
 
@@ -932,5 +977,4 @@ class MongoConnection(object):
         raise Exception("Function in progress")
 
 
-a = recursive_geodata_find({'text': "PuerTo rICO", 'lang': "en"})
-
+a = recursive_geodata_find({'tag': "afghanistan"})
