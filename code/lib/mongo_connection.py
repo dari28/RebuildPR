@@ -426,6 +426,14 @@ class MongoConnection(object):
                 out = {'count': articles['count'], 'article_list': articles['articles_list']}
         return out
 
+    def tag_stat_by_articles_list(self, params):
+        if 'locations' not in params or not isinstance(params['locations'], list):
+            raise EnvironmentError('Request must contain \'locations\' field and locations must be list type')
+        locations  = params['locations']
+        for article_id in locations:
+            tags = self.entity.distinct({'tags'}, {'_id': {'$in': locations}})
+            pass
+
     def get_location_by_level(self, params):
         locations = self.entity.find({'parent': None})
         out = []
@@ -942,5 +950,3 @@ class MongoConnection(object):
     def show_category(self, params):
         raise Exception("Function in progress")
 
-
-a = recursive_geodata_find({'tag': "afghanistan"})
