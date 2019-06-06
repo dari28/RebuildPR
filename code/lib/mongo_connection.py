@@ -45,6 +45,7 @@ class MongoConnection(object):
         self.category = self.mongo_db[config['category_collection']]
         self.iso639 = self.mongo_db[config['iso639_collection']]
         self.iso3166 = self.mongo_db[config['iso3166_collection']]
+        self.units = self.mongo_db[config['units_collection']]
 
     def get_article_language_list(self):
         language_list = []

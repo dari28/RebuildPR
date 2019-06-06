@@ -6,8 +6,8 @@ from lib import mongo_connection as mongo
 from lib.json_encoder import JSONEncoderHttp
 import geoposition as geo
 from nlp import tasks
-from lib import learning_model as model
-
+from lib import learning_model as model, nlp
+from lib.linguistic_functions import replace_str_numerals
 # ***************************** TEST FUNCTIONS ******************************** #
 
 # noinspection PyUnusedLocal
@@ -172,6 +172,22 @@ def predict_entity(request):
 
     predict_result = model.predict_entity(data=data['data'], set_entity=entity_id, language=data['language'])
     results = {'status': True, 'response': {'predict': predict_result}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def parse_units(request):
+    params = request.data
+
+    if not params or 'text' not in params:
+        raise Exception("Field \'text\' must be")
+    convert = ''
+    text = params['text']
+    text = replace_str_numerals(text)
+    a, b = nlp.parse_units(text, convert)
+
+    #predict_result = model.predict_entity(data=data['data'], set_entity=entity_id, language=data['language'])
+    results = {'status': True, 'response': {'predict': a}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
