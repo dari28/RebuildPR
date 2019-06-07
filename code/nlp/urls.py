@@ -48,7 +48,8 @@ urlpatterns = [
     url(r'^get_default_entity/?$', views.get_default_entity),
 
     url(r'^get_geoposition/?$', views.get_geoposition),
-    url(r'^find_articles_by_locations/?$', views.find_articles_by_locations),
+    url(r'^aggregate_articles_by_locations/?$', views.aggregate_articles_by_locations),
+    url(r'^tag_stat_by_articles_list/?$', views.tag_stat_by_articles_list),
 
     url(r'^predict_entity/?$', views.predict_entity),
 

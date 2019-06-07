@@ -73,13 +73,22 @@ def find_family(location, addr, lang="en"):
             parents = []
             addr = addr.split(',', 1)[1]
             level = addr_len - 1
-            parent = locator(addr, lang=lang, limit=3)
-            for p in parent:
-                if (len(remove_codes(p.raw['address']).values()) == level) & (list(remove_codes(p.raw['address']).keys())[0] <= keys[1]):
-                    parents.extend(find_family(location=location, addr=addr, lang=lang))
-            if (len(parents) == 0):
-                parents.extend(find_family(location=location, addr=addr, lang=lang))
-            p_list.extend(parents)
+            exists_parents = mongodb.geopy_requests.find_one({'phrase': addr})
+            if not exists_parents is None:
+                parents.extend(exists_parents)
+            else:
+                parent = locator(addr, lang=lang, limit=3)
+                if parent:
+                    for p in parent:
+                        if (len(remove_codes(p.raw['address']).values()) == level) & (list(remove_codes(p.raw['address']).keys())[0] <= keys[1]):
+                            response = find_family(location=location, addr=addr, lang=lang)
+                            parents.extend(response)
+                            mongodb.geopy_requests.insert_one({'phrase': addr, 'response': response})
+                    if (len(parents) == 0):
+                        response = find_family(location=location, addr=addr, lang=lang)
+                        parents.extend(response)
+                        mongodb.geopy_requests.insert_one({'phrase': addr, 'response': response})
+                    p_list.extend(parents)
             added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
                                                     'name': (location._address.split(',')[0]),
                                                     'location': {'latitude': location.latitude, 'longitude': location.longitude},
@@ -112,7 +121,7 @@ def recursive_geodata_find(params):
                 loc_list.extend(loc['parents'])
         return loc_list
     locations = locator(tag, lang, limit=3)
-    if len(locations) == 0:
+    if not locations:
         return None
     for location in locations:
         if len(list(mongodb.location.find({'place_id': location.raw['place_id']}))) == 0:
@@ -120,8 +129,9 @@ def recursive_geodata_find(params):
             address = remove_codes(address)
             addr_len = len(address.values())
             keys = list(address.keys())
+            level = addr_len - 1
             tp = keys[0]
-            if addr_len == 1:
+            if level == 0 or len(location._address.split(',')) == 1:
                 added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
                                                         'name': (location._address.split(',')[0]),
                                                         'location': {'latitude': location.latitude, 'longitude': location.longitude},
@@ -129,20 +139,28 @@ def recursive_geodata_find(params):
                 loc_list.append(added_id)
             else:
                 parents = []
-                level = addr_len - 1
                 addr = location._address.split(',', 1)[1]
-                parent = locator(addr, lang=lang, limit=3)
-                if (len(parent) == 1) & (len(remove_codes(parent[0].raw['address']).values()) == level):
-                    parents.extend(find_family(location=location, addr=addr, lang=lang))
+                exists_parents = mongodb.geopy_requests.find_one({'phrase': addr})
+                if not exists_parents is None:
+                    parents.extend(exists_parents)
                 else:
-                    for p in parent:
-                        if (len(remove_codes(p.raw['address']).values()) == level) & (list(remove_codes(p.raw['address']).keys())[0] <= keys[1]):
-                            parents.extend(find_family(location=location, addr=addr, lang=lang))
-                loc_list.extend(parents)
+                    parent = locator(addr, lang=lang, limit=3)
+                    if parent:
+                        if (len(parent) == 1) & (len(remove_codes(parent[0].raw['address']).values()) == level):
+                            response = find_family(location=location, addr=addr, lang=lang)
+                            parents.extend(response)
+                            mongodb.geopy_requests.insert_one({'phrase': addr, 'response': response})
+                        else:
+                            for p in parent:
+                                if (len(remove_codes(p.raw['address']).values()) == level) & (list(remove_codes(p.raw['address']).keys())[0] <= keys[1]):
+                                    response = find_family(location=location, addr=addr, lang=lang)
+                                    parents.extend(response)
+                                    mongodb.geopy_requests.insert_one({'phrase': addr, 'response': response})
+                        loc_list.extend(parents)
                 added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
                                                         'name': (location._address.split(',')[0]),
                                                         'location': {'latitude': location.latitude, 'longitude': location.longitude},
-                                                        'parents': parents, 'type': tp, 'level': len(parents), 'tags': [tag]}).inserted_id
+                                                        'parents': None, 'type': tp, 'level': len(parents), 'tags': [tag]}).inserted_id
 
         else:
             added_id = mongodb.location.update_one({'place_id': location.raw['place_id']}, {'$addToSet': {'tags': tag}}).upserted_id
@@ -173,6 +191,7 @@ class MongoConnection(object):
         self.category = self.mongo_db[config['category_collection']]
         self.iso639 = self.mongo_db[config['iso639_collection']]
         self.iso3166 = self.mongo_db[config['iso3166_collection']]
+        self.geopy_requests = self.mongo_db[config['geopy_requests_collection']]
 
     def get_article_language_list(self):
         language_list = []
@@ -380,17 +399,18 @@ class MongoConnection(object):
         return ids
 
     def add_article_locations(self, article_id):
-        """Return tag stat by location
-        location -- 2 elem tuple (latitude, longitude)
-        """
 
         article = self.entity.find_one({'_id': article_id})
         if 'location' in article['tags']:
-            tags = article['tags.location']
-            lang = self.article.find_one({'_id': article['article_id']})['source.language']
+            tags = article['tags']['location']
+            art = self.article.find_one({'_id': article['article_id']})
+            if 'language' in art['source']:
+                lang = art['source']['language']
+            else:
+                lang = "en"
             locations = []
             for tag in list(tags):
-                location = recursive_geodata_find(tag, lang)
+                location = recursive_geodata_find({'tag': tag['word'], 'lang': lang})
                 [locations.extend(location) if location is not None else None]
             self.entity.update_one({'_id': article_id}, {'$set': {'locations': locations}})
 
@@ -400,6 +420,8 @@ class MongoConnection(object):
         location = params['location']
         articles = dict()
         articles_list = list(self.entity.find({'locations': {'$in': [location]}}))
+        for l in articles_list:
+            l = l['_id']
         articles['articles_list'] = articles_list
         articles['count'] = len(articles_list)
         return articles
@@ -408,9 +430,10 @@ class MongoConnection(object):
         if 'locations' not in params:
             start = 0 if 'start' not in params else params['start']
             length = 10 if 'length' not in params else params['length']
-            articles = self.entity.find({'locations': {'$exist': False}}).skip(start).limit(length + 1)
+            articles = list(self.entity.find({'locations': {'$exists': False}}).skip(start).limit(length + 1))
+            count = self.entity.count({'locations': {'$exists': False}})
             more = True if len(articles) > length else False
-            return articles[:length], more
+            return {'articles': articles[:length], 'more': more, 'count': count}
         else:
             locations = params['locations']
             count = 0
@@ -420,10 +443,10 @@ class MongoConnection(object):
                     articles = self.find_articles_by_location(location)
                     count += articles['count']
                     article_list.extend(articles['articles_list'])
-                out = {'count': count, 'article_list': remove(article_list)}
+                out = {'count': count, 'articles_list': remove(article_list)}
             else:
                 articles = self.find_articles_by_location(locations)
-                out = {'count': articles['count'], 'article_list': articles['articles_list']}
+                out = {'count': articles['count'], 'articles_list': articles['articles_list']}
         return out
 
     def tag_stat_by_articles_list(self, params):
