@@ -92,6 +92,10 @@ def parse_units(text, convert):
 
     search_text = str(output_text)
 
+    for match in en_cardinal_numerals.finditer(search_text):
+        string = match.string[match.start():match.end()].strip()
+        print(string)
+
     for match in r_prices.finditer(search_text):
         string = match.string[match.start():match.end()].strip()
         clear_string = tools.remove_digits_and_delimiters(string)
@@ -135,3 +139,14 @@ def parse_units(text, convert):
     # Add SIDE
     zip_codes = []
     return {'units': detected_units, 'unknown_units': unknown_units, 'zip': zip_codes}, output_text
+
+
+def parse_currency(text):
+    text = str(text)
+    tags = dict()
+    tags['money'] = []
+    for match in currency_tags.finditer(text):
+        string = match.string[match.start():match.end()]
+        tags['money'].append({'start_match': match.start(), 'length_match': match.end() - match.start(), 'word': string})
+    return tags
+

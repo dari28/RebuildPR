@@ -51,7 +51,7 @@ urlpatterns = [
     url(r'^find_articles_by_locations/?$', views.find_articles_by_locations),
 
     url(r'^predict_entity/?$', views.predict_entity),
-    url(r'^parse_units/?$', views.parse_units),
+    url(r'^parse_currency/?$', views.parse_currency),
 
     # Fill up db
     url(r'^fill_up_db_from_zero/?$', views.fill_up_db_from_zero),
