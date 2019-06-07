@@ -40,3 +40,4 @@ beautifulsoup4
 urllib3
 unicode
 geopy
+num2words

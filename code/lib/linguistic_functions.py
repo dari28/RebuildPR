@@ -142,6 +142,123 @@ def replace_numerals(input_string, lang):
                 pass
     return new_string
 
+from lib.regexs import en_cardinal_numerals as en_numerals
+from lib.regexs import en_ordinal_numerals as en_o_numerals
+from lib.regexs import nums_billion
+from lib.tools import remove_digits
+from num2words import num2words
+
+
+def replace_num_to_word_around_money_sign(input_string):
+    try:
+        input_string = re.sub(r"(?<=\$)\d+", lambda m: num2words(m.group()), input_string)
+        input_string = re.sub(r"(?<=\$\s)\d+", lambda m: num2words(m.group()), input_string)
+        input_string = re.sub(r"\d+(?<=\s\$)", lambda m: num2words(m.group()), input_string)
+        input_string = re.sub(r"\d+(?<=\$)", lambda m: num2words(m.group()), input_string)
+    except Exception as ex:
+        print(ex)
+        pass
+    return input_string
+    # for match in a1:
+    #    a = num2words(input_string[match.start(): match.end()])
+    #    re.replace(match, num2words(match))
+    #    print(a)
+
+
+def replace_str_numerals(input_string):
+
+    cardinal_numbers = {
+        'zero': 0, 'one': 1, 'two': 2, 'three': 3,
+        'four': 4, 'five': 5, 'six': 6, 'seven': 7,
+        'eight': 8, 'nine': 9, 'ten': 10, 'eleven': 11,
+        'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15,
+        'sixteen': 16, 'seventeen': 17, 'eighteen': 18, 'nineteen': 19,
+        'twenty': 20, 'thirty': 30, 'forty': 40, 'fifty': 50,
+        'sixty': 60, 'seventy': 70, 'eighty': 80, 'ninety': 90
+    }
+    cardinal_orders = {'hundred': 100, 'thousand': 1000, 'million': 1000000, 'billion': 1000000000, }
+    # ordinal_numbers = {
+    #     "first": 1, "second": 2,
+    #     "third": 3, "fourth": 4,
+    #     "fifth": 5, "sixth": 6,
+    #     "seventh": 7, "eighth": 8,
+    #     "ninth": 9, "tenth": 10,
+    #     "eleventh": 11, "twelfth": 12,
+    #     "thirteenth": 13, "fourteenth": 14,
+    #     "fifteenth": 15, "sixteenth": 16,
+    #     "seventeenth": 17, "eighteenth": 18,
+    #     "nineteenth": 19, "twentieth": 20,
+    #     "thirtieth": 30,
+    #     "fortieth": 40, "fiftieth": 50,
+    #     "sixtieth": 60, "seventieth": 70,
+    #     "eightieth": 80, "ninetieth": 90,
+    #     "hundredth": 100, "thousandth": 1000,
+    #     'millionth': 1000000, 'billionth': 1000000000,
+    #     }
+    ordinal_numbers = {}
+    output = input_string
+    # numerals = en_numerals.findall(input_string)  ## character case is already ignored
+    numerals = [remove_digits(input_string[match.start(): match.end()]) for match in en_numerals.finditer(input_string)]
+    checked_text = set()
+    input_string = replace_num_to_word_around_money_sign(input_string)
+    for numeral in numerals:
+        for catch_pos, catch in enumerate(re.findall('(?i)\\b(?<='+numeral+') *\w+',input_string)):
+            text_part = re.search('(?i)'+numeral+' *'+catch, input_string)
+            text_part = set(range(text_part.start(), text_part.end()))
+            if not checked_text & text_part:
+                if en_o_numerals.findall(catch):
+                    numb = en_o_numerals.findall(catch)[0].replace(' ','')
+                    if numb in ordinal_numbers.keys():
+                        #####
+                        # if last cardinal and ordinal have same rank ordinal add to numerals like a separate numeral else like a part
+                        #####
+                        numerals[[num for num,i in enumerate(numerals) if i ==numeral][catch_pos]]+=' '+numb #ordinal[numb]
+                        checked_text |= text_part
+######################ADD ORDINALS INTO LIST#############################################
+    # for numeral in en_o_numerals.findall(input_string):
+    #     text_part = re.search(numeral,input_string)
+    #     text_part = set(range(text_part.start(), text_part.end()))
+    #     if not checked_text & text_part:
+    #         numerals.append(numeral)
+    #         checked_text |= text_part
+    for numeral in numerals:
+        digit =[0]
+        FLOATINGPOINT = 0
+        ORDINAL = ' '
+        float_part = '0.'
+        for word in re.findall(r'\w+', numeral):
+            # word = word.lower()
+            if word in cardinal_numbers.keys() and not FLOATINGPOINT:
+                digit[-1]+=cardinal_numbers[word]
+            elif word in cardinal_orders.keys() and not FLOATINGPOINT:
+                if digit[-1] !=0:
+                    digit[-1] = digit[-1]*cardinal_orders[word]
+                    digit.append(0)
+                elif len(digit) >=2:
+                    digit[-2] = digit[-2]*cardinal_orders[word]
+            elif FLOATINGPOINT:
+                if word in cardinal_numbers.keys():
+                    float_part+= str(cardinal_numbers[word])
+            elif en_o_numerals.findall(word):
+                if word not in (u'first', u'second', u'third'):
+                    ORDINAL = 'th '
+                else:
+                    if word == u'first':
+                        ORDINAL = u'st '
+                    if word == u'second':
+                        ORDINAL = u'nd '
+                    if word == u'third':
+                        ORDINAL = u'rd'
+                digit[-1]= ordinal_numbers[word]
+            else:
+                if word in (u'point', u'dot'):
+                    FLOATINGPOINT = 1
+        if float_part != '0.':
+            digit = sum(digit) +float(float_part)
+        else:
+            digit=sum(digit)
+        output = re.sub('((\b)|(?!\d))'+numeral+'((?!\w)|(?!\D))',' '+str(digit)+ORDINAL,output,re.I|re.U)  #whitespace crutch, error in regular expression, it capture whitespace after two-digit-prefix numeral
+    return output
 
 if __name__ == '__main__':
     print(replace_numerals(u'1 slovo 23 24 slovo e', 'cz'))

@@ -227,6 +227,7 @@ MONGO = dict(
     iso639_collection='iso639',
     iso3166_collection='iso3166',
     geopy_requests_collection='geopy_requests',
+    units_collection='units',
     # entity_collection='entity',
     # intent_collection='intent',
 )

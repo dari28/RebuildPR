@@ -848,3 +848,53 @@ def escape(pattern):
         if c in re_special:
             s[i] = " \{}".format(c)
     return pattern[:0].join(s)
+
+punctuation = set(u' ,,.:;\'\"<>\\/|{}[]`$!&@#%^?*()-_+=-~⟨⟩–—-―‐«»‘’“”·•©¤៛№₳฿₵¢₡₢₠$₫৳₯€ƒ₣₲₴₭ℳ₥₦₧₱₰£₨₪₮₩¥៛®″§™¦。')
+delimiters = set(u' ,.:;\'\"<>\\/|{}[]`!@#?*()_+=-–—-―‐~⟨⟩«»‘’“”·•©¤®″™¦®″。')
+remove = set(u'«»·•©¤®§™¦៛№®()')
+spec = set('\n\t\r\a\b\f\v\0')
+isdigit = str.isdigit
+
+
+def extract_numbers(text):
+    ret_val = ''
+    for c in text:
+        if isdigit(c) or c in ',./-':
+            ret_val += c
+    return ret_val
+
+
+def remove_digits(string):
+    return ''.join([c for c in string if not isdigit(c)])
+
+
+def remove_digits_and_delimiters(string):
+    new_str = ''
+    for s in string:
+        if isdigit(s) or s in delimiters:
+            continue
+        new_str += s
+    return new_str
+
+
+def trim_punkt(word):
+    if word and '<num>' not in word:
+        while len(word) > 1 and word[0] in punctuation:
+            word = word[1:]
+        while len(word) > 1 and word[-1] in punctuation:
+            word = word[0:len(word) - 1]
+        if len(word) == 1 and word[0] in punctuation:
+            return ''
+    return word
+
+
+def get_dir_path(path):
+    """"""
+    path = path if os.path.isabs(path) else \
+        os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+                path
+            )
+        )
+    return path
