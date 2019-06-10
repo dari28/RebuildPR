@@ -83,6 +83,8 @@ def union_res(result1, result2):
 def get_tags(text, language="en"):
     mongodb = MongoConnection()
 
+    is_money_regex_model_exist = True
+
     entities1 = mongodb.get_default_entity({"type": "default_polyglot", "language": language})
     result1 = predict_entity_polyglot(
         entities1,
@@ -109,8 +111,13 @@ def get_tags(text, language="en"):
     if 'detects organizations' in result1:
         result1['organization'] = result1.pop('detects organizations')
 
-    result3 = nlp.parse_currency(text)
-    return union_res(union_res(result1, result2), result3)
+    result = union_res(result1, result2)
+    if is_money_regex_model_exist:
+        result3 = nlp.parse_currency(text)
+        if result3['money']:
+            result['MONEY'] = result3['money']
+
+    return result
 
 
 def add_article_locations(params):
