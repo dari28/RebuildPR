@@ -1,6 +1,7 @@
 import re
 
-floats_re = re.compile(r"(?:\d+([\.,'\"]\d*){0,9}|\.\d+)\b")
+r_float = r"((?:\d+([\.,'\"]\d*){0,9}|\.\d+)\b)"
+floats_re = re.compile(r_float)
 url_re = re.compile(r"(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.][a-z0-9]+)*\.[a-z]{2,5}\b(:[0-9]{1,5})?(\/\S*)?", re.IGNORECASE)
 email_re = re.compile(r"([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)")
 date_re = re.compile("(?:(?:(?:(?:(?<!:)\\b\\'?\\d{1,4},? ?)?\\b(?:[Jj]an(?:uary)?|[Ff]eb(?:ruary)?|[Mm]ar(?:ch)?|[Aa]pr(?:il)?"
@@ -18,6 +19,18 @@ username_re = re.compile("@\\S+")
 # r_sym_num = re.compile(r"(\S{1,15}\s*(\"?(?:\d+(?:[.,\-/]*\d+)*)+\"?)|(\"?(?:\d+(?:[.,\-/]*\d+)*)+\"?\W*(?:\d+(?:[.,\-/]*\d+)*)+))")
 # r_num_sym = re.compile(r"(?:\d+(?:[.,\-/]*\d+)*)+\S+")
 r_around_num = re.compile(r"(\S+\s+(\d+\W?)|(\d+\W?\d+))\s*\S*")
+
+r_dollar = r'(\$|\$usd|usd|dollar|dollars|bucks)'
+r_euro = r'(€|€€|eur|euro|euros)'
+r_gbr = r'(£|gbp|pound sterling)'
+r_rub = r'(₽|rub|ruble|rubles)'
+r_yen = r'(¥|yen|jpy|yens)'
+r_cents = r'(cent|cents|¢|¢¢|ct.)'
+r_euro_cents = r'(euro cent|euro cents)'
+r_valuta = r'({0}|{1}|{2}|{3}|{4})'.format(r_dollar, r_euro, r_gbr, r_rub, r_yen)
+r_sub_valuta = r'({0}|{1})'.format(r_cents, r_euro_cents)
+
+r_price_sign = r'(usd|eur|€|\$|£|฿|₵|₡|₫|৳|ƒ|₣|₲|₴|₭|₽|₱|₨|₪|₩|¥|៛)'
 r_prices = re.compile(r"(usd|eur|€|\$|£|฿|₵|₡|₫|৳|ƒ|₣|₲|₴|₭|₽|₱|₨|₪|₩|¥|៛)+\s{0,10}(?:\d+(?:[.,\-/]*\d+)*)")
 r_prices_after = re.compile(r"\s?(?:\d+(?:[.,\-/]\d+){0,9})(\s{0,10}|-)(usd|eur|cents|cent|€|\$|£|฿|₵|₡|₫|৳|ƒ|₣|₲|₴|₭|₽|₱|₨|₪|₩|¥|៛)+")
 r_inches = re.compile(r'(?:\d+(?:[.,\-/x]\d+){0,9})\s?["“”″]')
@@ -40,10 +53,13 @@ r_cloth_sizes_2 = re.compile(r'\b(mens|men|boys|boy|jacket|womans|woman|ladies|g
 ones = r'(?:one|two|three|four|five|six|seven|eight|nine)((?!\w)|(?!\D))'
 tens = u'(?:(?:t|elev)en|twelve|(?:thir|four|fif|six|seven|eigh|nine)teen)((?!\w)|(?!\D))'
 prefix_two_digits = u'(?:(?:twen|thir|for|fif|six|seven|eigh|nine)ty(?!^\w))[ ]*(?:and|-)?[ ]*(?:(?:one|two|three|four|five|six|seven|eight|nine))?'
-nums_hundred = u'(?:{0})|(?:{2}|{1})'.format(prefix_two_digits, ones, tens)  # 99
-nums_thousand = u'(?:{0})\s+hundred(?:[ ]+(?:and[ ]+)?(?:{1}))?|{1}'.format(ones, nums_hundred)  # 999
-nums_million = u'(?:{0})\s+thousand(?:[ ]+(?:and[ ]+)?(?:{0}))?|{0}'.format(nums_thousand)  # 999,999
-nums_billion = u'(?:{1})\s+million(?:[ ]+(?:and[ ]+)?(?:{0}))?|{0}'.format(nums_million, nums_thousand)  # 999,999,999
+# nums_hundred = u'(?:{0})|(?:{2}|{1})'.format(prefix_two_digits, ones, tens)  # 99
+nums_hundred = u'(?:{0})|(?:{2}|{1}|[1-9][0-9]?)'.format(prefix_two_digits, ones, tens)  # 99
+# nums_thousand = u'(?:{0})\s+hundred(?:[ ]+(?:and[ ]+)?(?:{1}))?|{1}'.format(ones, nums_hundred)  # 999
+nums_thousand = u'(?:{0})\s+hundred(?:[ ]+(?:and[ ]+)?(?:{1}))?|{1}|[1-9][0-9][0-9]'.format(ones, nums_hundred)  # 999
+# nums_million = u'(?:{0})\s+thousand(?:[ ]+(?:and[ ]+)?(?:{0}))?|{0}'.format(nums_thousand)  # 999,999
+nums_million = u'(?:{0})\s+thousand(?:[ ]+(?:and[ ]+)?(?:{0}))?|{0}|([1-9][0-9][0-9][0-9][0-9]?[0-9]?)'.format(nums_thousand)  # 999,999
+nums_billion = u'(?:{1})\s+million(?:[ ]+(?:and[ ]+)?(?:{0}))?|{0}|([1-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]?[0-9]?)'.format(nums_million, nums_thousand)  # 999,999,999
 nums_trillion = u'(?:{1})\s+billion(?:[ ]+(?:and[ ]+)?(?:{0}))?|{0}'.format(nums_billion, nums_thousand)  # 999,999,999,999
 nums_quadrillion = u'(?:{1})\s+trllion(?:[ ]+(?:and[ ]+)?(?:{0}))?|{0}'.format(nums_trillion, nums_thousand)  # 999,999,999,999,999
 nums_quintillion = u'(?:{1})\s+quadrillion(?:[ ]+(?:and[ ]+)?(?:{0}))?|{0}'.format(nums_quadrillion, nums_thousand)  # 999,999,999,999,999,999
@@ -58,7 +74,11 @@ ordinal_nums = u'(?: *[-]? *)(?:first|second|third|(?:four|fif|six|seven|eigh|ni
 en_cardinal_numerals = re.compile(number, re.U | re.I)
 en_ordinal_numerals = re.compile(ordinal_nums, re.U | re.I)
 numbers_re = re.compile('\d+([,./]\d+)*')
-
+r_short_scale = u'(million|billion|milliard|trillion|quadrillion|quintillion|sextillion|septillion)'
+r_float_with_word = u'({0}\s{1})'.format(r_float,r_short_scale)
+valuta_with_num = u'(({0}|{2})\s?{1})|({1}\s?({2}|{0}))'.format(number, r_valuta, r_float_with_word)  # Order sensitive
+sub_valuta_with_num = u'(({0}|{2})\s?{1})|({1}\s?({0}|{2}))'.format(nums_hundred, r_sub_valuta, r_float)
+currency_tags = re.compile(u'({0}((\s?and\s|\s)({1})?))|({1})'.format(valuta_with_num, sub_valuta_with_num))
 # input_string = 'c 5three0-3six3-2six28 twon one eight mnine montwond'
 # numerals = [input_string[match.start(): match.end()] for match in en_cardinal_numerals.finditer(input_string)]
 # print(numerals)

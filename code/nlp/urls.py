@@ -52,7 +52,7 @@ urlpatterns = [
     url(r'^tag_stat_by_articles_list/?$', views.tag_stat_by_articles_list),
 
     url(r'^predict_entity/?$', views.predict_entity),
-    url(r'^parse_units/?$', views.parse_units),
+    url(r'^parse_currency/?$', views.parse_currency),
 
     # Fill up db
     url(r'^fill_up_db_from_zero/?$', views.fill_up_db_from_zero),

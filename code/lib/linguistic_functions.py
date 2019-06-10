@@ -151,10 +151,12 @@ from num2words import num2words
 
 def replace_num_to_word_around_money_sign(input_string):
     try:
-        input_string = re.sub(r"(?<=\$)\d+", lambda m: num2words(m.group()), input_string)
-        input_string = re.sub(r"(?<=\$\s)\d+", lambda m: num2words(m.group()), input_string)
-        input_string = re.sub(r"\d+(?<=\s\$)", lambda m: num2words(m.group()), input_string)
-        input_string = re.sub(r"\d+(?<=\$)", lambda m: num2words(m.group()), input_string)
+        # input_string = re.sub(r"(?<=\$)\d+", lambda m: num2words(m.group()), input_string)
+        # input_string = re.sub(r"(?<=\$\s)\d+", lambda m: num2words(m.group()), input_string)
+        # input_string = re.sub(r"\d+(?<=\s\$)", lambda m: num2words(m.group()), input_string)
+        # input_string = re.sub(r"\d+(?<=\$)", lambda m: num2words(m.group()), input_string)
+        input_string = re.sub(r"((?<=\$\s)|(?<=\$))\d+", lambda m: num2words(m.group()), input_string)
+        input_string = re.sub(r"\d+((?<=\$)|(?<=\s\$))", lambda m: num2words(m.group()), input_string)
     except Exception as ex:
         print(ex)
         pass
@@ -196,11 +198,12 @@ def replace_str_numerals(input_string):
     #     'millionth': 1000000, 'billionth': 1000000000,
     #     }
     ordinal_numbers = {}
-    output = input_string
+
     # numerals = en_numerals.findall(input_string)  ## character case is already ignored
+    input_string = replace_num_to_word_around_money_sign(input_string)
     numerals = [remove_digits(input_string[match.start(): match.end()]) for match in en_numerals.finditer(input_string)]
     checked_text = set()
-    input_string = replace_num_to_word_around_money_sign(input_string)
+    output = input_string
     for numeral in numerals:
         for catch_pos, catch in enumerate(re.findall('(?i)\\b(?<='+numeral+') *\w+',input_string)):
             text_part = re.search('(?i)'+numeral+' *'+catch, input_string)

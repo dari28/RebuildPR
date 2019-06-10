@@ -176,18 +176,19 @@ def predict_entity(request):
 
 
 @api_view(['POST'])
-def parse_units(request):
+def parse_currency(request):
     params = request.data
 
     if not params or 'text' not in params:
         raise Exception("Field \'text\' must be")
-    convert = ''
+    # convert = ''
     text = params['text']
     text = replace_str_numerals(text)
-    a, b = nlp.parse_units(text, convert)
 
-    #predict_result = model.predict_entity(data=data['data'], set_entity=entity_id, language=data['language'])
-    results = {'status': True, 'response': {'predict': a}, 'error': {}}
+    # a, b = nlp.parse_units(text, convert)
+    ans = nlp.parse_currency(text)
+    # predict_result = model.predict_entity(data=data['data'], set_entity=entity_id, language=data['language'])
+    results = {'status': True, 'response': {'predict': ans}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
