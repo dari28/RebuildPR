@@ -432,7 +432,10 @@ class MongoConnection(object):
         if 'locations' not in params:
             start = 0 if 'start' not in params else params['start']
             length = 10 if 'length' not in params else params['length']
-            articles = list(self.entity.find({'locations': {'$exists': False}}).skip(start).limit(length + 1))
+            art_list = list(self.entity.find({'locations': {'$exists': False}}).skip(start).limit(length + 1))
+            articles = []
+            for l in art_list:
+                articles.append(l['_id'])
             count = self.entity.count({'locations': {'$exists': False}})
             more = True if len(articles) > length else False
             return {'articles': articles[:length], 'more': more, 'count': count}
@@ -452,12 +455,44 @@ class MongoConnection(object):
         return out
 
     def tag_stat_by_articles_list(self, params):
-        if 'locations' not in params or not isinstance(params['locations'], list):
-            raise EnvironmentError('Request must contain \'locations\' field and locations must be list type')
-        locations  = params['locations']
-        for article_id in locations:
-            tags = self.entity.distinct({'tags'}, {'_id': {'$in': locations}})
-            pass
+        if 'articles' not in params or not isinstance(params['articles'], list):
+            raise EnvironmentError('Request must contain \'articles\' field and articles must be list type')
+        tags = ['location', 'person', 'organization', 'money', 'percent', 'date', 'time']
+        articles = params['articles']
+        pipeline = [
+            {"$addFields": {
+                "tags": {"$objectToArray": "$tags"}
+            }},
+            {"$unwind": "$tags"},
+            {"$unwind": "$tags.v"},
+            {"$group": {
+                "_id": {
+                    "tag": "$tags.k",
+                    "phrase": "$tags.v.word"
+                },
+                "count": {"$sum": 1}
+            }},
+            {'$sort': {'count': -1}},
+            {'$match': {
+                '_id.tag': {
+                    '$in': tags},
+                '_id': {
+                    '$in': articles
+                }
+            }},
+            {"$group": {
+                "_id": "$_id.tag",
+                "tag_list": {
+                    "$push": {
+                        "count": "$count",
+                        "phrase": "$_id.phrase"
+                    }
+                }
+            }},
+            {'$project': {'tag': '$_id', 'tag_list': 1, '_id': 0}},
+        ]
+
+        return list(self.entity.aggregate(pipeline, allowDiskUse=True))
 
     def get_location_by_level(self, params):
         locations = self.entity.find({'parent': None})
