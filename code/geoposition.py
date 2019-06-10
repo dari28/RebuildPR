@@ -8,3 +8,5 @@ def get_geoposition(params):
     geolocator = Nominatim(user_agent="specify_your_app_name_here")
     location = geolocator.geocode(params['text'])
     return {'latitude': location.latitude, 'longitude': location.longitude}
+
+

@@ -6,7 +6,7 @@ urlpatterns = [
     url(r'^test_work/?$', views.test_work),
     url(r'^test_exception_work/?$', views.test_exception_work),
 
-    url(r'^get_unlocated_articles/?$', views.get_unlocated_articles),
+    url(r'^get_location_by_level/?$', views.get_location_by_level),
 
     url(r'^tag_stat/?$', views.tag_stat),
 
@@ -48,7 +48,8 @@ urlpatterns = [
     url(r'^get_default_entity/?$', views.get_default_entity),
 
     url(r'^get_geoposition/?$', views.get_geoposition),
-    url(r'^find_articles_by_locations/?$', views.find_articles_by_locations),
+    url(r'^aggregate_articles_by_locations/?$', views.aggregate_articles_by_locations),
+    url(r'^tag_stat_by_articles_list/?$', views.tag_stat_by_articles_list),
 
     url(r'^predict_entity/?$', views.predict_entity),
     url(r'^parse_currency/?$', views.parse_currency),
