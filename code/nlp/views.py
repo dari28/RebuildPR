@@ -8,6 +8,7 @@ import geoposition as geo
 from nlp import tasks
 from lib import learning_model as model, nlp
 from lib.linguistic_functions import replace_str_numerals
+from background_task.models import Task
 # ***************************** TEST FUNCTIONS ******************************** #
 
 # noinspection PyUnusedLocal
@@ -39,7 +40,8 @@ def test_work(request):
 
 @api_view(['POST'])
 def update_source_list_from_server(request):
-    tasks.update_source_list_from_server()
+    if not Task.objects.filter(verbose_name="update_source_list_from_server").exists():
+        tasks.update_source_list_from_server(verbose_name="update_source_list_from_server")
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 

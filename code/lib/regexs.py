@@ -1,6 +1,7 @@
 import re
 
 r_float = r"((?:\d+([\.,'\"]\d*){0,9}|\.\d+)\b)"
+r_float_only = r"((?:\d+\.\d+)\b)"
 floats_re = re.compile(r_float)
 url_re = re.compile(r"(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.][a-z0-9]+)*\.[a-z]{2,5}\b(:[0-9]{1,5})?(\/\S*)?", re.IGNORECASE)
 email_re = re.compile(r"([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)")
@@ -20,13 +21,13 @@ username_re = re.compile("@\\S+")
 # r_num_sym = re.compile(r"(?:\d+(?:[.,\-/]*\d+)*)+\S+")
 r_around_num = re.compile(r"(\S+\s+(\d+\W?)|(\d+\W?\d+))\s*\S*")
 
-r_dollar = r'(\$|\$usd|usd|dollar|dollars|bucks)'
-r_euro = r'(€|€€|eur|euro|euros)'
+r_dollar = r'(\$|\$usd|usd|dollar(s)?|bucks)'
+r_euro = r'(€(€)?|eur(o|os)?)'
 r_gbr = r'(£|gbp|pound sterling)'
-r_rub = r'(₽|rub|ruble|rubles)'
-r_yen = r'(¥|yen|jpy|yens)'
-r_cents = r'(cent|cents|¢|¢¢|ct.)'
-r_euro_cents = r'(euro cent|euro cents)'
+r_rub = r'(₽|rub(le|les)?)'
+r_yen = r'(¥|yen(s)?|jpy)'
+r_cents = r'(cent(s)?|¢|¢¢|ct.)'
+r_euro_cents = r'(euro cent(s)?)'
 r_valuta = r'({0}|{1}|{2}|{3}|{4})'.format(r_dollar, r_euro, r_gbr, r_rub, r_yen)
 r_sub_valuta = r'({0}|{1})'.format(r_cents, r_euro_cents)
 
@@ -74,8 +75,9 @@ ordinal_nums = u'(?: *[-]? *)(?:first|second|third|(?:four|fif|six|seven|eigh|ni
 en_cardinal_numerals = re.compile(number, re.U | re.I)
 en_ordinal_numerals = re.compile(ordinal_nums, re.U | re.I)
 numbers_re = re.compile('\d+([,./]\d+)*')
+
 r_short_scale = u'(million|billion|milliard|trillion|quadrillion|quintillion|sextillion|septillion)'
-r_float_with_word = u'({0}\s{1})'.format(r_float,r_short_scale)
+r_float_with_word = u'({0}\s{1})'.format(r_float_only, r_short_scale)
 valuta_with_num = u'(({0}|{2})\s?{1})|({1}\s?({2}|{0}))'.format(number, r_valuta, r_float_with_word)  # Order sensitive
 sub_valuta_with_num = u'(({0}|{2})\s?{1})|({1}\s?({0}|{2}))'.format(nums_hundred, r_sub_valuta, r_float)
 currency_tags = re.compile(u'({0}((\s?and\s|\s)({1})?))|({1})'.format(valuta_with_num, sub_valuta_with_num))
