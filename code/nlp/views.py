@@ -183,7 +183,7 @@ def parse_currency(request):
         raise Exception("Field \'text\' must be")
     # convert = ''
     text = params['text']
-    text = replace_str_numerals(text)
+    # text = replace_str_numerals(text)
 
     # a, b = nlp.parse_units(text, convert)
     ans = nlp.parse_currency(text)
