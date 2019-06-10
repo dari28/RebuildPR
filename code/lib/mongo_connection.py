@@ -415,43 +415,82 @@ class MongoConnection(object):
                 [locations.extend(location) if location is not None else None]
             self.entity.update_one({'_id': article_id}, {'$set': {'locations': locations}})
 
-    def find_articles_by_location(self, params):
-        if 'location' not in params:
-            raise EnvironmentError('Request must contain \'location\' field')
-        location = params['location']
-        articles = dict()
-        art_list = list(self.entity.find({'locations': {'$in': [location]}}))
-        articles_list = []
-        for l in art_list:
-            articles_list.append(l['_id'])
-        articles['articles_list'] = articles_list
-        articles['count'] = len(articles_list)
-        return articles
+    # def find_articles_by_location(self, params):
+    #     if 'location' not in params:
+    #         raise EnvironmentError('Request must contain \'location\' field')
+    #     location = params['location']
+    #     articles = dict()
+    #     art_list = list(self.entity.find({'locations': {'$in': [location]}}))
+    #     articles_list = []
+    #     for l in art_list:
+    #         articles_list.append(l['_id'])
+    #     articles['articles_list'] = articles_list
+    #     articles['count'] = len(articles_list)
+    #     return articles
 
     def aggregate_articles_by_locations(self, params):
-        if 'locations' not in params:
-            start = 0 if 'start' not in params else params['start']
-            length = 10 if 'length' not in params else params['length']
-            art_list = list(self.entity.find({'locations': {'$exists': False}}).skip(start).limit(length + 1))
-            articles = []
-            for l in art_list:
-                articles.append(l['_id'])
-            count = self.entity.count({'locations': {'$exists': False}})
-            more = True if len(articles) > length else False
-            return {'articles': articles[:length], 'more': more, 'count': count}
-        else:
+        pipeline = []
+        if 'locations' in params:
             locations = params['locations']
-            count = 0
-            article_list = []
             if isinstance(locations, list):
-                for location in locations:
-                    articles = self.find_articles_by_location(location)
-                    count += articles['count']
-                    article_list.extend(articles['articles_list'])
-                out = {'count': count, 'articles_list': remove(article_list)}
-            else:
-                articles = self.find_articles_by_location(locations)
-                out = {'count': articles['count'], 'articles_list': articles['articles_list']}
+                locations = [locations]
+            pipeline += [
+                {"$match": {
+                    "locations": {
+                        "$in": locations
+                    }
+                }}
+            ]
+        else:
+            pipeline += [
+                {"$match": {
+                    "locations": {
+                        "$exists": False
+                    }
+                }}
+            ]
+        pipeline += [
+            {"$addFields": {
+                "tags": {"$objectToArray": "$tags"}
+            }},
+            {"$unwind": "$tags"},
+            {"$unwind": "$tags.v"}
+            ]
+        if 'keywords' in params:
+            kw = params['keywords']
+            if not isinstance(kw, list):
+                kw = [kw]
+            pipeline += [
+                {"$match": {
+                    "tags.v.word": {
+                        "$in": kw
+                    }
+                }}
+            ]
+        if 'pers/org' in params:
+            porg = params['pers/org']
+            if not isinstance(porg, list):
+                porg = [porg]
+            pipeline += [
+                {"$match": {
+                    "tags.k": {
+                        "$in": ["person", "organization"]
+                    }
+                }},
+                {"$group": {
+                    "_id": "$_id",
+                    "tag_words": {
+                        "$push": {
+                            "tag_cat": "$tags.k",
+                            "tag_word": "$tags.v.word",
+                        }
+                    },
+                }},
+                {"$match": {"tag_words.tag_word": {"$all": porg}}},
+                {"$project": {"_id": 1}}
+            ]
+        articles = list(self.entity.aggregate(pipeline=pipeline, allowDiskUse=True))
+        out = {'count': len(articles), 'articles_list': articles}
         return out
 
     def tag_stat_by_articles_list(self, params):
@@ -459,9 +498,15 @@ class MongoConnection(object):
             raise EnvironmentError('Request must contain \'articles\' field and articles must be list type')
         tags = ['location', 'person', 'organization', 'money', 'percent', 'date', 'time']
         articles = params['articles']
+        ids = [ObjectId(_id) if not isinstance(_id, ObjectId) else _id for _id in articles]
         pipeline = [
             {"$addFields": {
                 "tags": {"$objectToArray": "$tags"}
+            }},
+            {'$match': {
+                '_id': {
+                    '$in': ids
+                }
             }},
             {"$unwind": "$tags"},
             {"$unwind": "$tags.v"},
@@ -475,10 +520,7 @@ class MongoConnection(object):
             {'$sort': {'count': -1}},
             {'$match': {
                 '_id.tag': {
-                    '$in': tags},
-                '_id': {
-                    '$in': articles
-                }
+                    '$in': tags}
             }},
             {"$group": {
                 "_id": "$_id.tag",
@@ -494,14 +536,15 @@ class MongoConnection(object):
 
         return list(self.entity.aggregate(pipeline, allowDiskUse=True))
 
-    def get_location_by_level(self, params):
-        locations = self.entity.find({'parent': None})
-        out = []
-        for loc in locations:
-            articles = self.find_articles_by_locations(loc['location'])
-            out.append({'count': articles['count'], 'article_list': articles['articles_list']})
+    def get_locations_by_level(self, params):
+        if 'location' not in params:
+            locations = list(self.location.find({'level': 0}))
+        else:
+            loc = self.location.find_one({'$id': params['location']})
+            locations = list(self.location.find({'parent': {'$in': [loc], 'level': loc['level'] - 1}}))
+        return locations
 
-# ***************************** ARTILES ******************************** #
+    # ***************************** ARTICLES ******************************** #
 
     def update_article_list_one_q(self, q, language, new_articles):
         new_articles_hash = new_articles.copy()

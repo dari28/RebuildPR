@@ -479,10 +479,7 @@ def aggregate_articles_by_locations(request):
     params = request.data
     mongodb = mongo.MongoConnection()
     articles = mongodb.aggregate_articles_by_locations(params=params)
-    if 'locations' not in params:
-        results = {'status': True, 'response': {'count': articles['count'], 'articles': articles['articles'], 'more': articles['more']}, 'error': {}}
-    else:
-        results = {'status': True, 'response': {'count': articles['count'], 'articles': articles['articles_list']}, 'error': {}}
+    results = {'status': True, 'response': articles, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
@@ -490,6 +487,6 @@ def aggregate_articles_by_locations(request):
 def tag_stat_by_articles_list(request):
     params = request.data
     mongodb = mongo.MongoConnection()
-    articles = mongodb.tag_stat_by_articles_list(params=params)
-    results = {'status': True, 'response': {'count': articles['count'], 'articles': articles['articles_list']}, 'error': {}}
+    tags = mongodb.tag_stat_by_articles_list(params=params)
+    results = {'status': True, 'response': tags, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
