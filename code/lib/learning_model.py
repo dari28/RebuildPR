@@ -11,6 +11,7 @@ from nlp.config import description_tag, STANFORD
 
 # import jnius
 import numpy as np
+from lib import nlp
 
 
 def union_res(result1, result2):
@@ -107,7 +108,9 @@ def get_tags(text, language="en"):
         result1['person'] = result1.pop('detects persons')
     if 'detects organizations' in result1:
         result1['organization'] = result1.pop('detects organizations')
-    return union_res(result1, result2)
+
+    result3 = nlp.parse_currency(text)
+    return union_res(union_res(result1, result2), result3)
 
 
 def add_article_locations(params):
