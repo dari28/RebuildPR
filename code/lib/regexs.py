@@ -80,7 +80,8 @@ r_short_scale = u'(million|billion|milliard|trillion|quadrillion|quintillion|sex
 r_float_with_word = u'({0}\s{1})'.format(r_float_only, r_short_scale)
 valuta_with_num = u'(({0}|{2})\s?{1})|({1}\s?({2}|{0}))'.format(number, r_valuta, r_float_with_word)  # Order sensitive
 sub_valuta_with_num = u'(({0}|{2})\s?{1})|({1}\s?({0}|{2}))'.format(nums_hundred, r_sub_valuta, r_float)
-currency_tags = re.compile(u'({0}((\s?and\s|\s)({1})?))|({1})'.format(valuta_with_num, sub_valuta_with_num))
+# currency_tags = re.compile(u'({0}((\s?and\s|\s)({1})?))|({1})'.format(valuta_with_num, sub_valuta_with_num))
+currency_tags = re.compile(u'(({0}(\sand)?(\s{1})?)|({1}))'.format(valuta_with_num, sub_valuta_with_num))
 # input_string = 'c 5three0-3six3-2six28 twon one eight mnine montwond'
 # numerals = [input_string[match.start(): match.end()] for match in en_cardinal_numerals.finditer(input_string)]
 # print(numerals)
