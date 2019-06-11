@@ -960,6 +960,7 @@ class MongoConnection(object):
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
         tag_list = ['location', 'person', 'organization', 'money', 'percent', 'date', 'time']
+        tag_list += ['money2']
         is_paginate = 'tag' in params
         tags = []
 

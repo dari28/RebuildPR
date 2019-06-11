@@ -115,7 +115,7 @@ def get_tags(text, language="en"):
     if is_money_regex_model_exist:
         result3 = nlp.parse_currency(text)
         if result3['money']:
-            result['MONEY'] = result3['money']
+            result['money2'] = result3['money']
 
     return result
 
