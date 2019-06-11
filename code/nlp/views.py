@@ -490,3 +490,12 @@ def tag_stat_by_articles_list(request):
     tags = mongodb.tag_stat_by_articles_list(params=params)
     results = {'status': True, 'response': tags, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def get_locations_by_level(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    locations = mongodb.get_locations_by_level(params=params)
+    results = {'status': True, 'response': locations, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)

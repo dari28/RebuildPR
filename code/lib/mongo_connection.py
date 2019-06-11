@@ -487,10 +487,25 @@ class MongoConnection(object):
                     },
                 }},
                 {"$match": {"tag_words.tag_word": {"$all": porg}}},
-                {"$project": {"_id": 1}}
+            ]
+        else:
+            pipeline += [
+                {"$group": {
+                    "_id": "$_id",
+                }},
+                ]
+        pipeline += [
+            {"$project": {"_id": 1}}
             ]
         articles = list(self.entity.aggregate(pipeline=pipeline, allowDiskUse=True))
-        out = {'count': len(articles), 'articles_list': articles}
+        articles_ids = []
+        [articles_ids.append(art['_id']) for art in articles]
+        tags_list = self.tag_stat_by_articles_list({'articles': articles_ids})
+        start = 0 if 'start' not in params else params['start']
+        length = 10 if 'length' not in params else params['length']
+        count = len(articles)
+        more = True if count > length else False
+        out = {'count': count, 'articles_list': articles[start: start + length], 'more': more, 'tags_list': tags_list}
         return out
 
     def tag_stat_by_articles_list(self, params):
@@ -510,38 +525,40 @@ class MongoConnection(object):
             }},
             {"$unwind": "$tags"},
             {"$unwind": "$tags.v"},
+            {'$match': {
+                'tags.k': {
+                    '$in': tags}
+            }},
             {"$group": {
                 "_id": {
-                    "tag": "$tags.k",
-                    "phrase": "$tags.v.word"
+                    # "tag": "$tags.k",
+                    "phrase": "$tags.v.word",
+                    "count": "$count"
                 },
                 "count": {"$sum": 1}
             }},
             {'$sort': {'count': -1}},
-            {'$match': {
-                '_id.tag': {
-                    '$in': tags}
-            }},
-            {"$group": {
-                "_id": "$_id.tag",
-                "tag_list": {
-                    "$push": {
-                        "count": "$count",
-                        "phrase": "$_id.phrase"
-                    }
-                }
-            }},
-            {'$project': {'tag': '$_id', 'tag_list': 1, '_id': 0}},
+            {'$project': {'tag': '$_id.phrase', 'count': 1, '_id': 0}},
         ]
 
         return list(self.entity.aggregate(pipeline, allowDiskUse=True))
 
     def get_locations_by_level(self, params):
         if 'location' not in params:
-            locations = list(self.location.find({'level': 0}))
+            locations = list(self.location.aggregate([
+                {"$match": {'level': 0}},
+                {"$group": {"_id": "$_id"}},
+                {"$project": {'_id': 1}}
+            ]))
         else:
-            loc = self.location.find_one({'$id': params['location']})
-            locations = list(self.location.find({'parent': {'$in': [loc], 'level': loc['level'] - 1}}))
+            location = params['location']
+            loc_id = ObjectId(location) if not isinstance(location, ObjectId) else location
+            loc = self.location.find_one({'_id': loc_id})
+            locations = list(self.location.aggregate([
+                {"$match": {'parents': {'$in': [loc_id]}, 'level': loc['level'] + 1, }},
+                {"$group": {"_id": "$_id"}},
+                {"$project": {'_id': 1}}
+            ]))
         return locations
 
     # ***************************** ARTICLES ******************************** #

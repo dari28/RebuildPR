@@ -50,6 +50,7 @@ urlpatterns = [
     url(r'^get_geoposition/?$', views.get_geoposition),
     url(r'^aggregate_articles_by_locations/?$', views.aggregate_articles_by_locations),
     url(r'^tag_stat_by_articles_list/?$', views.tag_stat_by_articles_list),
+    url(r'^get_locations_by_level/?$', views.get_locations_by_level),
 
     url(r'^predict_entity/?$', views.predict_entity),
     url(r'^parse_currency/?$', views.parse_currency),
