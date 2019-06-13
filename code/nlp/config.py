@@ -3,8 +3,8 @@ POLIGLOT = dict(
 )
 
 STANFORD = dict(
-    languages=['en', 'zh', 'de', 'es', 'fr', 'ar'],
-    # languages=['en'],
+    # languages=['en', 'zh', 'de', 'es', 'fr', 'ar'],
+    languages=['en'],
     # # languages=[],
     crf_english_3class='../stanford_corenlp/classifiers/english.all.3class.distsim.crf.ser.gz',
     crf_english_4class='../stanford_corenlp/classifiers/english.conll.4class.distsim.crf.ser.gz',
@@ -198,7 +198,8 @@ description_tag = {
 
 SERVER = dict(
     # language=['en', 'ru', 'de']
-    language=['en', 'ru']
+    # language=['en', 'ru']
+    language=['en']
     # language=['pms', 'lmo', 'gan', 'scn', 'sco', 'ky', 'ps', 'ku', 'pt', 'kn', 'ko', 'km', 'kk', 'ilo', 'pl', 'pa',
     #          'ka', 'cv', 'als', 'cs', 'cy', 'ce', 'ca', 'se', 'sa', 'sl', 'jv', 'sk', 'sh', 'bar', 'sv', 'sw', 'su',
     #          'sr', 'sq', 'ja', 'fy', 'fr', 'fi', 'hsb', 'fo', 'fa', 'si', 'it', 'am', 'an', 'vo', 'is', 'sah', 'af',

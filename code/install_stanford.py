@@ -9,7 +9,7 @@ from lib.mongo_connection import MongoConnection
 # from install_tts_models import install_tts
 #
 from lib import stanford_module as stanford
-from nlp.config import description_tag, STANFORD, stanford_models
+from nlp.config import description_tag, STANFORD, stanford_models, SERVER
 from lib import tools
 import jnius
 
@@ -22,8 +22,7 @@ def add_standford_default():
     count_tag = {}
     step_tag = {}
     for model in stanford_models:
-        #if model['language'] in SERVER['language']:
-        if True:
+        if model['language'] in SERVER['language']:
             if model['language'] not in count_tag:
                 count_tag[model['language']] = {}
                 step_tag[model['language']] = {}
@@ -33,10 +32,8 @@ def add_standford_default():
                     step_tag[model['language']][tag] = 0
                 count_tag[model['language']][tag] += 1
 
-
     for model in stanford_models:
-        #if model['language'] in SERVER['language']:
-        if True:
+        if model['language'] in SERVER['language']:
             for tag in model['tags']:
                 entity = {
                     #'user': DEFAULT_USER[model['language']],
