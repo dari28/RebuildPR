@@ -563,6 +563,34 @@ class MongoConnection(object):
 
     # ***************************** ARTICLES ******************************** #
 
+    def fix_article_content(self):
+        # articles_without_content_fix = self.article.find({'original_content': {'$exists': False}})
+        all_articles = self.article.find()
+        for article in all_articles:
+            try:
+                if 'content' not in article or not article['content']:
+                    self.article.delete_one({'_id': article['_id']})
+                    continue
+                if 'original_content' in article:
+                    content = article['original_content']
+                else:
+                    content = article['content']
+                    article['original_content'] = content
+                content = re.sub(r'\[\+(\d)+ \w+\]$', '', content)  # remove [+657 chars] at the end
+                content = re.sub(r'\w+… ?$', '', content)  # remove end characters with ...
+                content = re.sub(r'… ?$', '', content)  # remove end ...
+                content = re.sub('[\r\n\t\f]+', ' ', content)  # change spec symbols to one space
+                content = re.sub('[—-]+', '-', content)  # change hyphen to normal hyphen
+                content = re.sub('[”“]', '"', content)  # change quotes to normal quotes
+                content = re.sub('[ ]{2, }', ' ', content)  # change 2+ spaces to one space
+
+                article['content'] = content
+                self.article.update_one({'_id': article['_id']}, {'$set': {'content': article['content'], 'original_content': article['original_content']}})
+            except Exception as ex:
+                print(ex)
+                print('Error in article {}'.format(article['_id']))
+                pass
+
     def update_article_list_one_q(self, q, language, new_articles):
         new_articles_hash = new_articles.copy()
         new_hash_list = []

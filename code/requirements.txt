@@ -16,10 +16,10 @@ ijson
 numpy==1.9.2
 pandas==0.16.0
 html5lib
-Django
-django-background-tasks
-django-compat
-djangorestframework
+Django==1.11.20
+django-background-tasks==1.1.11
+django-compat==1.0.14
+djangorestframework==3.6.4
 freeze
 futures
 iso-639
@@ -40,4 +40,3 @@ beautifulsoup4
 urllib3
 unicode
 geopy
-num2words

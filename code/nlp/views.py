@@ -79,6 +79,16 @@ def train_on_default_list(request):
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
+# *******************************FIX*********************************** #
+@api_view(['POST'])
+def fix_article_content(request):
+    # params = request.data
+    mongodb = mongo.MongoConnection()
+    mongodb.fix_article_content()
+    results = {'status': True, 'response': {}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
 # ***************************** SOURCES ******************************** #
 
 

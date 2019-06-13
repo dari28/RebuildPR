@@ -66,6 +66,8 @@ urlpatterns = [
     url(r'^fill_up_geolocation/?$', views.fill_up_geolocation),
     url(r'^train_on_default_list/?$', views.train_on_default_list),
     url(r'^get_tags_from_untrained_articles/?$', views.get_tags_from_untrained_articles),
+
+    url(r'^fix_article_content/?$', views.fix_article_content),
 ]
 
 execution_at_startup()
