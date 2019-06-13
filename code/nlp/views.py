@@ -49,7 +49,8 @@ def update_source_list_from_server(request):
 @api_view(['POST'])
 def get_tags_from_article(request):
     params = request.data
-    tasks.get_tags_from_article(params=params)
+    if not Task.objects.filter(verbose_name="get_tags_from_article").exists():
+        tasks.get_tags_from_article(params=params, verbose_name="get_tags_from_article")
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -58,7 +59,8 @@ def get_tags_from_article(request):
 
 @api_view(['POST'])
 def get_tags_from_untrained_articles(request):
-    tasks.get_tags_from_untrained_articles()
+    if not Task.objects.filter(verbose_name="get_tags_from_untrained_articles").exists():
+        tasks.get_tags_from_untrained_articles(verbose_name="get_tags_from_untrained_articles")
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -67,7 +69,8 @@ def get_tags_from_untrained_articles(request):
 
 @api_view(['POST'])
 def get_tags_from_all_articles(request):
-    tasks.get_tags_from_all_articles()
+    if not Task.objects.filter(verbose_name="get_tags_from_all_articles").exists():
+        tasks.get_tags_from_all_articles(verbose_name="get_tags_from_all_articles")
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -75,7 +78,8 @@ def get_tags_from_all_articles(request):
 @api_view(['POST'])
 def train_on_default_list(request):
     params = request.data
-    tasks.train_on_default_list(params=params)
+    if not Task.objects.filter(verbose_name="train_on_default_list").exists():
+        tasks.train_on_default_list(params=params, verbose_name="train_on_default_list")
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 

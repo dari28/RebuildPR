@@ -154,12 +154,14 @@ def get_tags_from_article(params):
 
     if 'content' in article and article['content']:
         tags = get_tags(article['content'], language)
-    elif 'description' in article and article['description']:
-        tags = get_tags(article['description'], language)
-    elif 'title' in article and article['title']:
-        tags = get_tags(article['title'], language)
+    # elif 'description' in article and article['description']:
+    #     tags = get_tags(article['description'], language)
+    # elif 'title' in article and article['title']:
+    #     tags = get_tags(article['title'], language)
+    # else:
+    #     tags = []
     else:
-        tags = []
+        return None
 
     inserted_id = mongodb.entity.insert_one(
         {
