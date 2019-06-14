@@ -151,7 +151,8 @@ class Text(BaseBlob):
                     if i + 2 < len(tokens):
                         if tokens[i+1] == '-' and tokens[i+2] not in string.punctuation:
                             hyphen_word += tokens[i] + tokens[i + 1] + tokens[i+2]
-                            i+=3
+                            # i+=3  # SIDE delete error [list out bound]
+                            i += 1  # SIDE ADD
                             if tokens[i] != '-':
                                 break
                 else:
