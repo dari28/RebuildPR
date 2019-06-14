@@ -567,10 +567,10 @@ class MongoConnection(object):
         content = re.sub(r'\w+… ?$', '', content)  # remove end characters with ...
         content = re.sub(r'… ?$', '', content)  # remove end ...
         content = re.sub('[\r\n\t\f\v]+', ' ', content)  # change spec symbols to one space
-        content = re.sub('[—-]+', '-', content)  # change hyphen to normal hyphen
+        content = re.sub('[-—\-]+', '-', content)  # change hyphen to normal hyphen
         content = re.sub(' - ', ' ', content)  # change hyphen to normal hyphen
-        content = re.sub('[”“]', '"', content)  # change double-quotes to normal double-quotes
-        content = re.sub('[‘’]', "'", content)  # change single-quotes to normal single-quotes
+        content = re.sub('[”“]', '', content)  # change double-quotes to normal double-quotes
+        content = re.sub("[‘’]", "'", content)  # change single-quotes to normal single-quotes
         content = re.sub('[ ]{2,}', ' ', content)  # change 2+ spaces to one space
         return content
 
