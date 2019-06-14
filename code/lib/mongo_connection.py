@@ -566,6 +566,7 @@ class MongoConnection(object):
         content = re.sub(r'\[\+(\d)+ \w+\]$', '', content)  # remove [+657 chars] at the end
         content = re.sub(r'\w+… ?$', '', content)  # remove end characters with ...
         content = re.sub(r'… ?$', '', content)  # remove end ...
+        content = re.sub(r'�', '', content)  # remove �
         content = re.sub('[\r\n\t\f\v]+', ' ', content)  # change spec symbols to one space
         content = re.sub('[-—\-]+', '-', content)  # change hyphen to normal hyphen
         content = re.sub(' - ', ' ', content)  # change hyphen to normal hyphen
