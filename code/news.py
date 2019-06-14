@@ -103,6 +103,7 @@ class NewsCollection:
             if status == 'ok':
                 articles = json["articles"]
                 total_results = json["totalResults"]
+                articles = [article for article in articles if article['content']]  # Add checking for empty content
             # else:
             #     error = json["message"]
         except Exception as ex:

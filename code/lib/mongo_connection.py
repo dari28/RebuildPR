@@ -562,6 +562,16 @@ class MongoConnection(object):
         return locations
 
     # ***************************** ARTICLES ******************************** #
+    def delete_trash_from_article_content(self, content):
+        content = re.sub(r'\[\+(\d)+ \w+\]$', '', content)  # remove [+657 chars] at the end
+        content = re.sub(r'\w+… ?$', '', content)  # remove end characters with ...
+        content = re.sub(r'… ?$', '', content)  # remove end ...
+        content = re.sub('[\r\n\t\f\v]+', ' ', content)  # change spec symbols to one space
+        content = re.sub('[—-]+', '-', content)  # change hyphen to normal hyphen
+        content = re.sub('[”“]', '"', content)  # change double-quotes to normal double-quotes
+        content = re.sub('[‘’]', "'", content)  # change single-quotes to normal single-quotes
+        content = re.sub('[ ]{2,}', ' ', content)  # change 2+ spaces to one space
+        return content
 
     def fix_article_content(self):
         # articles_without_content_fix = self.article.find({'original_content': {'$exists': False}})
@@ -576,15 +586,8 @@ class MongoConnection(object):
                 else:
                     content = article['content']
                     article['original_content'] = content
-                content = re.sub(r'\[\+(\d)+ \w+\]$', '', content)  # remove [+657 chars] at the end
-                content = re.sub(r'\w+… ?$', '', content)  # remove end characters with ...
-                content = re.sub(r'… ?$', '', content)  # remove end ...
-                content = re.sub('[\r\n\t\f\v]+', ' ', content)  # change spec symbols to one space
-                content = re.sub('[—-]+', '-', content)  # change hyphen to normal hyphen
-                content = re.sub('[”“]', '"', content)  # change double-quotes to normal double-quotes
-                content = re.sub('[‘’]', "'", content)  # change single-quotes to normal single-quotes
-                content = re.sub('[ ]{2,}', ' ', content)  # change 2+ spaces to one space
 
+                content = self.delete_trash_from_article_content(content)
                 article['content'] = content
                 self.article.update_one({'_id': article['_id']}, {'$set': {'content': article['content'], 'original_content': article['original_content']}})
             except Exception as ex:
@@ -600,6 +603,8 @@ class MongoConnection(object):
             hasher.update(json.dumps(ns).encode('utf-8'))
             ns['hash'] = hasher.hexdigest()
             new_hash_list.append(ns['hash'])
+            ns['original_content'] = ns['content']
+            ns['content'] = self.delete_trash_from_article_content(ns['content'])
 
         old_articles = self.article.find()
         old_sources_hashes = [x['hash'] for x in old_articles]
@@ -757,7 +762,7 @@ class MongoConnection(object):
             except (errors.InvalidId, TypeError):
                 raise EnvironmentError('\'_id\' field is not a valid ObjectId, it must be a 12-byte input or a 24-character hex string')
 
-        article = self.article.find_one({'_id': _id, 'content': {'$ne': None}}, {'source': 0, 'urlToImage': 0, 'hash': 0})
+        article = self.article.find_one({'_id': _id, 'content': {'$ne': None}}, {'source': 0, 'urlToImage': 0, 'hash': 0, 'original_content': 0})
         if not article:
             raise EnvironmentError('Article with \'_id\' {} does not exist or has empty content'.format(_id))
 
