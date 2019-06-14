@@ -579,10 +579,10 @@ class MongoConnection(object):
                 content = re.sub(r'\[\+(\d)+ \w+\]$', '', content)  # remove [+657 chars] at the end
                 content = re.sub(r'\w+… ?$', '', content)  # remove end characters with ...
                 content = re.sub(r'… ?$', '', content)  # remove end ...
-                content = re.sub('[\r\n\t\f]+', ' ', content)  # change spec symbols to one space
+                content = re.sub('[\r\n\t\f\v]+', ' ', content)  # change spec symbols to one space
                 content = re.sub('[—-]+', '-', content)  # change hyphen to normal hyphen
                 content = re.sub('[”“]', '"', content)  # change quotes to normal quotes
-                content = re.sub('[ ]{2, }', ' ', content)  # change 2+ spaces to one space
+                content = re.sub('[ ]{2,}', ' ', content)  # change 2+ spaces to one space
 
                 article['content'] = content
                 self.article.update_one({'_id': article['_id']}, {'$set': {'content': article['content'], 'original_content': article['original_content']}})
@@ -766,7 +766,10 @@ class MongoConnection(object):
                 article[field] = "<undefined>"
         if article:
             tags = self.entity.find_one({'article_id': _id})
-            article['tags'] = tags['tags']
+            if tags:
+                article['tags'] = tags['tags']
+            else:
+                article['tags'] = None
             return article
         else:
             raise EnvironmentError('No article with \'_id\' {}'.format(_id))
