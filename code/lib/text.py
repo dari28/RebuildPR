@@ -142,35 +142,48 @@ class Text(BaseBlob):
 
         fix_hyphen = []
         i = 0
+        # SIDE DELETE
+        # while i < len(tokens):
+        #     hyphen_word = ''
+        #     while i + 3 < len(tokens) and tokens[i+1] == '-' and tokens[i+2] not in string.punctuation:
+        #         if tokens[i+3] == '-':
+        #             hyphen_word += tokens[i] + tokens[i+1]
+        #             i += 2
+        #             if i + 2 < len(tokens):
+        #                 if tokens[i+1] == '-' and tokens[i+2] not in string.punctuation:
+        #                     hyphen_word += tokens[i] + tokens[i + 1] + tokens[i+2]
+        #                     # i+=3  # SIDE delete error [list out bound]
+        #                     i += 1  # SIDE ADD
+        #                     if tokens[i] != '-':
+        #                         break
+        #         else:
+        #             hyphen_word += tokens[i] + tokens[i + 1] + tokens[i + 2]
+        #             i += 3
+        #             if tokens[i] != '-':
+        #                 break
+        #     if hyphen_word:
+        #         fix_hyphen.append(hyphen_word)
+        #         continue
+        #     else:
+        #         if i + 2 < len(tokens):
+        #             if tokens[i] not in string.punctuation and tokens[i+1] == '-' and tokens[i+2] not in string.punctuation:
+        #                     fix_hyphen.append(tokens[i]+tokens[i+1]+tokens[i+2])
+        #                     i += 3
+        #                     continue
+        #     fix_hyphen.append(tokens[i])
+        #     i+=1
+
+        # SIDE ADD
         while i < len(tokens):
             hyphen_word = ''
-            while i + 3 < len(tokens) and tokens[i+1] == '-' and tokens[i+2] not in string.punctuation:
-                if tokens[i+3] == '-':
-                    hyphen_word += tokens[i] + tokens[i+1]
-                    i += 2
-                    if i + 2 < len(tokens):
-                        if tokens[i+1] == '-' and tokens[i+2] not in string.punctuation:
-                            hyphen_word += tokens[i] + tokens[i + 1] + tokens[i+2]
-                            # i+=3  # SIDE delete error [list out bound]
-                            i += 1  # SIDE ADD
-                            if tokens[i] != '-':
-                                break
-                else:
-                    hyphen_word += tokens[i] + tokens[i + 1] + tokens[i + 2]
-                    i += 3
-                    if tokens[i] != '-':
-                        break
+            if fix_hyphen and tokens[i] == '-' and i+1 < len(tokens) and tokens[i+1] not in string.punctuation:
+                hyphen_word = tokens[i] + tokens[i+1]
             if hyphen_word:
-                fix_hyphen.append(hyphen_word)
-                continue
+                fix_hyphen[-1] = fix_hyphen[-1] + hyphen_word
+                i += 1
             else:
-                if i + 2 < len(tokens):
-                    if tokens[i] not in string.punctuation and tokens[i+1] == '-' and tokens[i+2] not in string.punctuation:
-                            fix_hyphen.append(tokens[i]+tokens[i+1]+tokens[i+2])
-                            i += 3
-                            continue
-            fix_hyphen.append(tokens[i])
-            i+=1
+                fix_hyphen.append(tokens[i])
+            i += 1
 
         if self.split_apostrophe:
             fix_apostrophe = []
