@@ -192,11 +192,15 @@ def get_tags_from_untrained_articles():
     mongodb = MongoConnection()
 
     article_ids = [x['_id'] for x in mongodb.article.find()]
-    trained_article_ids = [ObjectId(x['article_id']) for x in mongodb.entity.find({'trained': True})]
+    trained_article_ids = [x['article_id'] for x in mongodb.entity.find({'trained': True})]
     untrained_ids = list(set(article_ids)-set(trained_article_ids))
 
     for article_id in untrained_ids:
-        get_tags_from_article({'article_id': article_id})
+        try:
+            get_tags_from_article({'article_id': article_id})
+        except Exception as ex:
+            print(ex)
+            print(article_id)
 
     return untrained_ids
 
