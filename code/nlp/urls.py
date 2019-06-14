@@ -20,19 +20,14 @@ urlpatterns = [
     url(r'^get_article_language_list/?$', views.get_article_language_list),
 
     url(r'^show_article_list/?$', views.show_article_list),
-    url(r'^show_country_list/?$', views.show_country_list),
-    url(r'^show_state_list/?$', views.show_state_list),
-    url(r'^show_pr_city_list/?$', views.show_pr_city_list),
     url(r'^show_trained_article_list/?$', views.show_trained_article_list),
 
     url(r'^get_source_list/?$', views.get_source_list),
-
 
     url(r'^get_article_list/?$', views.get_article_list),
     url(r'^get_article_list_by_tag/?$', views.get_article_list_by_tag),
     url(r'^get_article_by_id/?$', views.get_article_by_id),
     url(r'^remove_dubles_articles/?$', views.remove_dubles_articles),
-
 
     url(r'^get_tag_list/?$', views.get_tag_list),
 

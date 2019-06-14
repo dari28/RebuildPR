@@ -15,6 +15,8 @@ countries = {
 
 languages = {'ar', 'en', 'cn', 'de', 'es', 'fr', 'he', 'it', 'nl', 'no', 'pt', 'ru', 'sv', 'ud'}
 
+# languages_dict = {'ar': 'arabian', 'en': 'english', 'cn': , 'de', 'es', 'fr', 'he', 'it', 'nl', 'no', 'pt', 'ru', 'sv', 'ud'}
+
 categories = {'business', 'entertainment', 'general', 'health', 'science', 'sports', 'technology'}
 
 sort_method = {'relevancy', 'popularity', 'publishedAt'}

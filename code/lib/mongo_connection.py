@@ -568,6 +568,7 @@ class MongoConnection(object):
         content = re.sub(r'… ?$', '', content)  # remove end ...
         content = re.sub('[\r\n\t\f\v]+', ' ', content)  # change spec symbols to one space
         content = re.sub('[—-]+', '-', content)  # change hyphen to normal hyphen
+        content = re.sub(' - ', ' ', content)  # change hyphen to normal hyphen
         content = re.sub('[”“]', '"', content)  # change double-quotes to normal double-quotes
         content = re.sub('[‘’]', "'", content)  # change single-quotes to normal single-quotes
         content = re.sub('[ ]{2,}', ' ', content)  # change 2+ spaces to one space
@@ -1057,27 +1058,6 @@ class MongoConnection(object):
             raise EnvironmentError('Request must contain \'code\' field')
         language = self.language.find_one({'code': params['code']})
         return language
-
-    def show_country_list(self, params):
-        start = 0 if 'start' not in params else params['start']
-        length = 10 if 'length' not in params else params['length']
-        c_list = list(self.country.find().skip(start).limit(length + 1))
-        more = True if len(c_list) > length else False
-        return c_list[:length], more
-
-    def show_state_list(self, params):
-        start = 0 if 'start' not in params else params['start']
-        length = 10 if 'length' not in params else params['length']
-        s_list = list(self.state.find().skip(start).limit(length + 1))
-        more = True if len(s_list) > length else False
-        return s_list[:length], more
-
-    def show_pr_city_list(self, params):
-        start = 0 if 'start' not in params else params['start']
-        length = 10 if 'length' not in params else params['length']
-        pr_list = list(self.pr_city.find().skip(start).limit(length + 1))
-        more = True if len(pr_list) > length else False
-        return pr_list[:length], more
 
     def show_trained_article_list(self, params):
         search_param = dict()
