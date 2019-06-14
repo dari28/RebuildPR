@@ -234,10 +234,10 @@ class MongoConnection(object):
         return sources[:length], more
 
     def load_iso(self):
-        with open(tools.get_abs_path('../data/iso639-3.json'), 'r') as f:
+        with open(tools.get_abs_path('../data/iso639-3.json'), 'r', encoding="utf-8") as f:
             tree = json.load(f)
         self.iso639.insert(tree['639-3'])
-        with open(tools.get_abs_path('../data/iso3166-1.json'), 'r') as f:
+        with open(tools.get_abs_path('../data/iso3166-1.json'), 'r', encoding="utf-8") as f:
             tree = json.load(f)
         self.iso3166.insert(tree['3166-1'])
 
