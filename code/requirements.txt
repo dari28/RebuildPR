@@ -34,7 +34,6 @@ pytz
 six
 pattern==3.6
 requests
-pycountry==16.11.27
 pyinstrument
 beautifulsoup4
 urllib3

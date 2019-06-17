@@ -1,7 +1,7 @@
 """"Connection class to mongoDB"""
 
+from news import languages_dict
 import pymongo
-import pycountry
 from bson import ObjectId, errors
 from news import NewsCollection
 from nlp.config import MONGO  # , TYPE_WITHOUT_FILE, SEND_POST_URL, ADMIN_USER, DEFAULT_USER
@@ -11,10 +11,8 @@ import re
 import requests
 from bs4 import BeautifulSoup
 import geoposition as geo
-from collections import Counter
 from lib import tools
 import time
-import random
 from geopy.geocoders import Nominatim
 import operator
 
@@ -195,18 +193,7 @@ class MongoConnection(object):
         self.units = self.mongo_db[config['units_collection']]
 
     def get_article_language_list(self):
-        language_list = []
-        for source in self.source.find({'deleted': False}):
-            language_list.append(source['language'])
-        language_list = list(set(language_list))
-        dict_language_list = []
-        for lang in language_list:
-            try:
-                language = pycountry.languages.get(alpha_2=lang)
-            except Exception:
-                language = None
-            dict_language_list.append({'code': lang, 'description': language.name if language else "Unknown language"})
-        return dict_language_list
+        return [{'code': k, 'name': v} for k, v in languages_dict.items()]
 
     def get_sources(self, params):
         ''' parameters may be list or str '''
