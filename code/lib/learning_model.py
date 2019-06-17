@@ -317,9 +317,11 @@ def predict_entity_polyglot(entities, data, language=None):
         pass
 
     # if 'case_sensitive' in entity['model_settings'] and not entity['model_settings']['case_sensitive']:
-    for entity in entities:
-        if entity['model_settings']['tag'] in ['negative_word', 'positive_word']:
-            data = data.lower()
+
+    # Side change/ Try to fix problem with more words in output
+    # for entity in entities:
+    #     if entity['model_settings']['tag'] in ['negative_word', 'positive_word']:
+    #         data = data.lower()
 
     data_predict, back_map = tools.adaptiv_remove_tab(data)
 
