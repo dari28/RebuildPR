@@ -203,8 +203,7 @@ class MongoConnection(object):
         for lang in language_list:
             try:
                 language = pycountry.languages.get(alpha_2=lang)
-            except:
-                Exception
+            except Exception:
                 language = None
             dict_language_list.append({'code': lang, 'description': language.name if language else "Unknown language"})
         return dict_language_list
