@@ -259,7 +259,7 @@ def predict_entity(set_entity=None, data=None, language='en'):
     set_entity = [entity['_id'] if isinstance(entity, dict) else entity for entity in set_entity]
     set_entity = [entity if isinstance(entity, ObjectId) else ObjectId(entity) for entity in set_entity]
     mongo = MongoConnection()
-    many_entity = list(mongo.entity.find({'_id': {'$in': set_entity}}))
+    many_entity = list(mongo.default_entity.find({'_id': {'$in': set_entity}}))
     if len(many_entity) != len(set_entity):
         exists_entity = [entity['_id'] for entity in many_entity]
         diff_entity = set(set_entity) - set(exists_entity)
@@ -292,7 +292,7 @@ def predict_entity(set_entity=None, data=None, language='en'):
             if type_model not in model_entity_predict:
                 raise EnvironmentError('Entity type {0} unsupported'.format(type_model))
             results_document.update(model_entity_predict[type_model](entities=dict_entity[type_model],
-                                                                          data=document, language=language))
+                                                                     data=document, language=language))
         results_list = []
         for key in results_document:
             # matches = tools.sample_update_matches(back_map, document, results_document[key])

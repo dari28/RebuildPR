@@ -373,10 +373,10 @@ def get_location_by_level(request):
 
 
 @api_view(['POST'])
-def show_trained_article_list(request):
+def show_tagged_article_list(request):
     params = request.data
     mongodb = mongo.MongoConnection()
-    articles, trained, untrained, more = mongodb.show_trained_article_list(params=params)
+    articles, trained, untrained, more = mongodb.show_tagged_article_list(params=params)
     results = {'status': True, 'response': {'trained count': trained, 'untrained count': untrained, 'trained articles': articles, 'more': more}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 

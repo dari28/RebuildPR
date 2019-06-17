@@ -201,7 +201,11 @@ class MongoConnection(object):
         language_list = list(set(language_list))
         dict_language_list = []
         for lang in language_list:
-            language = pycountry.languages.get(alpha_2=lang)
+            try:
+                language = pycountry.languages.get(alpha_2=lang)
+            except:
+                Exception
+                language = None
             dict_language_list.append({'code': lang, 'description': language.name if language else "Unknown language"})
         return dict_language_list
 
@@ -970,7 +974,7 @@ class MongoConnection(object):
         query = dict()
         query_list = []
         for tag in tags.keys():
-            query_list.append({'tags.{0}.word'.format(tag): tags.get(tag)})
+            query_list.append({'tags.{0}.word'.format(tag): tags.get(tag).lower()})
         query['$or'] = query_list
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
@@ -1060,14 +1064,14 @@ class MongoConnection(object):
         language = self.language.find_one({'code': params['code']})
         return language
 
-    def show_trained_article_list(self, params):
+    def show_tagged_article_list(self, params):
         search_param = dict()
-        status = 'trained' if 'status' not in params else params['status']
+        status = 'tagged' if 'status' not in params else params['status']
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
         trained = self.entity.count({'trained': True})
         untrained = self.entity.count({'trained': False})
-        search_param['trained'] = True if status == 'trained' else False
+        search_param['trained'] = True if status == 'tagged' else False
         articles = list(self.entity.find(search_param).skip(start).limit(length + 1))
         more = True if len(articles) > length else False
         return articles[:length], trained, untrained, more
