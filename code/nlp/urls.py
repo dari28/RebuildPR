@@ -17,8 +17,6 @@ urlpatterns = [
     url(r'^show_language_list/?$', views.show_language_list),
     url(r'^get_language/?$', views.get_language),
 
-    url(r'^get_article_language_list/?$', views.get_article_language_list),
-
     url(r'^show_article_list/?$', views.show_article_list),
     url(r'^show_tagged_article_list/?$', views.show_tagged_article_list),
 

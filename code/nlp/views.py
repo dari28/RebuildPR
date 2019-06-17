@@ -138,14 +138,6 @@ def get_article_list_by_tag(request):
 
 
 @api_view(['POST'])
-def get_article_language_list(request):
-    mongodb = mongo.MongoConnection()
-    languages = mongodb.get_article_language_list()
-    results = {'status': True, 'response': {'languages': languages}, 'error': {}}
-    return JsonResponse(results, encoder=JSONEncoderHttp)
-
-
-@api_view(['POST'])
 def get_article_by_id(request):
     params = request.data
     mongodb = mongo.MongoConnection()
@@ -355,10 +347,9 @@ def tag_stat(request):
 
 @api_view(['POST'])
 def show_language_list(request):
-    params = request.data
     mongodb = mongo.MongoConnection()
-    response, more = mongodb.show_language_list(params=params)
-    results = {'status': True, 'response': {'language': response, 'more': more}, 'error': {}}
+    language = mongodb.show_language_list()
+    results = {'status': True, 'response': {'language': language}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 

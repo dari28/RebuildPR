@@ -192,9 +192,6 @@ class MongoConnection(object):
         self.geopy_requests = self.mongo_db[config['geopy_requests_collection']]
         self.units = self.mongo_db[config['units_collection']]
 
-    def get_article_language_list(self):
-        return [{'code': k, 'name': v} for k, v in languages_dict.items()]
-
     def get_sources(self, params):
         ''' parameters may be list or str '''
         search_param = dict()
@@ -1041,12 +1038,9 @@ class MongoConnection(object):
             ]
         return list(self.entity.aggregate(pipeline, allowDiskUse=True))
 
-    def show_language_list(self, params):
-        start = 0 if 'start' not in params else params['start']
-        length = 10 if 'length' not in params else params['length']
-        l_list = list(self.language.find().skip(start).limit(length + 1))
-        more = True if len(l_list) > length else False
-        return l_list[:length], more
+    def show_language_list(self):
+        l_list = [{'code': k, 'name': v} for k, v in languages_dict.items()]
+        return l_list
 
     def get_language(self, params):
         if 'code' not in params:
