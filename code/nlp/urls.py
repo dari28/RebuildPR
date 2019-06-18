@@ -34,6 +34,7 @@ urlpatterns = [
     url(r'^get_phrase_list/?$', views.get_phrase_list),
     url(r'^update_phrase_list/?$', views.update_phrase_list),
     url(r'^add_phrase_list/?$', views.add_phrase_list),
+    
     url(r'^delete_phrase_list/?$', views.delete_phrase_list),
     url(r'^delete_permanent_phrase_list/?$', views.delete_permanent_phrase_list),
 
