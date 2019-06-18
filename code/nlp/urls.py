@@ -56,10 +56,14 @@ urlpatterns = [
     url(r'^update_country_list/?$', views.update_country_list),
     url(r'^update_state_list/?$', views.update_state_list),
     url(r'^update_pr_city_list/?$', views.update_pr_city_list),
-    url(r'^fill_up_geolocation/?$', views.fill_up_geolocation),
     url(r'^train_on_default_list/?$', views.train_on_default_list),
     url(r'^get_tags_from_untrained_articles/?$', views.get_tags_from_untrained_articles),
+    url(r'^add_locations_to_untrained_articles/?$', views.add_locations_to_untrained_articles),
+    url(r'^fill_up_geolocation/?$', views.fill_up_geolocation),
 
+
+
+    # Fixes
     url(r'^fix_article_content/?$', views.fix_article_content),
 ]
 

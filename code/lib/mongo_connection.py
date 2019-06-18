@@ -554,6 +554,13 @@ class MongoConnection(object):
         content = re.sub(r'\w+… ?$', '', content)  # remove end characters with ...
         content = re.sub(r'… ?$', '', content)  # remove end ...
         content = re.sub(r'�', '', content)  # remove �
+        content = re.sub(r'www\.\S+', '', content)  # remove url1
+        content = re.sub(r'http:\/\/\S+', '', content)  # remove url2
+        content = re.sub('[→]+', '', content)  # remove strange symbols
+
+        content = re.sub('Click here to join', '', content)  # remove links
+        content = re.sub('Click here', '', content)  # remove links
+
         content = re.sub('[\r\n\t\f\v]+', ' ', content)  # change spec symbols to one space
         content = re.sub('[-—\-]+', '-', content)  # change hyphen to normal hyphen
         content = re.sub(' - ', ' ', content)  # change hyphen to normal hyphen

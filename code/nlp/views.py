@@ -311,6 +311,13 @@ def update_pr_city_list(request):
 
 
 @api_view(['POST'])
+def add_locations_to_untrained_articles(request):
+    model.add_locations_to_untrained_articles()
+    results = {'status': True, 'response': {}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
 def show_article_list(request):
     params = request.data
     mongodb = mongo.MongoConnection()
