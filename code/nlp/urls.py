@@ -3,6 +3,7 @@ from nlp import views
 from lib.server_tuning import execution_at_startup
 
 urlpatterns = [
+    # TEST
     url(r'^test_work/?$', views.test_work),
     url(r'^test_exception_work/?$', views.test_exception_work),
 
@@ -25,7 +26,6 @@ urlpatterns = [
     url(r'^get_article_list/?$', views.get_article_list),
     url(r'^get_article_list_by_tag/?$', views.get_article_list_by_tag),
     url(r'^get_article_by_id/?$', views.get_article_by_id),
-    url(r'^remove_dubles_articles/?$', views.remove_dubles_articles),
 
     url(r'^get_tag_list/?$', views.get_tag_list),
 
@@ -62,10 +62,9 @@ urlpatterns = [
     url(r'^add_locations_to_untrained_articles/?$', views.add_locations_to_untrained_articles),
     url(r'^fill_up_geolocation/?$', views.fill_up_geolocation),
 
-
-
     # Fixes
     url(r'^fix_article_content/?$', views.fix_article_content),
+    url(r'^remove_dubles_articles/?$', views.remove_dubles_articles),
 ]
 
 execution_at_startup()

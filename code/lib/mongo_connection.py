@@ -28,6 +28,11 @@ def remove(duplicate):
 def locator(text, lang="en", limit=1):
     geolocator = Nominatim(user_agent="specify_your_app_name_here", timeout=10)
     trigger = True
+    try:
+        text = text.decode('utf-8')
+    except Exception as ex:
+        print(ex)
+
     print('Location search: ', text)
     while trigger:
         try:
