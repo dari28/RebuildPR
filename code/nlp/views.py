@@ -7,7 +7,7 @@ from lib.json_encoder import JSONEncoderHttp
 import geoposition as geo
 from nlp import tasks
 from lib import learning_model as model, nlp
-from lib.linguistic_functions import replace_str_numerals
+# from lib.linguistic_functions import replace_str_numerals
 from background_task.models import Task
 # ***************************** TEST FUNCTIONS ******************************** #
 
@@ -40,8 +40,8 @@ def test_work(request):
 
 @api_view(['POST'])
 def update_source_list_from_server(request):
-    if not Task.objects.filter(verbose_name="update_source_list_from_server").exists():
-        tasks.update_source_list_from_server(verbose_name="update_source_list_from_server")
+    if not Task.objects.filter(task_name=tasks.update_source_list_from_server.name).exists():
+        tasks.update_source_list_from_server()
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -49,8 +49,8 @@ def update_source_list_from_server(request):
 @api_view(['POST'])
 def get_tags_from_article(request):
     params = request.data
-    if not Task.objects.filter(verbose_name="get_tags_from_article").exists():
-        tasks.get_tags_from_article(params=params, verbose_name="get_tags_from_article")
+    if not Task.objects.filter(task_name=tasks.get_tags_from_article.name).exists():
+        tasks.get_tags_from_article(params=params)
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -59,8 +59,8 @@ def get_tags_from_article(request):
 
 @api_view(['POST'])
 def get_tags_from_untrained_articles(request):
-    if not Task.objects.filter(verbose_name="get_tags_from_untrained_articles").exists():
-        tasks.get_tags_from_untrained_articles(verbose_name="get_tags_from_untrained_articles")
+    if not Task.objects.filter(task_name=tasks.get_tags_from_untrained_articles.name).exists():
+        tasks.get_tags_from_untrained_articles()
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -69,8 +69,8 @@ def get_tags_from_untrained_articles(request):
 
 @api_view(['POST'])
 def get_tags_from_all_articles(request):
-    if not Task.objects.filter(verbose_name="get_tags_from_all_articles").exists():
-        tasks.get_tags_from_all_articles(verbose_name="get_tags_from_all_articles")
+    if not Task.objects.filter(task_name=tasks.get_tags_from_all_articles.name).exists():
+        tasks.get_tags_from_all_articles()
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -78,8 +78,8 @@ def get_tags_from_all_articles(request):
 @api_view(['POST'])
 def train_on_default_list(request):
     params = request.data
-    if not Task.objects.filter(verbose_name="train_on_default_list").exists():
-        tasks.train_on_default_list(params=params, verbose_name="train_on_default_list")
+    if not Task.objects.filter(task_name=tasks.train_on_default_list.name).exists():
+        tasks.train_on_default_list(params=params)
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -93,6 +93,13 @@ def fix_article_content(request):
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
+@api_view(['POST'])
+def remove_dubles_articles(request):
+    # params = request.data
+    mongodb = mongo.MongoConnection()
+    mongodb.remove_dubles_articles()
+    results = {'status': True, 'response': {}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
 # ***************************** SOURCES ******************************** #
 
 
@@ -131,14 +138,6 @@ def get_article_list_by_tag(request):
 
 
 @api_view(['POST'])
-def get_article_language_list(request):
-    mongodb = mongo.MongoConnection()
-    languages = mongodb.get_article_language_list()
-    results = {'status': True, 'response': {'languages': languages}, 'error': {}}
-    return JsonResponse(results, encoder=JSONEncoderHttp)
-
-
-@api_view(['POST'])
 def get_article_by_id(request):
     params = request.data
     mongodb = mongo.MongoConnection()
@@ -146,14 +145,6 @@ def get_article_by_id(request):
     results = {'status': True, 'response': {'article': article}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
-
-@api_view(['POST'])
-def remove_dubles_articles(request):
-    # params = request.data
-    mongodb = mongo.MongoConnection()
-    mongodb.remove_dubles_articles()
-    results = {'status': True, 'response': {}, 'error': {}}
-    return JsonResponse(results, encoder=JSONEncoderHttp)
 
 # ***************************** ENTITY ******************************** #
 
@@ -356,10 +347,9 @@ def tag_stat(request):
 
 @api_view(['POST'])
 def show_language_list(request):
-    params = request.data
     mongodb = mongo.MongoConnection()
-    response, more = mongodb.show_language_list(params=params)
-    results = {'status': True, 'response': {'language': response, 'more': more}, 'error': {}}
+    language = mongodb.show_language_list()
+    results = {'status': True, 'response': {'language': language}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 

@@ -44,30 +44,30 @@ def add_polyglot_default():
             'description': 'Trained model based on a neural network, detected organizations',
             'name': 'Detects organizations'
         },
-        {
-            'model_settings': {
-                'tag': 'negative_word',
-                'polyglot_model': 'sentiment2',
-                'case_sensitive': False
-            },
-            'training': 'finished',
-            'available': True,
-            'type': 'default_polyglot',
-            'description': 'Trained model based on a neural network, detected negative words',
-            'name': 'negative words'
-        },
-        {
-            'model_settings': {
-                'tag': 'positive_word',
-                'polyglot_model': 'sentiment2',
-                'case_sensitive': False
-            },
-            'training': 'finished',
-            'available': True,
-            'type': 'default_polyglot',
-            'description': 'Trained model based on a neural network, detected positive words',
-            'name': 'positive words'
-        },
+        # {
+        #     'model_settings': {
+        #         'tag': 'negative_word',
+        #         'polyglot_model': 'sentiment2',
+        #         'case_sensitive': False
+        #     },
+        #     'training': 'finished',
+        #     'available': True,
+        #     'type': 'default_polyglot',
+        #     'description': 'Trained model based on a neural network, detected negative words',
+        #     'name': 'negative words'
+        # },
+        # {
+        #     'model_settings': {
+        #         'tag': 'positive_word',
+        #         'polyglot_model': 'sentiment2',
+        #         'case_sensitive': False
+        #     },
+        #     'training': 'finished',
+        #     'available': True,
+        #     'type': 'default_polyglot',
+        #     'description': 'Trained model based on a neural network, detected positive words',
+        #     'name': 'positive words'
+        # },
         # {'model_settings': {'tag': 'polarity_sentence', 'polyglot_model': 'sentiment2'},
         #  'status': 'train', 'available': True, 'type': 'default_polyglot',
         #  'name': 'Polyglot default detected polarity of sentence'},

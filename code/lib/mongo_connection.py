@@ -192,9 +192,6 @@ class MongoConnection(object):
         self.geopy_requests = self.mongo_db[config['geopy_requests_collection']]
         self.units = self.mongo_db[config['units_collection']]
 
-    def get_article_language_list(self):
-        return [{'code': k, 'name': v} for k, v in languages_dict.items()]
-
     def get_sources(self, params):
         ''' parameters may be list or str '''
         search_param = dict()
@@ -990,16 +987,17 @@ class MongoConnection(object):
         length = 10 if 'length' not in params else params['length']
         tag_list = ['location', 'person', 'organization', 'money', 'percent', 'date', 'time']
         tag_list += ['money2']
-        is_paginate = 'tag' in params
-        tags = []
 
-        if is_paginate:
-            tag = params['tag'].lower()
+        tags = params['tag'] if 'tag' in params else tag_list
+
+        if isinstance(tags, str):
+            tags = [tags]
+        is_only_one_tag = len(tags) == 1
+        tags = [tag.lower() for tag in tags]
+
+        for tag in tags:
             if tag not in tag_list:
-                raise EnvironmentError('Value of the field "tag" must be in {}'.format(tag_list))
-            tags += [tag]
-        if not tags:
-            tags = tag_list
+                raise EnvironmentError('Value of the field "tag" {} must be in {}'.format(tag, tag_list))
 
         pipeline = [
             {"$addFields": {
@@ -1018,31 +1016,31 @@ class MongoConnection(object):
             {'$match': {'_id.tag': {'$in': tags}}}
         ]
 
-        if is_paginate:
-            pipeline += [{'$skip': start}]
-            pipeline += [{'$limit': length}]
+        pipeline += [{'$skip': start}]
+        pipeline += [{'$limit': length}]
 
-        pipeline += [
-            {"$group": {
-                "_id": "$_id.tag",
-                "tag_list": {
-                    "$push": {
-                        "count": "$count",
-                        "phrase": "$_id.phrase"
+        if is_only_one_tag:
+            pipeline += [
+                {"$group": {
+                    "_id": "$_id.tag",
+                    "tag_list": {
+                        "$push": {
+                            "count": "$count",
+                            "phrase": "$_id.phrase"
+                        }
                     }
-                }
-            }},
-            {'$project': {'tag': '$_id', 'tag_list': 1, '_id': 0}},
-        ]
-
+                }},
+                {'$project': {'tag': '$_id', 'tag_list': 1, '_id': 0}},
+            ]
+        else:
+            pipeline += [
+                {'$project': {'tag': '$_id.tag', "phrase": "$_id.phrase", "count": "$count", "_id": 0}}
+            ]
         return list(self.entity.aggregate(pipeline, allowDiskUse=True))
 
-    def show_language_list(self, params):
-        start = 0 if 'start' not in params else params['start']
-        length = 10 if 'length' not in params else params['length']
-        l_list = list(self.language.find().skip(start).limit(length + 1))
-        more = True if len(l_list) > length else False
-        return l_list[:length], more
+    def show_language_list(self):
+        l_list = [{'code': k, 'name': v} for k, v in languages_dict.items()]
+        return l_list
 
     def get_language(self, params):
         if 'code' not in params:
