@@ -56,7 +56,7 @@ def get_tags_from_article(params):
         pass
 
 
-@background(schedule=1)
+@background(schedule=300)
 def get_tags_from_untrained_articles():
     try:
         print("Background task get_tags_from_untrained_articles started")
