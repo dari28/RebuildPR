@@ -111,11 +111,15 @@ def get_tags(text, language="en"):
     if 'detects organizations' in result1:
         result1['organization'] = result1.pop('detects organizations')
 
+    if 'money' in result1:
+        result1.pop('money')
+    if 'money' in result1:
+        result2.pop('money')
+    
     result = union_res(result1, result2)
     if is_money_regex_model_exist:
         result3 = nlp.parse_currency(text)
         if result3['money']:
-            result['money'] = list()
             result['money'] = result3['money']
 
     return result

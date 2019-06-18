@@ -497,7 +497,7 @@ class MongoConnection(object):
         length = 10 if 'length' not in params else params['length']
         count = len(articles)
         more = True if count > length else False
-        out = {'count': count, 'articles_list': articles[start: start + length], 'more': more, 'tags_list': tags_list}
+        out = {'count': count, 'articles_list': articles_ids[start: start + length], 'more': more, 'tags_list': tags_list}
         return out
 
     def tag_stat_by_articles_list(self, params):
