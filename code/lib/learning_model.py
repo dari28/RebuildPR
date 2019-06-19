@@ -122,6 +122,20 @@ def get_tags(text, language="en"):
         if result3['money']:
             result['money'] = result3['money']
 
+    mongodb = MongoConnection()
+    loc_res_names_id = mongodb.default_entity.find({'type': 'list', 'name': 'names'})
+    loc_res_common_names_id = mongodb.default_entity.find({'type': 'list', 'name': 'common_names'})
+
+    if loc_res_names_id:
+        loc_res_names = predict_entity(set_entity=loc_res_names_id, data=[text], language=language)
+        res = [x for entity in loc_res_names for match in entity['entities'] for x in match['matches']]
+        if res:
+            result['location_names'] = res
+    if loc_res_common_names_id:
+        loc_res_common_names = predict_entity(set_entity=loc_res_common_names_id, data=[text], language=language)
+        res = [x for entity in loc_res_common_names for match in entity['entities'] for x in match['matches']]
+        if res:
+            result['location_common_names'] = res
     return result
 
 
@@ -159,12 +173,6 @@ def get_tags_from_article(params):
 
     if 'content' in article and article['content']:
         tags = get_tags(article['content'], language)
-    # elif 'description' in article and article['description']:
-    #     tags = get_tags(article['description'], language)
-    # elif 'title' in article and article['title']:
-    #     tags = get_tags(article['title'], language)
-    # else:
-    #     tags = []
     else:
         return None
 
@@ -247,11 +255,11 @@ def train_on_default_list(params):
 
     language = 'en' if 'language' not in params else params['language']
     # Add country
-    locations = mongodb.location.find()
+    locations = list(mongodb.location.find())
     names = [x['name'].lower() for x in locations]
     names = list(set(names))
 
-    common_names = [x['common_names'].lower() for x in locations]
+    common_names = [x.lower() for location in locations if 'tags' in location for x in location['tags']]
     common_names = list(set(common_names))
 
     train_on_list(train_text=names, name='names', language=language)

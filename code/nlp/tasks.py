@@ -49,14 +49,14 @@ def train_on_default_list(params):
 def get_tags_from_article(params):
     try:
         print("Background task get_tags_from_article started")
-        ids = model.get_tags_from_article(params)
-        print("Background task get_tags_from_article finished. Response: \n{}".format(ids))
+        id = model.get_tags_from_article(params)
+        print("Background task get_tags_from_article finished. Response: \n{}".format(id))
     except Exception as ex:
         print(ex)
         pass
 
 
-@background(schedule=300)
+@background(schedule=1)
 def get_tags_from_untrained_articles():
     try:
         print("Background task get_tags_from_untrained_articles started")

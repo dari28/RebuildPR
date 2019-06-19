@@ -703,7 +703,7 @@ class MongoConnection(object):
 
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
-        count_articles = len(list(self.entity.aggregate([
+        pipeline = [
             {'$lookup': {
                 'from': "article",
                 'localField': "article_id",
@@ -716,37 +716,23 @@ class MongoConnection(object):
                 'article.content': {'$ne': None}
             }},
             {'$project': {
-                '_id': 0, 'article.author': 1, 'article.title': 1, 'article.publishedAt': 1}},
-        ], allowDiskUse=True)))
+                '_id': 0, 'author': '$article.author', 'title': '$article.title', 'publishedAt': '$article.publishedAt'}},
+        ]
 
-        full_articles = list(self.entity.aggregate([
-            {'$lookup': {
-                'from': "article",
-                'localField': "article_id",
-                'foreignField': "_id",
-                'as': "article"
-            }},
-            {'$unwind': '$article'},
-            {'$match': {
-                'tags.{}.word'.format(tag): tag_word,
-                'article.content': {'$ne': None}
-            }},
-            {'$sort': {'article.publishedAt': -1}},
-            {'$project': {
-                '_id': 0, 'article.author': 1, 'article.title': 1, 'article.publishedAt': 1}},
-            # {'$count': 'total'},
-            # {"$push": {"author": "$article.author", "title": "$article.title", "publishedAt": "$article.publishedAt"}},
-            #  {"$group": {"_id": None, "total": {"$sum": 1},
-            #              "articles": {"$push": {"author": "$article.author", "title": "$article.title", "article.publishedAt": "$article.publishedAt"}}}},
+        count_articles = len(list(self.entity.aggregate(pipeline, allowDiskUse=True)))
+
+        pipeline += [
             {'$skip': start},
             {'$limit': length + 1}
-        ], allowDiskUse=True))
+        ]
+
+        full_articles = list(self.entity.aggregate(pipeline, allowDiskUse=True))
 
         for article in full_articles:
             undefined_fields = ['title', 'author']
             for field in undefined_fields:
-                if not article['article'][field]:
-                    article['article'][field] = '<undefined>'
+                if not article[field]:
+                    article[field] = '<undefined>'
 
         more = True if len(full_articles) > length else False
         return full_articles[:length], more, count_articles
@@ -998,7 +984,7 @@ class MongoConnection(object):
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
         tag_list = ['location', 'person', 'organization', 'money', 'percent', 'date', 'time']
-        tag_list += ['money2']
+        tag_list += ['money2', "location_names", "location_common_names"]
 
         tags = params['tag'] if 'tag' in params else tag_list
 

@@ -40,8 +40,8 @@ def test_work(request):
 
 @api_view(['POST'])
 def update_source_list_from_server(request):
-    if not Task.objects.filter(task_name=tasks.update_source_list_from_server.name).exists():
-        tasks.update_source_list_from_server()
+    # if not Task.objects.filter(task_name=tasks.update_source_list_from_server.name).exists():
+    tasks.update_source_list_from_server()
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -49,8 +49,8 @@ def update_source_list_from_server(request):
 @api_view(['POST'])
 def get_tags_from_article(request):
     params = request.data
-    if not Task.objects.filter(task_name=tasks.get_tags_from_article.name).exists():
-        tasks.get_tags_from_article(params=params)
+    # if not Task.objects.filter(task_name=tasks.get_tags_from_article.name).exists():
+    tasks.get_tags_from_article(params=params)
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -59,8 +59,8 @@ def get_tags_from_article(request):
 
 @api_view(['POST'])
 def get_tags_from_untrained_articles(request):
-    if not Task.objects.filter(task_name=tasks.get_tags_from_untrained_articles.name).exists():
-        tasks.get_tags_from_untrained_articles()
+    # if not Task.objects.filter(task_name=tasks.get_tags_from_untrained_articles.name).exists():
+    tasks.get_tags_from_untrained_articles()
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -69,8 +69,8 @@ def get_tags_from_untrained_articles(request):
 
 @api_view(['POST'])
 def get_tags_from_all_articles(request):
-    if not Task.objects.filter(task_name=tasks.get_tags_from_all_articles.name).exists():
-        tasks.get_tags_from_all_articles()
+    # if not Task.objects.filter(task_name=tasks.get_tags_from_all_articles.name).exists():
+    tasks.get_tags_from_all_articles()
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -78,8 +78,8 @@ def get_tags_from_all_articles(request):
 @api_view(['POST'])
 def train_on_default_list(request):
     params = request.data
-    if not Task.objects.filter(task_name=tasks.train_on_default_list.name).exists():
-        tasks.train_on_default_list(params=params)
+    # if not Task.objects.filter(task_name=tasks.train_on_default_list.name).exists():
+    tasks.train_on_default_list(params=params)
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
