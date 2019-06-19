@@ -716,7 +716,7 @@ class MongoConnection(object):
                 'article.content': {'$ne': None}
             }},
             {'$project': {
-                '_id': 0, 'author': '$article.author', 'title': '$article.title', 'publishedAt': '$article.publishedAt'}},
+                '_id': 0, 'article_id': '$article._id', 'author': '$article.author', 'title': '$article.title', 'publishedAt': '$article.publishedAt'}},
         ]
 
         count_articles = len(list(self.entity.aggregate(pipeline, allowDiskUse=True)))
