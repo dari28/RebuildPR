@@ -178,8 +178,8 @@ class MongoConnection(object):
     def __init__(self, config=None, language=None):
         # override the global CONFIG if the config override dict is supplied
         config = dict(MONGO, **config) if config else MONGO
-        mongo = pymongo.MongoClient(config['mongo_host'], connect=True)
-        self.mongo_db = mongo[config['database']]
+        self.connection = pymongo.MongoClient(config['mongo_host'], connect=True)
+        self.mongo_db = self.connection[config['database']]
         self.phrase = self.mongo_db[config['phrase_collection']]
         self.source = self.mongo_db[config['source_collection']]
         self.article = self.mongo_db[config['article_collection']]
@@ -196,6 +196,12 @@ class MongoConnection(object):
         self.iso3166 = self.mongo_db[config['iso3166_collection']]
         self.geopy_requests = self.mongo_db[config['geopy_requests_collection']]
         self.units = self.mongo_db[config['units_collection']]
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.connection.close()
 
     def get_sources(self, params):
         ''' parameters may be list or str '''
@@ -548,11 +554,22 @@ class MongoConnection(object):
             loc = self.location.find_one({'_id': loc_id})
             if not loc:
                 raise EnvironmentError('No element with such _id')
-            locations = list(self.location.aggregate([
+            pipeline1 = [
                 {"$match": {'parents': {'$in': [loc_id]}, 'level': loc['level'] + 1, }},
                 {"$group": {"_id": "$_id"}},
                 {"$project": {'_id': 1}}
-            ]))
+            ]
+
+            pipeline2 = [
+                {"$match": {'level': loc['level'] + 1}},
+                {"$unwind": "$parents"},
+                {"$match": {'parents': loc_id}},
+                {"$group": {"_id": "$_id"}},
+                {"$project": {'_id': 1}}
+            ]
+
+            locations = list(self.location.aggregate(pipeline1))
+
         return locations
 
     # ***************************** ARTICLES ******************************** #

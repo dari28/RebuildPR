@@ -59,8 +59,8 @@ def get_tags_from_article(request):
 
 @api_view(['POST'])
 def get_tags_from_untrained_articles(request):
-    if not Task.objects.filter(task_name=tasks.get_tags_from_untrained_articles.name).exists():
-        tasks.get_tags_from_untrained_articles()
+    # if not Task.objects.filter(task_name=tasks.get_tags_from_untrained_articles.name).exists():
+    tasks.get_tags_from_untrained_articles(repeat=Task.NEVER)
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 

@@ -81,62 +81,60 @@ def union_res(result1, result2):
 
 
 def get_tags(text, language="en"):
-    mongodb = MongoConnection()
+    with MongoConnection() as mongodb:
+        is_money_regex_model_exist = True
 
-    is_money_regex_model_exist = True
+        entities1 = mongodb.get_default_entity({"type": "default_polyglot", "language": language})
+        result1 = predict_entity_polyglot(
+            entities1,
+            text,
+            language)
 
-    entities1 = mongodb.get_default_entity({"type": "default_polyglot", "language": language})
-    result1 = predict_entity_polyglot(
-        entities1,
-        text,
-        language)
+        for tg in [tg for tg in result1]:
+            result1[tg.lower()] = result1.pop(tg)
 
-    for tg in [tg for tg in result1]:
-        result1[tg.lower()] = result1.pop(tg)
+        entities2 = mongodb.get_default_entity({"type": "default_stanford", "language": language})
+        result2 = predict_entity_stanford_default(
+            entities2,
+            text,
+            language)
+        # res2 = result2.copy()
+        # for tg in res2:
+        for tg in [tg for tg in result2]:
+            result2[tg.lower()] = result2.pop(tg)
 
-    entities2 = mongodb.get_default_entity({"type": "default_stanford", "language": language})
-    result2 = predict_entity_stanford_default(
-        entities2,
-        text,
-        language)
-    # res2 = result2.copy()
-    # for tg in res2:
-    for tg in [tg for tg in result2]:
-        result2[tg.lower()] = result2.pop(tg)
+        if 'detects locations' in result1:
+            result1['location'] = result1.pop('detects locations')
+        if 'detects persons' in result1:
+            result1['person'] = result1.pop('detects persons')
+        if 'detects organizations' in result1:
+            result1['organization'] = result1.pop('detects organizations')
 
-    if 'detects locations' in result1:
-        result1['location'] = result1.pop('detects locations')
-    if 'detects persons' in result1:
-        result1['person'] = result1.pop('detects persons')
-    if 'detects organizations' in result1:
-        result1['organization'] = result1.pop('detects organizations')
+        if 'money' in result1:
+            result1.pop('money')
+        if 'money' in result2:
+            result2.pop('money')
 
-    if 'money' in result1:
-        result1.pop('money')
-    if 'money' in result2:
-        result2.pop('money')
+        result = union_res(result1, result2)
+        if is_money_regex_model_exist:
+            result3 = nlp.parse_currency(text)
+            if result3['money']:
+                result['money'] = result3['money']
 
-    result = union_res(result1, result2)
-    if is_money_regex_model_exist:
-        result3 = nlp.parse_currency(text)
-        if result3['money']:
-            result['money'] = result3['money']
-
-    mongodb = MongoConnection()
-    loc_res_names_id = mongodb.default_entity.find({'type': 'list', 'name': 'names'})
-    loc_res_common_names_id = mongodb.default_entity.find({'type': 'list', 'name': 'common_names'})
-
-    if loc_res_names_id:
-        loc_res_names = predict_entity(set_entity=loc_res_names_id, data=[text], language=language)
-        res = [x for entity in loc_res_names for match in entity['entities'] for x in match['matches']]
-        if res:
-            result['location_names'] = res
-    if loc_res_common_names_id:
-        loc_res_common_names = predict_entity(set_entity=loc_res_common_names_id, data=[text], language=language)
-        res = [x for entity in loc_res_common_names for match in entity['entities'] for x in match['matches']]
-        if res:
-            result['location_common_names'] = res
-    return result
+        # loc_res_names_id = mongodb.default_entity.find({'type': 'list', 'name': 'names'})
+        # loc_res_common_names_id = mongodb.default_entity.find({'type': 'list', 'name': 'common_names'})
+        #
+        # if loc_res_names_id:
+        #     loc_res_names = predict_entity(set_entity=loc_res_names_id, data=[text], language=language)
+        #     res = [x for entity in loc_res_names for match in entity['entities'] for x in match['matches']]
+        #     if res:
+        #         result['location_names'] = res
+        # if loc_res_common_names_id:
+        #     loc_res_common_names = predict_entity(set_entity=loc_res_common_names_id, data=[text], language=language)
+        #     res = [x for entity in loc_res_common_names for match in entity['entities'] for x in match['matches']]
+        #     if res:
+        #         result['location_common_names'] = res
+        return result
 
 
 def add_article_locations(params):
@@ -151,41 +149,40 @@ def add_article_locations(params):
 
 
 def get_tags_from_article(params):
-    mongodb = MongoConnection()
+    with MongoConnection() as mongodb:
+        language = 'en' if 'language' not in params else params['language']
 
-    language = 'en' if 'language' not in params else params['language']
+        if 'article_id' not in params:
+            raise EnvironmentError('Request must contain \'article_id\' field')
+        article_id = params['article_id']
+        if not isinstance(article_id, ObjectId):
+            try:
+                article_id = ObjectId(article_id)
+            except (errors.InvalidId, TypeError):
+                raise EnvironmentError('\'article_id\' field is not a valid ObjectId, it must be a 12-byte input or a 24-character hex string')
 
-    if 'article_id' not in params:
-        raise EnvironmentError('Request must contain \'article_id\' field')
-    article_id = params['article_id']
-    if not isinstance(article_id, ObjectId):
-        try:
-            article_id = ObjectId(article_id)
-        except (errors.InvalidId, TypeError):
-            raise EnvironmentError('\'article_id\' field is not a valid ObjectId, it must be a 12-byte input or a 24-character hex string')
+        if mongodb.entity.find_one({'trained': True, 'article_id': article_id}):
+            return None
 
-    if mongodb.entity.find_one({'trained': True, 'article_id': article_id}):
-        return None
+        article = mongodb.article.find_one({'_id': article_id})
+        if not article:
+            return None
 
-    article = mongodb.article.find_one({'_id': article_id})
-    if not article:
-        return None
+        if 'content' in article and article['content']:
+            tags = get_tags(article['content'], language)
+        else:
+            return None
 
-    if 'content' in article and article['content']:
-        tags = get_tags(article['content'], language)
-    else:
-        return None
-
-    inserted_id = mongodb.entity.insert_one(
-        {
-            'article_id': article_id,
-            'model': 'default_stanford',
-            'tags': tags,
-            'trained': True,
-            'deleted': False
-        }
-    ).inserted_id
-    return inserted_id
+        inserted_id = mongodb.entity.insert_one(
+            {
+                'article_id': article_id,
+                'model': 'default_stanford',
+                'tags': tags,
+                'trained': True,
+                'deleted': False
+            }
+        ).inserted_id
+        return inserted_id
 
 
 def get_tags_from_all_articles():
