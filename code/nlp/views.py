@@ -59,8 +59,8 @@ def get_tags_from_article(request):
 
 @api_view(['POST'])
 def get_tags_from_untrained_articles(request):
-    # if not Task.objects.filter(task_name=tasks.get_tags_from_untrained_articles.name).exists():
-    tasks.get_tags_from_untrained_articles()
+    if not Task.objects.filter(task_name=tasks.get_tags_from_untrained_articles.name).exists():
+        tasks.get_tags_from_untrained_articles()
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -357,15 +357,6 @@ def show_language_list(request):
     mongodb = mongo.MongoConnection()
     language = mongodb.show_language_list()
     results = {'status': True, 'response': {'language': language}, 'error': {}}
-    return JsonResponse(results, encoder=JSONEncoderHttp)
-
-
-@api_view(['POST'])
-def get_location_by_level(request):
-    params = request.data
-    mongodb = mongo.MongoConnection()
-    response, more = mongodb.get_location_by_level(params=params)
-    results = {'status': True, 'response': {'articles': response, 'more': more}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 

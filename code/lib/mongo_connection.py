@@ -546,6 +546,8 @@ class MongoConnection(object):
             location = params['location']
             loc_id = ObjectId(location) if not isinstance(location, ObjectId) else location
             loc = self.location.find_one({'_id': loc_id})
+            if not loc:
+                raise EnvironmentError('No element with such _id')
             locations = list(self.location.aggregate([
                 {"$match": {'parents': {'$in': [loc_id]}, 'level': loc['level'] + 1, }},
                 {"$group": {"_id": "$_id"}},
