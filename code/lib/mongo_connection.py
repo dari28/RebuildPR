@@ -646,18 +646,21 @@ class MongoConnection(object):
 
     def get_q_article_list(self, params):
         if 'used_filter_phrase' not in params:
-            raise EnvironmentError('Request must contain \'used_filter_phrase\' field')
+            # raise EnvironmentError('Request must contain \'used_filter_phrase\' field')
+            q = self.phrase.find({}, {'phrase': 1})
+        else:
+            q = params['used_filter_phrase']
+            # Convert str to list
+            if not isinstance(q, list):
+                q = [q]
 
-        q = params['used_filter_phrase']
-        # Convert str to list
-        if not isinstance(q, list):
-            q = [q]
+        # case_sensitive = True
+        # if 'case_sensitive' in params:
+        #     case_sensitive = params['case_sensitive']
+        # if not case_sensitive:
+        #     q = [x.lower() for x in q]
 
-        case_sensitive = True
-        if 'case_sensitive' in params:
-            case_sensitive = params['case_sensitive']
-        if not case_sensitive:
-            q = [x.lower() for x in q]
+        q = [x.lower() for x in q]
 
         search_param = dict()
 
@@ -677,7 +680,22 @@ class MongoConnection(object):
                 if field in params:
                     search_param['source.'+field] = {'$in': params[field]}
 
-        articles = [x for articles in self.q_article.find({'q': {'$in': q}}, {'_id': 0, 'articles': 1}) for x in articles['articles']]
+        # articles = [x for articles in self.q_article.find({'q': {'$in': q}}, {'_id': 0, 'articles': 1}) for x in articles['articles']]
+        article_pipeline = [
+            {'$project': {
+                'q': {'$toLower': "$q"},
+                'articles': '$articles'
+            }},
+            {'$match': {
+                'q': {'$in': q}
+            }},
+            {'$project': {
+                'articles': '$articles',
+                '_id': 0
+            }}
+        ]
+        articles = [x for article in list(self.q_article.aggregate(article_pipeline)) for x in article['articles']]
+
         search_param['_id'] = {'$in': articles}
 
         start = 0 if 'start' not in params else params['start']
