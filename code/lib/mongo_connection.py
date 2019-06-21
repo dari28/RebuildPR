@@ -477,6 +477,7 @@ class MongoConnection(object):
                 }},
                 {"$group": {
                     "_id": "$_id",
+                    # "article_id": {"$push":{"article_id":"$article_id"}},
                     "tag_words": {
                         "$push": {
                             "tag_cat": "$tags.k",
@@ -486,24 +487,29 @@ class MongoConnection(object):
                 }},
                 {"$match": {"tag_words.tag_word": {"$all": porg}}},
             ]
-        else:
-            pipeline += [
-                {"$group": {
-                    "_id": "$_id",
-                }},
-                ]
+        # else:
+        #     pipeline += [
+        #         {"$group": {
+        #             "_id": "$_id",
+        #             "article_id": {"$push": {"article_id": "$article_id"}},
+        #
+        #         }},
+        #         ]
         pipeline += [
-            {"$project": {"_id": 1}}
+            {"$project": {"_id": 1, 'article_id': '$article_id'}}
             ]
         articles = list(self.entity.aggregate(pipeline=pipeline, allowDiskUse=True))
-        articles_ids = []
-        [articles_ids.append(art['_id']) for art in articles]
-        tags_list = self.tag_stat_by_articles_list({'articles': articles_ids})
+        entity_ids = [art['_id'] for art in articles]
+        article_ids = [art['article_id'] for art in articles]
+
+        article_full = list(self.article.find({'_id': {"$in": article_ids}}, {'title': 1, 'author': 1, 'publishedAt': 1}))
+
+        tags_list = self.tag_stat_by_articles_list({'articles': entity_ids})
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
         count = len(articles)
         more = True if count > length else False
-        out = {'count': count, 'articles_list': articles_ids[start: start + length], 'more': more, 'tags_list': tags_list}
+        out = {'count': count, 'articles_list': article_full[start: start + length], 'more': more, 'tags_list': tags_list}
         return out
 
     def tag_stat_by_articles_list(self, params):
