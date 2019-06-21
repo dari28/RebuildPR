@@ -5,11 +5,11 @@ from background_task import background
 
 from lib import mongo_connection as mongo
 from lib import learning_model as model
-
+from background_task.models import Task
 # ***************************** GEOLOCATION ******************************** #
 
 
-@background(schedule=1)
+@background(schedule=1, name='update_country_list')
 def update_country_list():
     mongodb = mongo.MongoConnection()
     try:
@@ -23,7 +23,7 @@ def update_country_list():
 # ***************************** ENTITY ******************************** #
 
 
-@background(schedule=1)
+@background(schedule=1, name='train_on_list')
 def train_on_list(train_text, name, language):
     try:
         print("Background task train_on_list started")
@@ -34,7 +34,7 @@ def train_on_list(train_text, name, language):
         pass
 
 
-@background(schedule=1)
+@background(schedule=1, name='train_on_default_list')
 def train_on_default_list(params):
     try:
         print("Background task train_on_default_list started")
@@ -45,19 +45,21 @@ def train_on_default_list(params):
         pass
 
 
-@background(schedule=1)
+@background(schedule=1, name='get_tags_from_article')
 def get_tags_from_article(params):
     try:
         print("Background task get_tags_from_article started")
-        ids = model.get_tags_from_article(params)
-        print("Background task get_tags_from_article finished. Response: \n{}".format(ids))
+        id = model.get_tags_from_article(params)
+        print("Background task get_tags_from_article finished. Response: \n{}".format(id))
     except Exception as ex:
         print(ex)
         pass
 
 
-@background(schedule=1)
+@background(schedule=1, name='get_tags_from_untrained_articles')
 def get_tags_from_untrained_articles():
+    # if not Task.objects.filter(task_name=get_tags_from_untrained_articles.name).exists():
+    # if len(list(Task.objects.filter(task_name=get_tags_from_untrained_articles.name))) == 1:
     try:
         print("Background task get_tags_from_untrained_articles started")
         ids = model.get_tags_from_untrained_articles()
@@ -67,7 +69,7 @@ def get_tags_from_untrained_articles():
         pass
 
 
-@background(schedule=1)
+@background(schedule=1, name='get_tags_from_all_articles')
 def get_tags_from_all_articles():
     try:
         print("Background task get_tags_from_untrained_articles started")
@@ -80,7 +82,7 @@ def get_tags_from_all_articles():
 # ***************************** UPDATE ******************************** #
 
 
-@background(schedule=1)
+@background(schedule=1, name='update_source_list_from_server')
 def update_source_list_from_server():
     mongodb = mongo.MongoConnection()
     try:

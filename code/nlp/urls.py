@@ -3,10 +3,9 @@ from nlp import views
 from lib.server_tuning import execution_at_startup
 
 urlpatterns = [
+    # TEST
     url(r'^test_work/?$', views.test_work),
     url(r'^test_exception_work/?$', views.test_exception_work),
-
-    url(r'^get_location_by_level/?$', views.get_location_by_level),
 
     url(r'^tag_stat/?$', views.tag_stat),
 
@@ -25,7 +24,6 @@ urlpatterns = [
     url(r'^get_article_list/?$', views.get_article_list),
     url(r'^get_article_list_by_tag/?$', views.get_article_list_by_tag),
     url(r'^get_article_by_id/?$', views.get_article_by_id),
-    url(r'^remove_dubles_articles/?$', views.remove_dubles_articles),
 
     url(r'^get_tag_list/?$', views.get_tag_list),
 
@@ -57,11 +55,14 @@ urlpatterns = [
     url(r'^update_country_list/?$', views.update_country_list),
     url(r'^update_state_list/?$', views.update_state_list),
     url(r'^update_pr_city_list/?$', views.update_pr_city_list),
-    url(r'^fill_up_geolocation/?$', views.fill_up_geolocation),
     url(r'^train_on_default_list/?$', views.train_on_default_list),
     url(r'^get_tags_from_untrained_articles/?$', views.get_tags_from_untrained_articles),
+    url(r'^add_locations_to_untrained_articles/?$', views.add_locations_to_untrained_articles),
+    url(r'^fill_up_geolocation/?$', views.fill_up_geolocation),
 
+    # Fixes
     url(r'^fix_article_content/?$', views.fix_article_content),
+    url(r'^remove_dubles_articles/?$', views.remove_dubles_articles),
 ]
 
 execution_at_startup()

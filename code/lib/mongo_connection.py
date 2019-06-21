@@ -28,6 +28,11 @@ def remove(duplicate):
 def locator(text, lang="en", limit=1):
     geolocator = Nominatim(user_agent="specify_your_app_name_here", timeout=10)
     trigger = True
+    try:
+        text = text.encode('utf-8')
+    except Exception as ex:
+        print(ex)
+
     print('Location search: ', text)
     while trigger:
         try:
@@ -173,8 +178,8 @@ class MongoConnection(object):
     def __init__(self, config=None, language=None):
         # override the global CONFIG if the config override dict is supplied
         config = dict(MONGO, **config) if config else MONGO
-        mongo = pymongo.MongoClient(config['mongo_host'], connect=True)
-        self.mongo_db = mongo[config['database']]
+        self.connection = pymongo.MongoClient(config['mongo_host'], connect=True)
+        self.mongo_db = self.connection[config['database']]
         self.phrase = self.mongo_db[config['phrase_collection']]
         self.source = self.mongo_db[config['source_collection']]
         self.article = self.mongo_db[config['article_collection']]
@@ -191,6 +196,12 @@ class MongoConnection(object):
         self.iso3166 = self.mongo_db[config['iso3166_collection']]
         self.geopy_requests = self.mongo_db[config['geopy_requests_collection']]
         self.units = self.mongo_db[config['units_collection']]
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.connection.close()
 
     def get_sources(self, params):
         ''' parameters may be list or str '''
@@ -492,7 +503,7 @@ class MongoConnection(object):
         length = 10 if 'length' not in params else params['length']
         count = len(articles)
         more = True if count > length else False
-        out = {'count': count, 'articles_list': articles[start: start + length], 'more': more, 'tags_list': tags_list}
+        out = {'count': count, 'articles_list': articles_ids[start: start + length], 'more': more, 'tags_list': tags_list}
         return out
 
     def tag_stat_by_articles_list(self, params):
@@ -541,11 +552,24 @@ class MongoConnection(object):
             location = params['location']
             loc_id = ObjectId(location) if not isinstance(location, ObjectId) else location
             loc = self.location.find_one({'_id': loc_id})
-            locations = list(self.location.aggregate([
+            if not loc:
+                raise EnvironmentError('No element with such _id')
+            pipeline1 = [
                 {"$match": {'parents': {'$in': [loc_id]}, 'level': loc['level'] + 1, }},
                 {"$group": {"_id": "$_id"}},
                 {"$project": {'_id': 1}}
-            ]))
+            ]
+
+            pipeline2 = [
+                {"$match": {'level': loc['level'] + 1}},
+                {"$unwind": "$parents"},
+                {"$match": {'parents': loc_id}},
+                {"$group": {"_id": "$_id"}},
+                {"$project": {'_id': 1}}
+            ]
+
+            locations = list(self.location.aggregate(pipeline1))
+
         return locations
 
     # ***************************** ARTICLES ******************************** #
@@ -554,6 +578,13 @@ class MongoConnection(object):
         content = re.sub(r'\w+… ?$', '', content)  # remove end characters with ...
         content = re.sub(r'… ?$', '', content)  # remove end ...
         content = re.sub(r'�', '', content)  # remove �
+        content = re.sub(r'www\.\S+', '', content)  # remove url1
+        content = re.sub(r'http:\/\/\S+', '', content)  # remove url2
+        content = re.sub('[→]+', '', content)  # remove strange symbols
+
+        content = re.sub('Click here to join', '', content)  # remove links
+        content = re.sub('Click here', '', content)  # remove links
+
         content = re.sub('[\r\n\t\f\v]+', ' ', content)  # change spec symbols to one space
         content = re.sub('[-—\-]+', '-', content)  # change hyphen to normal hyphen
         content = re.sub(' - ', ' ', content)  # change hyphen to normal hyphen
@@ -634,18 +665,21 @@ class MongoConnection(object):
 
     def get_q_article_list(self, params):
         if 'used_filter_phrase' not in params:
-            raise EnvironmentError('Request must contain \'used_filter_phrase\' field')
+            # raise EnvironmentError('Request must contain \'used_filter_phrase\' field')
+            q = self.phrase.find({}, {'phrase': 1})
+        else:
+            q = params['used_filter_phrase']
+            # Convert str to list
+            if not isinstance(q, list):
+                q = [q]
 
-        q = params['used_filter_phrase']
-        # Convert str to list
-        if not isinstance(q, list):
-            q = [q]
+        # case_sensitive = True
+        # if 'case_sensitive' in params:
+        #     case_sensitive = params['case_sensitive']
+        # if not case_sensitive:
+        #     q = [x.lower() for x in q]
 
-        case_sensitive = True
-        if 'case_sensitive' in params:
-            case_sensitive = params['case_sensitive']
-        if not case_sensitive:
-            q = [x.lower() for x in q]
+        q = [x.lower() for x in q]
 
         search_param = dict()
 
@@ -665,7 +699,22 @@ class MongoConnection(object):
                 if field in params:
                     search_param['source.'+field] = {'$in': params[field]}
 
-        articles = [x for articles in self.q_article.find({'q': {'$in': q}}, {'_id': 0, 'articles': 1}) for x in articles['articles']]
+        # articles = [x for articles in self.q_article.find({'q': {'$in': q}}, {'_id': 0, 'articles': 1}) for x in articles['articles']]
+        article_pipeline = [
+            {'$project': {
+                'q': {'$toLower': "$q"},
+                'articles': '$articles'
+            }},
+            {'$match': {
+                'q': {'$in': q}
+            }},
+            {'$project': {
+                'articles': '$articles',
+                '_id': 0
+            }}
+        ]
+        articles = [x for article in list(self.q_article.aggregate(article_pipeline)) for x in article['articles']]
+
         search_param['_id'] = {'$in': articles}
 
         start = 0 if 'start' not in params else params['start']
@@ -691,7 +740,7 @@ class MongoConnection(object):
 
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
-        count_articles = len(list(self.entity.aggregate([
+        pipeline = [
             {'$lookup': {
                 'from': "article",
                 'localField': "article_id",
@@ -704,37 +753,23 @@ class MongoConnection(object):
                 'article.content': {'$ne': None}
             }},
             {'$project': {
-                '_id': 0, 'article.author': 1, 'article.title': 1, 'article.publishedAt': 1}},
-        ], allowDiskUse=True)))
+                '_id': 0, 'article_id': '$article._id', 'author': '$article.author', 'title': '$article.title', 'publishedAt': '$article.publishedAt'}},
+        ]
 
-        full_articles = list(self.entity.aggregate([
-            {'$lookup': {
-                'from': "article",
-                'localField': "article_id",
-                'foreignField': "_id",
-                'as': "article"
-            }},
-            {'$unwind': '$article'},
-            {'$match': {
-                'tags.{}.word'.format(tag): tag_word,
-                'article.content': {'$ne': None}
-            }},
-            {'$sort': {'article.publishedAt': -1}},
-            {'$project': {
-                '_id': 0, 'article.author': 1, 'article.title': 1, 'article.publishedAt': 1}},
-            # {'$count': 'total'},
-            # {"$push": {"author": "$article.author", "title": "$article.title", "publishedAt": "$article.publishedAt"}},
-            #  {"$group": {"_id": None, "total": {"$sum": 1},
-            #              "articles": {"$push": {"author": "$article.author", "title": "$article.title", "article.publishedAt": "$article.publishedAt"}}}},
+        count_articles = len(list(self.entity.aggregate(pipeline, allowDiskUse=True)))
+
+        pipeline += [
             {'$skip': start},
             {'$limit': length + 1}
-        ], allowDiskUse=True))
+        ]
+
+        full_articles = list(self.entity.aggregate(pipeline, allowDiskUse=True))
 
         for article in full_articles:
             undefined_fields = ['title', 'author']
             for field in undefined_fields:
-                if not article['article'][field]:
-                    article['article'][field] = '<undefined>'
+                if not article[field]:
+                    article[field] = '<undefined>'
 
         more = True if len(full_articles) > length else False
         return full_articles[:length], more, count_articles
@@ -986,7 +1021,7 @@ class MongoConnection(object):
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
         tag_list = ['location', 'person', 'organization', 'money', 'percent', 'date', 'time']
-        tag_list += ['money2']
+        tag_list += ['money2', "location_names", "location_common_names"]
 
         tags = params['tag'] if 'tag' in params else tag_list
 

@@ -13,7 +13,7 @@ from lib import tools
 from lib.mongo_connection import MongoConnection
 from lib import stanford_module as stanford
 from nlp.config import POLIGLOT, STANFORD, STANDFORD_PACKAGE, SERVER#, DEFAULT_USER, , CONFIGURATION_FILES, REPEAT_FINAL_PROCESSING, ADMIN_USER
-#from nlp.tasks import final_processing
+# from nlp.tasks import final_processing
 from lib.linguistic_functions import get_supported_languages
 from lib.stanford_module import jString
 from install.install_default_model import add_polyglot_default
@@ -153,6 +153,14 @@ def standford_default_install():
 #         pass
 
 
+def unlock_all_tasks():
+    for task in Task.objects.all():
+        if task.locked_by:
+            task.locked_by = None
+            task.locked_at = None
+            task.save()
+
+
 # def add_admin_user():
 #     mongo = MongoConnection()
 #     if not mongo.users.find_one({'_id': ADMIN_USER}):
@@ -165,9 +173,10 @@ def execution_at_startup():
     standford_default_install()
     add_polyglot_default()
     add_standford_default()
-    #create_folder()
-    #add_final_processing()
-    #add_admin_user()
+    # create_folder()
+    # add_final_processing()
+    unlock_all_tasks()
+    # add_admin_user()
 
 
 if __name__ == '__main__':
