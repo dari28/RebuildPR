@@ -200,6 +200,16 @@ def parse_currency(request):
 
 
 @api_view(['POST'])
+def get_location_info_by_id(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    location = mongodb.get_location_info_by_id(params)
+    # predict_result = model.predict_entity(data=data['data'], set_entity=entity_id, language=data['language'])
+    results = {'status': True, 'response': {'location': location}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
 def get_default_entity(request):
     params = request.data
     mongodb = mongo.MongoConnection()

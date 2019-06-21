@@ -47,6 +47,7 @@ urlpatterns = [
     url(r'^predict_entity/?$', views.predict_entity),
     url(r'^parse_currency/?$', views.parse_currency),
 
+    url(r'^get_location_info_by_id/?$', views.get_location_info_by_id),
     # Fill up db
     url(r'^fill_up_db_from_zero/?$', views.fill_up_db_from_zero),
     url(r'^update_source_list_from_server/?$', views.update_source_list_from_server),

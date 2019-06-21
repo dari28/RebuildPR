@@ -973,6 +973,13 @@ class MongoConnection(object):
             k = self.phrase.count({'deleted': False, 'updated_all_old_article': False})
     # ***************************** Train articles ******************************** #
 
+    def get_location_info_by_id(self, params):
+        if '_id' not in params:
+            raise EnvironmentError('Request must contain \'_id\' field')
+        _id = params['_id']
+        _id = ObjectId(_id) if not isinstance(_id, ObjectId) else _id
+        return self.location.find_one({'_id': _id})
+
     def get_default_entity(self, params):
         search_params = {}
         if params and 'type' in params:
