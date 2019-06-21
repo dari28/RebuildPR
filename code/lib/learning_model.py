@@ -41,7 +41,6 @@ def union_res(result1, result2):
                         n_word.replace(l, '', 1)
                         ln -= 1
 
-
             v = tuple_tag_value
             if isinstance(v, np.int64):
                 v = int(v)
