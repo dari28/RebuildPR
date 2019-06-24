@@ -100,7 +100,7 @@ def union_res(result1, result2):
     return union_dict2
 
 
-def get_tags(text, language="en"):
+def get_tags(text, language="en", type="default"):
     with MongoConnection() as mongodb:
         is_money_regex_model_exist = True
 
@@ -189,20 +189,47 @@ def get_tags_from_article(params):
             return None
 
         if 'content' in article and article['content']:
-            tags = get_tags(article['content'], language)
+            tags_content = get_tags(article['content'], language, 'content')
+            mongodb.entity.insert_one(
+                {
+                    'article_id': article_id,
+                    'model': 'default_stanford',
+                    'tags': tags_content,
+                    'type': 'content',
+                    'trained': True,
+                    'deleted': False
+                }
+            )
         else:
             return None
 
-        inserted_id = mongodb.entity.insert_one(
-            {
-                'article_id': article_id,
-                'model': 'default_stanford',
-                'tags': tags,
-                'trained': True,
-                'deleted': False
-            }
-        ).inserted_id
-        return inserted_id
+        if 'description' in article and article['description']:
+            tags_description = get_tags(article['description'], language, 'description')
+            mongodb.entity.insert_one(
+                {
+                    'article_id': article_id,
+                    'model': 'default_stanford',
+                    'tags': tags_description,
+                    'type': 'description',
+                    'trained': True,
+                    'deleted': False
+                }
+            )
+
+        if 'title' in article and article['title']:
+            tags_title = get_tags(article['title'], language, 'title')
+            mongodb.entity.insert_one(
+                {
+                    'article_id': article_id,
+                    'model': 'default_stanford',
+                    'tags': tags_title,
+                    'type': 'title',
+                    'trained': True,
+                    'deleted': False
+                }
+            )
+
+        return None
 
 
 def get_tags_from_all_articles():
