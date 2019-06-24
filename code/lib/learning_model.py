@@ -51,12 +51,13 @@ def union_res(result1, result2):
                 elem['start_match'] = start
                 elem['length_match'] = ln
             if tuple_tag_key in union_dict2:
-                for elem in tuple_tag_key:
+                for elem in tuple_tag_value:
                     if (elem not in union_dict2[tuple_tag_key]) & (elem['length_match'] > 0):
                         union_dict2[tuple_tag_key].append(elem)
             else:
+                trigger = True
                 for elem in tuple_tag_value:
-                    if elem['length_match'] > 0:
+                    if elem['length_match'] == 0:
                         trigger = False
                 if trigger:
                     union_dict2[tuple_tag_key] = list(v)
