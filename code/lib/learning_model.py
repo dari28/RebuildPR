@@ -51,7 +51,8 @@ def union_res(result1, result2):
                     if (elem not in union_dict2[tuple_tag_key]) & (elem['length_match'] > 0):
                         union_dict2[tuple_tag_key].append(elem)
             else:
-                union_dict2[tuple_tag_key] = list(v)
+                if elem['length_match'] > 0:
+                    union_dict2[tuple_tag_key] = list(v)
 
     for tag in union_dict2:
         v = union_dict2[tag]
