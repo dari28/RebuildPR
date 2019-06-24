@@ -21,10 +21,13 @@ def union_res(result1, result2):
     # Union the tags
     for (tuple_tag_key,tuple_tag_value) in tuple_tags:
         if tuple_tag_value:
-            for val in tuple_tag_value:
-                word = val['word']
-                start = val['start_match']
-                ln = val['len_match']
+            v = tuple_tag_value
+            if isinstance(v, np.int64):
+                v = int(v)
+            for elem in tuple_tag_value:
+                word = elem['word']
+                start = elem['start_match']
+                ln = elem['length_match']
                 n_word = word
                 for l in word:
                     if l.isalnum():
@@ -38,15 +41,14 @@ def union_res(result1, result2):
                     if l.isalnum():
                         break
                     else:
-                        n_word = n_word.replace(l, '', 1)
+                        n_word = n_word[::-1].replace(l, '', 1)[::-1]
                         ln -= 1
-
-            v = tuple_tag_value
-            if isinstance(v, np.int64):
-                v = int(v)
+                elem['word'] = n_word
+                elem['start_match'] = start
+                elem['length_match'] = ln
             if tuple_tag_key in union_dict2:
                 for elem in v:
-                    if elem not in union_dict2[tuple_tag_key]:
+                    if (elem not in union_dict2[tuple_tag_key]) & (elem['length_match'] > 0):
                         union_dict2[tuple_tag_key].append(elem)
             else:
                 union_dict2[tuple_tag_key] = list(v)
