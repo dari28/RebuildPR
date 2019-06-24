@@ -47,11 +47,14 @@ def union_res(result1, result2):
                 elem['start_match'] = start
                 elem['length_match'] = ln
             if tuple_tag_key in union_dict2:
-                for elem in v:
+                for elem in tuple_tag_key:
                     if (elem not in union_dict2[tuple_tag_key]) & (elem['length_match'] > 0):
                         union_dict2[tuple_tag_key].append(elem)
             else:
-                if elem['length_match'] > 0:
+                for elem in tuple_tag_key:
+                    if elem['length_match'] > 0:
+                        trigger = False
+                if trigger:
                     union_dict2[tuple_tag_key] = list(v)
 
     for tag in union_dict2:
