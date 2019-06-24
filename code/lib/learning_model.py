@@ -30,7 +30,7 @@ def union_res(result1, result2):
                     if l.isalnum():
                         break
                     else:
-                        n_word.replace(l, '', 1)
+                        n_word = n_word.replace(l, '', 1)
                         ln -= 1
                         start += 1
                 word = n_word
@@ -38,7 +38,7 @@ def union_res(result1, result2):
                     if l.isalnum():
                         break
                     else:
-                        n_word.replace(l, '', 1)
+                        n_word = n_word.replace(l, '', 1)
                         ln -= 1
 
             v = tuple_tag_value
