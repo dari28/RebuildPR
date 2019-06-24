@@ -14,6 +14,10 @@ import numpy as np
 from lib import nlp
 
 
+def drop_urls_from_text(text):
+    return re.sub(r'(https?://\S+)', '', text)
+
+
 def union_res(result1, result2):
     union_dict = dict()
     union_dict2 = dict()
@@ -51,7 +55,7 @@ def union_res(result1, result2):
                     if (elem not in union_dict2[tuple_tag_key]) & (elem['length_match'] > 0):
                         union_dict2[tuple_tag_key].append(elem)
             else:
-                for elem in tuple_tag_key:
+                for elem in tuple_tag_value:
                     if elem['length_match'] > 0:
                         trigger = False
                 if trigger:
@@ -107,6 +111,7 @@ def union_res(result1, result2):
 
 
 def get_tags(text, language="en", type="default"):
+    text = drop_urls_from_text(text)
     with MongoConnection() as mongodb:
         is_money_regex_model_exist = True
 
