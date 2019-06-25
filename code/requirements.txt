@@ -39,3 +39,4 @@ beautifulsoup4
 urllib3
 unicode
 geopy
+urlextract

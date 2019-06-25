@@ -1,4 +1,5 @@
 import re
+from urlextract import URLExtract
 
 from lib import tools, stanford_module as stanford
 from lib.text import Text
@@ -15,6 +16,11 @@ from lib import nlp
 
 
 def drop_urls_from_text(text):
+    extractor = URLExtract()
+    urls = extractor.find_urls(text)
+    for url in urls:
+        text = text.replace(url, '')
+        print(url)
     return re.sub(r'(https?://\S+)', '', text)
 
 
