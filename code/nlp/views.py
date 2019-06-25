@@ -481,6 +481,6 @@ def tag_stat_by_articles_list(request):
 def get_locations_by_level(request):
     params = request.data
     mongodb = mongo.MongoConnection()
-    locations = mongodb.get_locations_by_level(params=params)
-    results = {'status': True, 'response': {'locations': locations}, 'error': {}}
+    locations, more = mongodb.get_locations_by_level(params=params)
+    results = {'status': True, 'response': {'locations': locations, 'more': more}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)

@@ -548,11 +548,16 @@ class MongoConnection(object):
         return list(self.entity.aggregate(pipeline, allowDiskUse=True))
 
     def get_locations_by_level(self, params):
+        start = 0 if 'start' not in params else params['start']
+        length = 10 if 'length' not in params else params['length']
+
         if 'location' not in params:
             locations = list(self.location.aggregate([
                 {"$match": {'level': 0}},
                 {"$group": {"_id": "$_id"}},
-                {"$project": {'_id': 1}}
+                {"$project": {'_id': 1}},
+                {'$skip': start},
+                {'$limit': length + 1}
             ]))
         else:
             location = params['location']
@@ -574,9 +579,15 @@ class MongoConnection(object):
                 {"$project": {'_id': 1}}
             ]
 
-            locations = list(self.location.aggregate(pipeline1))
+            pipeline1 += [
+                {'$skip': start},
+                {'$limit': length + 1}
+            ]
 
-        return locations
+            locations = list(self.location.aggregate(pipeline1))
+        locations = [x['_id'] for x in locations]
+        more = True if len(locations) > length else False
+        return locations[:length], more
 
     # ***************************** ARTICLES ******************************** #
     def delete_trash_from_article_content(self, content):
