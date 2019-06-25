@@ -123,34 +123,81 @@ def union_res(result1, result2):
         # print(vv)
         union_dict2[tag] = vv
 
-    # for r1 in result1:
-    #     if result1[r1]:
-    #         v = result1[r1]
-    #         if isinstance(v, np.int64):
-    #             v = int(v)
-    #         if r1 in union_dict:
-    #             for elem in v:
-    #                 if elem in union_dict[r1]:
-    #                     union_dict[r1].append(elem)
-    #         else:
-    #             union_dict[r1] = list(v)
-    # for r2 in result2:
-    #     if result2[r2]:
-    #         v = result2[r2]
-    #         if isinstance(v, np.int64):
-    #             v = int(v)
-    #         if r2 in union_dict:
-    #             for elem in v:
-    #                 lst = union_dict[r2]
-    #                 if len(list(filter(lambda lst: lst['start_match'] == elem['start_match'], lst))) > 0:
-    #                     union_dict[r2].append(elem)
-    #         else:
-    #             union_dict[r2] = list(v)
+    return union_dict2
+
+
+def union_res_with_article_id(result1, result2):
+    union_dict = dict()
+    union_dict2 = dict()
+    tuple_tags = list(result1.items()) + list(result2.items())
+    # Union the tags
+    for (tuple_tag_key,tuple_tag_value) in tuple_tags:
+        if tuple_tag_value:
+            v = tuple_tag_value
+            if isinstance(v, np.int64):
+                v = int(v)
+            for elem in tuple_tag_value:
+                word = elem['word']
+                start = elem['start_match']
+                ln = elem['length_match']
+                article_type = elem['article_type']
+                n_word = word
+                for l in word:
+                    if l.isalnum():
+                        break
+                    else:
+                        n_word = n_word.replace(l, '', 1)
+                        ln -= 1
+                        start += 1
+                word = n_word
+                for l in word[::-1]:
+                    if l.isalnum():
+                        break
+                    else:
+                        n_word = n_word[::-1].replace(l, '', 1)[::-1]
+                        ln -= 1
+                elem['word'] = n_word
+                elem['start_match'] = start
+                elem['length_match'] = ln
+                elem['article_type'] = article_type
+            if tuple_tag_key in union_dict2:
+                for elem in tuple_tag_value:
+                    if (elem not in union_dict2[tuple_tag_key]) & (elem['length_match'] > 0):
+                        union_dict2[tuple_tag_key].append(elem)
+            else:
+                trigger = True
+                for elem in tuple_tag_value:
+                    if elem['length_match'] == 0:
+                        trigger = False
+                if trigger:
+                    union_dict2[tuple_tag_key] = list(v)
+
+    for tag in union_dict2:
+        v = union_dict2[tag]
+        filter_dict = dict()
+        for x in v:
+            start_match = x['start_match']
+            length_match = x['length_match']
+            word = x['word']
+            article_type = x['article_type']
+            if not (start_match, article_type) in filter_dict:
+                filter_dict[(start_match, article_type)] = (length_match, word)
+            else:
+                if length_match > filter_dict[(start_match, article_type)][0]:
+                    filter_dict[(start_match, article_type)] = (length_match, word)
+        # list(filter(lambda v: v['start_match'] == 57 and v['length_match'] == max([int(x['length_match']) for x in v]), v))
+        # print(filter_dict)
+
+        vv = []
+        for sv in filter_dict:
+            vv.append({'start_match': sv[0], 'length_match': filter_dict[sv][0], 'word': filter_dict[sv][1].lower(), 'article_type': sv[1]})
+
+        union_dict2[tag] = vv
 
     return union_dict2
 
 
-def get_tags(text, language="en", type="default"):
+def get_tags(text, language="en", article_type="default"):
     text = drop_urls_from_text(text)
     with MongoConnection() as mongodb:
         is_money_regex_model_exist = True
@@ -194,6 +241,7 @@ def get_tags(text, language="en", type="default"):
             if result3['money']:
                 result['money'] = result3['money']
 
+        [y.update({'article_type': article_type}) for tag in result for y in result[tag]]
         # loc_res_names_id = mongodb.default_entity.find({'type': 'list', 'name': 'names'})
         # loc_res_common_names_id = mongodb.default_entity.find({'type': 'list', 'name': 'common_names'})
         #
@@ -243,44 +291,26 @@ def get_tags_from_article(params):
 
         if 'content' in article and article['content']:
             tags_content = get_tags(article['content'], language, 'content')
-            mongodb.entity.insert_one(
-                {
-                    'article_id': article_id,
-                    'model': 'default_stanford',
-                    'tags': tags_content,
-                    'type': 'content',
-                    'trained': True,
-                    'deleted': False
-                }
-            )
+            ret_tags = tags_content
         else:
             return None
 
         if 'description' in article and article['description']:
             tags_description = get_tags(article['description'], language, 'description')
-            mongodb.entity.insert_one(
-                {
-                    'article_id': article_id,
-                    'model': 'default_stanford',
-                    'tags': tags_description,
-                    'type': 'description',
-                    'trained': True,
-                    'deleted': False
-                }
-            )
+            ret_tags = union_res_with_article_id(ret_tags, tags_description)
 
         if 'title' in article and article['title']:
             tags_title = get_tags(article['title'], language, 'title')
-            mongodb.entity.insert_one(
-                {
-                    'article_id': article_id,
-                    'model': 'default_stanford',
-                    'tags': tags_title,
-                    'type': 'title',
-                    'trained': True,
-                    'deleted': False
-                }
-            )
+            ret_tags = union_res_with_article_id(ret_tags, tags_title)
+
+        mongodb.entity.insert_one({
+            'article_id': article_id,
+            'model': 'default_stanford',
+            'tags': ret_tags,
+            # 'type': 'content',
+            'trained': True,
+            'deleted': False
+        })
 
         return None
 
