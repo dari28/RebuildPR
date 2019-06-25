@@ -1028,7 +1028,7 @@ class MongoConnection(object):
         more = True if len(list_to_show) > length else False
         return list_to_show[:length], more
 
-    def remove_dubles_articles(self):
+    def remove_dubles_articles_and_entities(self):
         hashes = []
         articles = list(self.article.find({}, {'_id': 1, 'hash': 1}))
         for article in articles:

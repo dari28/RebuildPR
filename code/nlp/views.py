@@ -94,10 +94,10 @@ def fix_article_content(request):
 
 
 @api_view(['POST'])
-def remove_dubles_articles(request):
+def remove_dubles_articles_and_entities(request):
     # params = request.data
     mongodb = mongo.MongoConnection()
-    mongodb.remove_dubles_articles()
+    mongodb.remove_dubles_articles_and_entities()
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 # ***************************** SOURCES ******************************** #
