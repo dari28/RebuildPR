@@ -922,11 +922,15 @@ class MongoConnection(object):
 
     def get_phrases(self, params):
         """Getting phrase to the database"""
+        start = 0 if 'start' not in params else params['start']
+        length = 10 if 'length' not in params else params['length']
         deleted = False
         if params and 'deleted' in params:
             deleted = params['deleted']
 
-        return list(self.phrase.find({'deleted': deleted}))
+        phrases = list(self.phrase.find({'deleted': deleted}).skip(start).limit(length + 1))
+        more = True if len(phrases) > length else False
+        return phrases[:length], more
 
     def download_articles_by_phrases(self):
         new_phrases = list(self.phrase.find({'deleted': False, 'to': {'$exists': False}}))

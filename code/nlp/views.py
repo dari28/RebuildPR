@@ -227,8 +227,8 @@ def get_phrase_list(request):
     except Exception as ex:
         return JsonResponse({'status': False, 'response': {}, 'error': ex}, encoder=JSONEncoderHttp)
     mongodb = mongo.MongoConnection()
-    phrases = mongodb.get_phrases(params=params)
-    results = {'status': True, 'response': {'phrases': phrases}, 'error': {}}
+    phrases, more = mongodb.get_phrases(params=params)
+    results = {'status': True, 'response': {'phrases': phrases, 'more': more}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
