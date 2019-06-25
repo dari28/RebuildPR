@@ -94,10 +94,10 @@ def fix_article_content(request):
 
 
 @api_view(['POST'])
-def remove_dubles_articles(request):
+def remove_dubles_articles_and_entities(request):
     # params = request.data
     mongodb = mongo.MongoConnection()
-    mongodb.remove_dubles_articles()
+    mongodb.remove_dubles_articles_and_entities()
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 # ***************************** SOURCES ******************************** #
@@ -227,8 +227,8 @@ def get_phrase_list(request):
     except Exception as ex:
         return JsonResponse({'status': False, 'response': {}, 'error': ex}, encoder=JSONEncoderHttp)
     mongodb = mongo.MongoConnection()
-    phrases = mongodb.get_phrases(params=params)
-    results = {'status': True, 'response': {'phrases': phrases}, 'error': {}}
+    phrases, more = mongodb.get_phrases(params=params)
+    results = {'status': True, 'response': {'phrases': phrases, 'more': more}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
@@ -357,8 +357,8 @@ def fill_up_geolocation(request):
 def tag_stat(request):
     params = request.data
     mongodb = mongo.MongoConnection()
-    tags = mongodb.tag_stat(params=params)
-    results = {'status': True, 'response': {'tags': tags}, 'error': {}}
+    tags, more = mongodb.tag_stat(params=params)
+    results = {'status': True, 'response': {'tags': tags, 'more': more}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
@@ -481,6 +481,6 @@ def tag_stat_by_articles_list(request):
 def get_locations_by_level(request):
     params = request.data
     mongodb = mongo.MongoConnection()
-    locations = mongodb.get_locations_by_level(params=params)
-    results = {'status': True, 'response': {'locations': locations}, 'error': {}}
+    locations, more = mongodb.get_locations_by_level(params=params)
+    results = {'status': True, 'response': {'locations': locations, 'more': more}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)

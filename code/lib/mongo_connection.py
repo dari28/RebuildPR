@@ -553,11 +553,16 @@ class MongoConnection(object):
         return list(self.entity.aggregate(pipeline, allowDiskUse=True))
 
     def get_locations_by_level(self, params):
+        start = 0 if 'start' not in params else params['start']
+        length = 10 if 'length' not in params else params['length']
+
         if 'location' not in params:
             locations = list(self.location.aggregate([
                 {"$match": {'level': 0}},
                 {"$group": {"_id": "$_id"}},
-                {"$project": {'_id': 1}}
+                {"$project": {'_id': 1}},
+                {'$skip': start},
+                {'$limit': length + 1}
             ]))
         else:
             location = params['location']
@@ -579,9 +584,15 @@ class MongoConnection(object):
                 {"$project": {'_id': 1}}
             ]
 
-            locations = list(self.location.aggregate(pipeline1))
+            pipeline1 += [
+                {'$skip': start},
+                {'$limit': length + 1}
+            ]
 
-        return locations
+            locations = list(self.location.aggregate(pipeline1))
+        locations = [x['_id'] for x in locations]
+        more = True if len(locations) > length else False
+        return locations[:length], more
 
     # ***************************** ARTICLES ******************************** #
     def delete_trash_from_article_content(self, content):
@@ -916,11 +927,15 @@ class MongoConnection(object):
 
     def get_phrases(self, params):
         """Getting phrase to the database"""
+        start = 0 if 'start' not in params else params['start']
+        length = 10 if 'length' not in params else params['length']
         deleted = False
         if params and 'deleted' in params:
             deleted = params['deleted']
 
-        return list(self.phrase.find({'deleted': deleted}))
+        phrases = list(self.phrase.find({'deleted': deleted}).skip(start).limit(length + 1))
+        more = True if len(phrases) > length else False
+        return phrases[:length], more
 
     def download_articles_by_phrases(self):
         new_phrases = list(self.phrase.find({'deleted': False, 'to': {'$exists': False}}))
@@ -1018,7 +1033,7 @@ class MongoConnection(object):
         more = True if len(list_to_show) > length else False
         return list_to_show[:length], more
 
-    def remove_dubles_articles(self):
+    def remove_dubles_articles_and_entities(self):
         hashes = []
         articles = list(self.article.find({}, {'_id': 1, 'hash': 1}))
         for article in articles:
@@ -1070,6 +1085,7 @@ class MongoConnection(object):
         ]
 
         pipeline += [{'$skip': start}]
+        more = True if len(list(self.entity.aggregate(pipeline, allowDiskUse=True))) > length else False
         pipeline += [{'$limit': length}]
 
         if is_only_one_tag:
@@ -1089,7 +1105,7 @@ class MongoConnection(object):
             pipeline += [
                 {'$project': {'tag': '$_id.tag', "phrase": "$_id.phrase", "count": "$count", "_id": 0}}
             ]
-        return list(self.entity.aggregate(pipeline, allowDiskUse=True))
+        return list(self.entity.aggregate(pipeline, allowDiskUse=True)), more
 
     def show_language_list(self):
         l_list = [{'code': k, 'name': v} for k, v in languages_dict.items()]
