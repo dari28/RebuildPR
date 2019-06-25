@@ -25,7 +25,6 @@ urlpatterns = [
     url(r'^delete_permanent_phrase_list/?$', views.delete_permanent_phrase_list),  # DEVELOPER
     # ******************* Entity ***************
     url(r'^get_tags_from_article/?$', views.get_tags_from_article),
-    url(r'^get_tags_from_all_articles/?$', views.get_tags_from_all_articles),
     url(r'^parse_currency/?$', views.parse_currency),
     # ******************** Other ***************
     url(r'^get_geoposition/?$', views.get_geoposition),
@@ -35,20 +34,14 @@ urlpatterns = [
     url(r'^aggregate_articles_by_locations/?$', views.aggregate_articles_by_locations),
     url(r'^get_location_info_by_id/?$', views.get_location_info_by_id),
 
-    url(r'^update_category/?$', views.update_category),
-    url(r'^show_category/?$', views.show_category),
-
-    url(r'^update_language_list/?$', views.update_language_list),
-
-    url(r'^get_language/?$', views.get_language),
-
-    url(r'^get_default_entity/?$', views.get_default_entity),
-
-    url(r'^tag_stat_by_articles_list/?$', views.tag_stat_by_articles_list),
-
-    url(r'^predict_entity/?$', views.predict_entity),
-
-    # Fill up db
+    # ********************************************
+    # *********  DEVELOPER FUNCTIONS   ***********
+    # ********************************************
+    # ****************** Fixes *******************
+    url(r'^fix_article_content/?$', views.fix_article_content),
+    url(r'^remove_dubles_articles_and_entities/?$', views.remove_dubles_articles_and_entities),
+    url(r'^get_tags_from_all_articles/?$', views.get_tags_from_all_articles),
+    # ***************** Fill up db from zero ***************
     url(r'^fill_up_db_from_zero/?$', views.fill_up_db_from_zero),
     url(r'^update_source_list_from_server/?$', views.update_source_list_from_server),
     url(r'^download_articles_by_phrases/?$', views.download_articles_by_phrases),
@@ -61,9 +54,14 @@ urlpatterns = [
     url(r'^add_locations_to_untrained_articles/?$', views.add_locations_to_untrained_articles),
     url(r'^fill_up_geolocation/?$', views.fill_up_geolocation),
 
-    # Fixes
-    url(r'^fix_article_content/?$', views.fix_article_content),
-    url(r'^remove_dubles_articles_and_entities/?$', views.remove_dubles_articles_and_entities),
+
+    url(r'^update_category/?$', views.update_category),
+    # url(r'^show_category/?$', views.show_category),  # DONT WORK
+
+    url(r'^update_language_list/?$', views.update_language_list),
+    url(r'^get_default_entity/?$', views.get_default_entity),
+    url(r'^tag_stat_by_articles_list/?$', views.tag_stat_by_articles_list),
+    url(r'^predict_entity/?$', views.predict_entity),
 ]
 
 execution_at_startup()

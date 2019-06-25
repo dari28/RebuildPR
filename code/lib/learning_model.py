@@ -162,7 +162,9 @@ def get_tags(text, language="en", type="default"):
             language)
 
         for tg in [tg for tg in result1]:
-            result1[tg.lower()] = result1.pop(tg)
+            tag_value = result1.pop(tg)
+            if tg not in ['negative words', 'positive words']:
+                result1[tg.lower()] = tag_value
 
         entities2 = mongodb.get_default_entity({"type": "default_stanford", "language": language})
         result2 = predict_entity_stanford_default(
