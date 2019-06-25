@@ -357,8 +357,8 @@ def fill_up_geolocation(request):
 def tag_stat(request):
     params = request.data
     mongodb = mongo.MongoConnection()
-    tags = mongodb.tag_stat(params=params)
-    results = {'status': True, 'response': {'tags': tags}, 'error': {}}
+    tags, more = mongodb.tag_stat(params=params)
+    results = {'status': True, 'response': {'tags': tags, 'more': more}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 

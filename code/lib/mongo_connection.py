@@ -1076,6 +1076,7 @@ class MongoConnection(object):
         ]
 
         pipeline += [{'$skip': start}]
+        more = True if len(list(self.entity.aggregate(pipeline, allowDiskUse=True))) > length else False
         pipeline += [{'$limit': length}]
 
         if is_only_one_tag:
@@ -1095,7 +1096,7 @@ class MongoConnection(object):
             pipeline += [
                 {'$project': {'tag': '$_id.tag', "phrase": "$_id.phrase", "count": "$count", "_id": 0}}
             ]
-        return list(self.entity.aggregate(pipeline, allowDiskUse=True))
+        return list(self.entity.aggregate(pipeline, allowDiskUse=True)), more
 
     def show_language_list(self):
         l_list = [{'code': k, 'name': v} for k, v in languages_dict.items()]
