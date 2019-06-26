@@ -68,7 +68,8 @@ def find_family(location, addr, lang="en"):
             added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
                                                     'name': (location._address.split(',')[0]),
                                                     'location': {'latitude': location.latitude, 'longitude': location.longitude},
-                                                    'parents': None, 'type': tp, 'level': 0}).inserted_id
+                                                    'parents': None, 'type': tp, 'level': 0}).inserted_id \
+                if len(list(mongodb.location.find({'place_id': location.raw['place_id']}))) == 0 else None
             p_list.append(added_id)
             p_list = remove(p_list)
             return p_list
@@ -95,7 +96,8 @@ def find_family(location, addr, lang="en"):
             added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
                                                     'name': (location._address.split(',')[0]),
                                                     'location': {'latitude': location.latitude, 'longitude': location.longitude},
-                                                    'parents': parents if len(parents) > 0 else None, 'type': tp, 'level': len(parents)}).inserted_id
+                                                    'parents': parents if len(parents) > 0 else None, 'type': tp, 'level': len(parents)}).inserted_id \
+                if len(list(mongodb.location.find({'place_id': location.raw['place_id']}))) == 0 else None
             p_list.append(added_id)
             p_list = remove(p_list)
     else:
