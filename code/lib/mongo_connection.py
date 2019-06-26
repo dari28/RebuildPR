@@ -78,7 +78,7 @@ def find_family(location, addr, lang="en"):
             level = addr_len - 1
             exists_parents = mongodb.geopy_requests.find_one({'phrase': addr})
             if not exists_parents is None:
-                parents.extend(exists_parents)
+                parents.extend(exists_parents['response'])
             else:
                 parent = locator(addr, lang=lang, limit=2)
                 if parent:
@@ -125,55 +125,56 @@ def recursive_geodata_find(params):
         return loc_list
     locations = locator(tag, lang, limit=2)
     if not locations:
-        return None
-    for location in locations:
-        if len(list(mongodb.location.find({'place_id': location.raw['place_id']}))) == 0:
-            address = location.raw['address']
-            address = remove_codes(address)
-            addr_len = len(address.values())
-            keys = list(address.keys())
-            level = addr_len - 1
-            tp = keys[0]
-            if level > 5 or tp in ['road', 'river', 'islet', 'island', 'stream', 'restaurant', 'cafe',
-                                   'peak', 'supermarket', 'guest_house', 'neighbourhood', 'water', 'hamlet']:
-                added_id = None
-            else:
-                if (level == 0 or len(location._address.split(',')) == 1) & len(list(mongodb.location.find({'place_id': location.raw['place_id']}))) == 0:
-                    added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
-                                                            'name': (location._address.split(',')[0]),
-                                                            'location': {'latitude': location.latitude, 'longitude': location.longitude},
-                                                            'parents': None, 'type': tp, 'level': 0, 'tags': [tag]}).inserted_id
-                    loc_list.append(added_id)
+        added_id = None
+    else:
+        for location in locations:
+            if len(list(mongodb.location.find({'place_id': location.raw['place_id']}))) == 0:
+                address = location.raw['address']
+                address = remove_codes(address)
+                addr_len = len(address.values())
+                keys = list(address.keys())
+                level = addr_len - 1
+                tp = keys[0]
+                if level > 5 or tp in ['road', 'river', 'islet', 'island', 'stream', 'restaurant', 'cafe',
+                                       'peak', 'supermarket', 'guest_house', 'neighbourhood', 'water', 'hamlet']:
+                    added_id = None
                 else:
-                    parents = []
-                    addr = location._address.split(',', 1)[1]
-                    exists_parents = mongodb.geopy_requests.find_one({'phrase': addr})
-                    if not exists_parents is None:
-                        parents.extend(exists_parents['response'])
-                    else:
-                        parent = locator(addr, lang=lang, limit=2)
-                        if parent:
-                            if (len(parent) == 1) & (len(remove_codes(parent[0].raw['address']).values()) == level):
-                                response = find_family(location=location, addr=addr, lang=lang)
-                                parents.extend(response)
-                                mongodb.geopy_requests.insert_one({'phrase': addr, 'response': response})
-                            else:
-                                for p in parent:
-                                    if (len(remove_codes(p.raw['address']).values()) == level) & (list(remove_codes(p.raw['address']).keys())[0] <= keys[1]):
-                                        response = find_family(location=location, addr=addr, lang=lang)
-                                        parents.extend(response)
-                                        mongodb.geopy_requests.insert_one({'phrase': addr, 'response': response})
-                            loc_list.extend(parents)
-                    if len(list(mongodb.location.find({'place_id': location.raw['place_id']}))) == 0:
+                    if (level == 0 or len(location._address.split(',')) == 1) & (len(list(mongodb.location.find({'place_id': location.raw['place_id']}))) == 0):
                         added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
                                                                 'name': (location._address.split(',')[0]),
                                                                 'location': {'latitude': location.latitude, 'longitude': location.longitude},
-                                                                'parents': parents, 'type': tp, 'level': len(parents), 'tags': [tag]}).inserted_id
+                                                                'parents': None, 'type': tp, 'level': 0, 'tags': [tag]}).inserted_id
+                        loc_list.append(added_id)
                     else:
-                        added_id = None
+                        parents = []
+                        addr = location._address.split(',', 1)[1]
+                        exists_parents = mongodb.geopy_requests.find_one({'phrase': addr})
+                        if not exists_parents is None:
+                            parents.extend(exists_parents['response'])
+                        else:
+                            parent = locator(addr, lang=lang, limit=2)
+                            if parent:
+                                if (len(parent) == 1) & (len(remove_codes(parent[0].raw['address']).values()) == level):
+                                    response = find_family(location=location, addr=addr, lang=lang)
+                                    parents.extend(response)
+                                    mongodb.geopy_requests.insert_one({'phrase': addr, 'response': response})
+                                else:
+                                    for p in parent:
+                                        if (len(remove_codes(p.raw['address']).values()) == level) & (list(remove_codes(p.raw['address']).keys())[0] <= keys[1]):
+                                            response = find_family(location=location, addr=addr, lang=lang)
+                                            parents.extend(response)
+                                            mongodb.geopy_requests.insert_one({'phrase': addr, 'response': response})
+                                loc_list.extend(parents)
+                        if len(list(mongodb.location.find({'place_id': location.raw['place_id']}))) == 0:
+                            added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
+                                                                    'name': (location._address.split(',')[0]),
+                                                                    'location': {'latitude': location.latitude, 'longitude': location.longitude},
+                                                                    'parents': parents, 'type': tp, 'level': len(parents), 'tags': [tag]}).inserted_id
+                        else:
+                            added_id = None
 
-        else:
-            added_id = mongodb.location.update_one({'place_id': location.raw['place_id']}, {'$addToSet': {'tags': tag}}).upserted_id
+            else:
+                added_id = mongodb.location.update_one({'place_id': location.raw['place_id']}, {'$addToSet': {'tags': tag}}).upserted_id
     loc_list.append(added_id)
     loc_list = remove(loc_list)
     return loc_list
