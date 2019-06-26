@@ -742,7 +742,7 @@ class MongoConnection(object):
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
         # full_artilces = list(self.article.find({'_id': {"$in": articles['articles']}}))
-        full_articles = list(self.article.find(search_param).skip(start).limit(length + 1))
+        full_articles = list(self.article.find(search_param).sort("_id", 1).skip(start).limit(length + 1))
         more = True if len(full_articles) > length else False
         return full_articles[:length], more
 
