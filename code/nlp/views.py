@@ -50,8 +50,9 @@ def update_source_list_from_server(request):
 def get_tags_from_article(request):
     params = request.data
     # if not Task.objects.filter(task_name=tasks.get_tags_from_article.name).exists():
-    tasks.get_tags_from_article(params=params)
-    results = {'status': True, 'response': {}, 'error': {}}
+    # tasks.get_tags_from_article(params=params)
+    entity = model.get_tags_from_article(params=params)
+    results = {'status': True, 'response': {'entity': entity}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 # noinspection PyUnusedLocal

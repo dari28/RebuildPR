@@ -303,16 +303,17 @@ def get_tags_from_article(params):
             tags_title = get_tags(article['title'], language, 'title')
             ret_tags = union_res_with_article_id(ret_tags, tags_title)
 
-        mongodb.entity.insert_one({
+        entity_elem = {
             'article_id': article_id,
             'model': 'default_stanford',
             'tags': ret_tags,
             # 'type': 'content',
             'trained': True,
             'deleted': False
-        })
+        }
+        mongodb.entity.insert_one(entity_elem)
 
-        return None
+        return entity_elem
 
 
 def get_tags_from_all_articles():

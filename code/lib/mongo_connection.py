@@ -229,7 +229,7 @@ class MongoConnection(object):
                     search_param[field] = {'$in': params[field]}
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
-        sources = list(self.source.find(search_param).skip(start).limit(length + 1))
+        sources = list(self.source.find(search_param).sort('_id', 1).skip(start).limit(length + 1))
         more = True if len(sources) > length else False
         for source in sources:
             source["articles"] = self.article.count({'source.name': source['name']})
@@ -735,9 +735,9 @@ class MongoConnection(object):
                 '_id': 0
             }}
         ]
-        articles = [x for article in list(self.q_article.aggregate(article_pipeline)) for x in article['articles']]
+        article_ids = [x for article in list(self.q_article.aggregate(article_pipeline)) for x in article['articles']]
 
-        search_param['_id'] = {'$in': articles}
+        search_param['_id'] = {'$in': article_ids}
 
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
@@ -762,6 +762,7 @@ class MongoConnection(object):
 
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
+        language = "en" if "language" not in params else params["language"]
         pipeline = [
             {'$lookup': {
                 'from': "article",
@@ -772,7 +773,8 @@ class MongoConnection(object):
             {'$unwind': '$article'},
             {'$match': {
                 'tags.{}.word'.format(tag): tag_word,
-                'article.content': {'$ne': None}
+                'article.content': {'$ne': None},
+                'article.source.language': language
             }},
             {'$project': {
                 '_id': 0, 'article_id': '$article._id', 'author': '$article.author', 'title': '$article.title', 'publishedAt': '$article.publishedAt'}},
@@ -1022,14 +1024,23 @@ class MongoConnection(object):
         if 'tags' not in params:
             raise EnvironmentError('Request must contain \'tags\' field')
         tags = params['tags']
+        start = 0 if 'start' not in params else params['start']
+        length = 10 if 'length' not in params else params['length']
+        language = "en" if "language" not in params else params["language"]
+
         query = dict()
         query_list = []
         for tag in tags.keys():
             query_list.append({'tags.{0}.word'.format(tag): tags.get(tag).lower()})
         query['$or'] = query_list
-        start = 0 if 'start' not in params else params['start']
-        length = 10 if 'length' not in params else params['length']
-        list_to_show = list(self.entity.find(query).skip(start).limit(length + 1))
+
+        # list_to_show = list(self.entity.find(query).skip(start).limit(length + 1))
+        pipeline = [
+            {'$match': query},
+            {'$skip': start},
+            {'$limit': length + 1}
+        ]
+        list_to_show = list(self.entity.aggregate(pipeline))
         more = True if len(list_to_show) > length else False
         return list_to_show[:length], more
 

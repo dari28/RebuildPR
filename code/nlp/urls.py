@@ -24,7 +24,6 @@ urlpatterns = [
     url(r'^update_phrase_list/?$', views.update_phrase_list),
     url(r'^delete_permanent_phrase_list/?$', views.delete_permanent_phrase_list),  # DEVELOPER
     # ******************* Entity ***************
-    url(r'^get_tags_from_article/?$', views.get_tags_from_article),
     url(r'^parse_currency/?$', views.parse_currency),
     # ******************** Other ***************
     url(r'^get_geoposition/?$', views.get_geoposition),
@@ -62,6 +61,7 @@ urlpatterns = [
     url(r'^get_default_entity/?$', views.get_default_entity),
     url(r'^tag_stat_by_articles_list/?$', views.tag_stat_by_articles_list),
     url(r'^predict_entity/?$', views.predict_entity),
+    url(r'^get_tags_from_article/?$', views.get_tags_from_article),
 ]
 
 execution_at_startup()
