@@ -70,7 +70,8 @@ def get_tags_from_untrained_articles(request):
 @api_view(['POST'])
 def get_tags_from_all_articles(request):
     # if not Task.objects.filter(task_name=tasks.get_tags_from_all_articles.name).exists():
-    tasks.get_tags_from_all_articles()
+    # tasks.get_tags_from_all_articles()
+    model.get_tags_from_all_articles()
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -405,15 +406,6 @@ def predict_entity(request):
 
     predict_result = model.predict_entity(data=data['data'], set_entity=entity_ids, language=data['language'])
     results = {'status': True, 'response': {'predict': predict_result}, 'error': {}}
-    return JsonResponse(results, encoder=JSONEncoderHttp)
-
-
-@api_view(['POST'])
-def get_language(request):
-    params = request.data
-    mongodb = mongo.MongoConnection()
-    response = mongodb.get_language(params=params)
-    results = {'status': True, 'response': response, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 # noinspection PyUnusedLocal

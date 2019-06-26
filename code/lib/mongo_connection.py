@@ -1113,12 +1113,6 @@ class MongoConnection(object):
         l_list = [{'code': k, 'name': v} for k, v in languages_dict.items()]
         return l_list
 
-    def get_language(self, params):
-        if 'code' not in params:
-            raise EnvironmentError('Request must contain \'code\' field')
-        language = self.language.find_one({'code': params['code']})
-        return language
-
     def show_tagged_article_list(self, params):
         search_param = dict()
         status = 'tagged' if 'status' not in params else params['status']
