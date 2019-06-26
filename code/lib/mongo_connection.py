@@ -684,6 +684,7 @@ class MongoConnection(object):
         if 'used_filter_phrase' not in params:
             # raise EnvironmentError('Request must contain \'used_filter_phrase\' field')
             q = self.phrase.find({}, {'phrase': 1})
+            q = [x['phrase'] for x in q]
         else:
             q = params['used_filter_phrase']
             # Convert str to list
