@@ -134,8 +134,8 @@ def recursive_geodata_find(params):
                 keys = list(address.keys())
                 level = addr_len - 1
                 tp = keys[0]
-                if not (level <= 5 or tp not in ['road', 'river', 'islet', 'island', 'stream', 'restaurant', 'cafe',
-                                       'peak', 'supermarket', 'guest_house', 'neighbourhood', 'water', 'hamlet']):
+                if not (level > 5 or tp in ['road', 'river', 'islet', 'island', 'stream', 'restaurant', 'cafe', 'peak',
+                                                 'supermarket', 'guest_house', 'neighbourhood', 'water', 'hamlet', 'building']):
                     if (level == 0 or len(location._address.split(',')) == 1) & (len(list(mongodb.location.find({'place_id': location.raw['place_id']}))) == 0):
                         added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
                                                                 'name': (location._address.split(',')[0]),
@@ -164,7 +164,8 @@ def recursive_geodata_find(params):
                                         mongodb.geopy_requests.insert_one({'phrase': addr, 'response': response})
                                     else:
                                         for p in parent:
-                                            if (len(remove_codes(p.raw['address']).values()) == level) & (list(remove_codes(p.raw['address']).keys())[0] <= keys[1]):
+                                            if (len(remove_codes(p.raw['address']).values()) == level) & \
+                                                    (list(remove_codes(p.raw['address']).keys())[0] <= keys[1]):
                                                 response = find_family(location=location, addr=addr, lang=lang)
                                                 parents.extend(response)
                                                 mongodb.geopy_requests.insert_one({'phrase': addr, 'response': response})
