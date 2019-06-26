@@ -818,6 +818,9 @@ class MongoConnection(object):
             }},
             {'$project': {
                 '_id': 0, 'article_id': '$article._id', 'author': '$article.author', 'title': '$article.title', 'publishedAt': '$article.publishedAt'}},
+            {'$sort': {
+                'article_id': 1
+            }}
         ]
 
         count_articles = len(list(self.entity.aggregate(pipeline, allowDiskUse=True)))
@@ -1074,9 +1077,17 @@ class MongoConnection(object):
             query_list.append({'tags.{0}.word'.format(tag): tags.get(tag).lower()})
         query['$or'] = query_list
 
-        # list_to_show = list(self.entity.find(query).skip(start).limit(length + 1))
         pipeline = [
             {'$match': query},
+            {'$lookup': {
+                'from': 'article',
+                'localField': 'article_id',
+                'foreignField': '_id',
+                'as': 'article'
+            }},
+            {'$match': {'article.source.language': language}},
+            {'$project': {'article': 0}},
+            {'$sort': {'_id': 1}},
             {'$skip': start},
             {'$limit': length + 1}
         ]
@@ -1118,7 +1129,17 @@ class MongoConnection(object):
             if tag not in tag_list:
                 raise EnvironmentError('Value of the field "tag" {} must be in {}'.format(tag, tag_list))
 
+        language = "en" if "language" not in params else params["language"]
+
         pipeline = [
+            {'$lookup': {
+                'from': 'article',
+                'localField': 'article_id',
+                'foreignField': '_id',
+                'as': 'article'
+            }},
+            {'$match': {'article.source.language': language}},
+            {'$project': {'article': 0}},
             {"$addFields": {
                 "tags": {"$objectToArray": "$tags"}
             }},
@@ -1131,7 +1152,7 @@ class MongoConnection(object):
                 },
                 "count": {"$sum": 1}
             }},
-            {'$sort': {'count': -1}},
+            {'$sort': {'count': -1, '_id.tag': 1, '_id.phrase': 1}},
             {'$match': {'_id.tag': {'$in': tags}}}
         ]
 
@@ -1151,10 +1172,13 @@ class MongoConnection(object):
                     }
                 }},
                 {'$project': {'tag': '$_id', 'tag_list': 1, '_id': 0}},
+                # {'$replaceRoot': {'newRoot': '$tag_list'}}
             ]
         else:
             pipeline += [
-                {'$project': {'tag': '$_id.tag', "phrase": "$_id.phrase", "count": "$count", "_id": 0}}
+                {'$project': {
+                    'tag': '$_id.tag', "phrase": "$_id.phrase", "count": "$count", "_id": 0
+                }},
             ]
         return list(self.entity.aggregate(pipeline, allowDiskUse=True)), more
 
@@ -1167,10 +1191,28 @@ class MongoConnection(object):
         status = 'tagged' if 'status' not in params else params['status']
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
+        language = "en" if "language" not in params else params["language"]
+
         trained = self.entity.count({'trained': True})
         untrained = self.entity.count({'trained': False})
         search_param['trained'] = True if status == 'tagged' else False
-        articles = list(self.entity.find(search_param).skip(start).limit(length + 1))
+
+        pipeline = [
+            {'$match': search_param},
+            {'$lookup': {
+                'from': 'article',
+                'localField': 'article_id',
+                'foreignField': '_id',
+                'as': 'article'
+            }},
+            {'$match': {'article.source.language': language}},
+            {'$project': {'article': 0}},
+            {'$sort': {'_id': 1}},
+            {'$skip': start},
+            {'$limit': length + 1}
+        ]
+
+        articles = list(self.entity.aggregate(pipeline))
         more = True if len(articles) > length else False
         return articles[:length], trained, untrained, more
 
