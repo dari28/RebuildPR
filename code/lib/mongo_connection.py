@@ -63,43 +63,45 @@ def find_family(location, addr, lang="en"):
         address = remove_codes(address)
         addr_len = len(address.values())
         keys = list(address.keys())
+        level = addr_len - 1
         tp = keys[0]
-        if (addr_len == 1) or (len(addr.split(',')) == 1):
-            added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
-                                                    'name': (location._address.split(',')[0]),
-                                                    'location': {'latitude': location.latitude, 'longitude': location.longitude},
-                                                    'parents': None, 'type': tp, 'level': 0}).inserted_id \
-                if len(list(mongodb.location.find({'place_id': location.raw['place_id']}))) == 0 else None
-            p_list.append(added_id)
-            p_list = remove(p_list)
-            return p_list
-        else:
-            parents = []
-            addr = addr.split(',', 1)[1]
-            level = addr_len - 1
-            exists_parents = mongodb.geopy_requests.find_one({'phrase': addr})
-            if not exists_parents is None:
-                parents.extend(exists_parents['response'])
+        if not (level > 5 or tp in ['road', 'river', 'islet', 'island', 'stream', 'restaurant', 'cafe', 'peak',
+                                    'supermarket', 'guest_house', 'neighbourhood', 'water', 'hamlet', 'building']):
+            if (addr_len == 1) or (len(addr.split(',')) == 1):
+                added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
+                                                        'name': (location._address.split(',')[0]),
+                                                        'location': {'latitude': location.latitude, 'longitude': location.longitude},
+                                                        'parents': None, 'type': tp, 'level': 0}).inserted_id \
+                    if len(list(mongodb.location.find({'place_id': location.raw['place_id']}))) == 0 else None
+                p_list.append(added_id)
+                p_list = remove(p_list)
+                return p_list
             else:
-                parent = locator(addr, lang=lang, limit=1)
-                if parent:
-                    for p in parent:
-                        if (len(remove_codes(p.raw['address']).values()) == level) & (list(remove_codes(p.raw['address']).keys())[0] <= keys[1]):
+                parents = []
+                addr = addr.split(',', 1)[1]
+                exists_parents = mongodb.geopy_requests.find_one({'phrase': addr})
+                if not exists_parents is None:
+                    parents.extend(exists_parents['response'])
+                else:
+                    parent = locator(addr, lang=lang, limit=1)
+                    if parent:
+                        for p in parent:
+                            if (len(remove_codes(p.raw['address']).values()) == level) & (list(remove_codes(p.raw['address']).keys())[0] <= keys[1]):
+                                response = find_family(location=location, addr=addr, lang=lang)
+                                parents.extend(response)
+                                mongodb.geopy_requests.insert_one({'phrase': addr, 'response': response})
+                        if (len(parents) == 0):
                             response = find_family(location=location, addr=addr, lang=lang)
                             parents.extend(response)
                             mongodb.geopy_requests.insert_one({'phrase': addr, 'response': response})
-                    if (len(parents) == 0):
-                        response = find_family(location=location, addr=addr, lang=lang)
-                        parents.extend(response)
-                        mongodb.geopy_requests.insert_one({'phrase': addr, 'response': response})
-                    p_list.extend(parents)
-            added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
-                                                    'name': (location._address.split(',')[0]),
-                                                    'location': {'latitude': location.latitude, 'longitude': location.longitude},
-                                                    'parents': parents if len(parents) > 0 else None, 'type': tp, 'level': len(parents)}).inserted_id \
-                if len(list(mongodb.location.find({'place_id': location.raw['place_id']}))) == 0 else None
-            p_list.append(added_id)
-            p_list = remove(p_list)
+                        p_list.extend(parents)
+                added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
+                                                        'name': (location._address.split(',')[0]),
+                                                        'location': {'latitude': location.latitude, 'longitude': location.longitude},
+                                                        'parents': parents if len(parents) > 0 else None, 'type': tp, 'level': level}).inserted_id \
+                    if len(list(mongodb.location.find({'place_id': location.raw['place_id']}))) == 0 else None
+                p_list.append(added_id)
+                p_list = remove(p_list)
     else:
         added_id = list(mongodb.location.find({'place_id': location.raw['place_id']}))[0]['_id']
         p_list.append(added_id)
@@ -125,7 +127,22 @@ def recursive_geodata_find(params):
             if loc['parents']:
                 loc_list.extend(loc['parents'])
         return loc_list
-    locations = locator(tag, lang, limit=3)
+    f_locations = locator(tag, lang, limit=3)
+    locations = []
+    if f_locations:
+        for loc in f_locations:
+            address = loc.raw['address']
+            address = remove_codes(address)
+            addr_len = len(address.values())
+            keys = list(address.keys())
+            level = addr_len - 1
+            tp = keys[0]
+            if not (level > 5 or tp in ['road', 'river', 'islet', 'island', 'stream', 'restaurant', 'cafe', 'peak',
+                                        'supermarket', 'guest_house', 'neighbourhood', 'water', 'hamlet', 'building']):
+                locations.append(loc)
+                break
+    else:
+        return None
     added_id = None
     if locations:
         for location in locations:
@@ -138,7 +155,8 @@ def recursive_geodata_find(params):
                 tp = keys[0]
                 if not (level > 5 or tp in ['road', 'river', 'islet', 'island', 'stream', 'restaurant', 'cafe', 'peak',
                                             'supermarket', 'guest_house', 'neighbourhood', 'water', 'hamlet', 'building']):
-                    if (level == 0 or len(location._address.split(',')) == 1) & (len(list(mongodb.location.find({'place_id': location.raw['place_id']}))) == 0):
+                    if (level == 0 or len(location._address.split(',')) == 1) & \
+                            (len(list(mongodb.location.find({'place_id': location.raw['place_id']}))) == 0):
                         added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
                                                                 'name': (location._address.split(',')[0]),
                                                                 'location': {'latitude': location.latitude, 'longitude': location.longitude},
@@ -168,7 +186,8 @@ def recursive_geodata_find(params):
                             added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
                                                                     'name': (location._address.split(',')[0]),
                                                                     'location': {'latitude': location.latitude, 'longitude': location.longitude},
-                                                                    'parents': parents if len(parents) > 0 else None, 'type': tp, 'level': len(parents), 'tags': [tag]}).inserted_id
+                                                                    'parents': parents if len(parents) > 0 else None, 'type': tp, 'level': level,
+                                                                    'tags': [tag]}).inserted_id
                         else:
                             added_id = None
             else:
