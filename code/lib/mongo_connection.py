@@ -134,7 +134,7 @@ def recursive_geodata_find(params):
                 keys = list(address.keys())
                 level = addr_len - 1
                 tp = keys[0]
-                if not (level <= 5 or tp not in ['road', 'river', 'islet', 'island', 'stream', 'restaurant', 'cafe',
+                if not (level <= 5 or tp in ['road', 'river', 'islet', 'island', 'stream', 'restaurant', 'cafe',
                                        'peak', 'supermarket', 'guest_house', 'neighbourhood', 'water', 'hamlet']):
                     if (level == 0 or len(location._address.split(',')) == 1) & (len(list(mongodb.location.find({'place_id': location.raw['place_id']}))) == 0):
                         added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
