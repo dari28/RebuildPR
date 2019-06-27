@@ -14,6 +14,7 @@ from lib import tools
 import time
 from geopy.geocoders import Nominatim
 import operator
+import logging
 
 
 def remove(duplicate):
@@ -33,16 +34,20 @@ def locator(text, lang="en", limit=1):
         print(ex)
 
     print('Location search: ', text)
-    while trigger:
+    logging.basicConfig(filename="locator.log", level=logging.INFO)
+    i = 0
+    results = None
+    while i < 3:
         try:
             results = geolocator.geocode(text.decode('utf-8'), exactly_one=False, addressdetails=True, limit=limit, language=lang)
         except Exception as e:
+            logging.info('text: {0}, error: {1}'.format(text.decode('utf-8'), e))
             print(e)
             print('Sleep 10s')
             time.sleep(10)
+            i += 1
         else:
-            trigger = False
-            print('Success')
+            i = 3
     return results
 
 
@@ -434,7 +439,7 @@ class MongoConnection(object):
             locations = []
             for tag in list(tags):
                 location = recursive_geodata_find({'tag': tag['word'], 'lang': lang})
-                [locations.extend(location) if location is not None else None]
+                locations.extend(location) if location is not None else None
             self.entity.update_one({'_id': article_id}, {'$set': {'locations': locations}})
 
     # def find_articles_by_location(self, params):
