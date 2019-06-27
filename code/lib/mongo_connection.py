@@ -527,7 +527,7 @@ class MongoConnection(object):
         entity_ids = [art['_id'] for art in articles]
         article_ids = [art['article_id'] for art in articles]
 
-        article_full = list(self.article.find({'_id': {"$in": article_ids}}, {'title': 1, 'author': 1, 'publishedAt': 1}))
+        article_full = list(self.article.find({'_id': {"$in": article_ids}}, {'title': 1, 'author': 1, 'publishedAt': 1}).sort('_id', 1))
 
         tags_list = self.tag_stat_by_articles_list({'articles': entity_ids})
         start = 0 if 'start' not in params else params['start']
@@ -581,6 +581,7 @@ class MongoConnection(object):
                 {"$match": {'level': 0}},
                 {"$group": {"_id": "$_id"}},
                 {"$project": {'_id': 1}},
+                {'sort': {'_id': 1}},
                 {'$skip': start},
                 {'$limit': length + 1}
             ]))
@@ -978,7 +979,7 @@ class MongoConnection(object):
         if params and 'deleted' in params:
             deleted = params['deleted']
 
-        phrases = list(self.phrase.find({'deleted': deleted}).skip(start).limit(length + 1))
+        phrases = list(self.phrase.find({'deleted': deleted}).sort('_id', 1).skip(start).limit(length + 1))
         more = True if len(phrases) > length else False
         return phrases[:length], more
 
@@ -1131,6 +1132,35 @@ class MongoConnection(object):
 
         language = "en" if "language" not in params else params["language"]
 
+        # RETURN COUNT OF SELECTED TAGS
+
+        # pipeline = [
+        #     {'$lookup': {
+        #         'from': 'article',
+        #         'localField': 'article_id',
+        #         'foreignField': '_id',
+        #         'as': 'article'
+        #     }},
+        #     {'$match': {'article.source.language': language}},
+        #     {'$project': {'article': 0}},
+        #     {"$addFields": {
+        #         "tags": {"$objectToArray": "$tags"}
+        #     }},
+        #     {"$unwind": "$tags"},
+        #     {"$unwind": "$tags.v"},
+        #     {"$group": {
+        #         "_id": {
+        #             "tag": "$tags.k",
+        #             "phrase": "$tags.v.word"
+        #         },
+        #         "count": {"$sum": 1}
+        #     }},
+        #     {'$sort': {'count': -1, '_id.tag': 1, '_id.phrase': 1}},
+        #     {'$match': {'_id.tag': {'$in': tags}}}
+        # ]
+
+        # RETURN COUNT OF ARTICLE WHICH CONTAIN SELECTED TAGS
+
         pipeline = [
             {'$lookup': {
                 'from': 'article',
@@ -1143,18 +1173,27 @@ class MongoConnection(object):
             {"$addFields": {
                 "tags": {"$objectToArray": "$tags"}
             }},
+
             {"$unwind": "$tags"},
             {"$unwind": "$tags.v"},
+            {'$match': {'tags.k': {'$in': tags}}},
             {"$group": {
                 "_id": {
                     "tag": "$tags.k",
-                    "phrase": "$tags.v.word"
+                    "phrase": "$tags.v.word",
+                    "article_id": "$article_id"
+                }
+            }},
+            {"$group": {
+                "_id": {
+                    "tag": "$_id.tag",
+                    "phrase": "$_id.phrase"
                 },
                 "count": {"$sum": 1}
             }},
             {'$sort': {'count': -1, '_id.tag': 1, '_id.phrase': 1}},
-            {'$match': {'_id.tag': {'$in': tags}}}
         ]
+
 
         pipeline += [{'$skip': start}]
         more = True if len(list(self.entity.aggregate(pipeline, allowDiskUse=True))) > length else False
