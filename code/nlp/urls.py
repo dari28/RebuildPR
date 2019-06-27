@@ -59,7 +59,7 @@ urlpatterns = [
 
     url(r'^update_language_list/?$', views.update_language_list),
     url(r'^get_default_entity/?$', views.get_default_entity),
-    url(r'^tag_stat_by_articles_list/?$', views.tag_stat_by_articles_list),
+    url(r'^tag_stat_by_articles_list/?$', views.tag_stat_by_articles_list),  # NEED FOR
     url(r'^predict_entity/?$', views.predict_entity),
     url(r'^get_tags_from_article/?$', views.get_tags_from_article),
 ]

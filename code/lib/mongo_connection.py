@@ -642,7 +642,17 @@ class MongoConnection(object):
 
                 content = self.delete_trash_from_article_content(content)
                 article['content'] = content
-                self.article.update_one({'_id': article['_id']}, {'$set': {'content': article['content'], 'original_content': article['original_content']}})
+                article['title'] = self.delete_trash_from_article_content(article['title'])
+                article['description'] = self.delete_trash_from_article_content(article['description'])
+                self.article.update_one(
+                    {'_id': article['_id']},
+                    {'$set': {
+                        'content': article['content'],
+                        'title': article['title'],
+                        'description': article['description'],
+                        'original_content': article['original_content']
+                    }}
+                )
             except Exception as ex:
                 print(ex)
                 print('Error in article {}'.format(article['_id']))
@@ -658,6 +668,8 @@ class MongoConnection(object):
             new_hash_list.append(ns['hash'])
             ns['original_content'] = ns['content']
             ns['content'] = self.delete_trash_from_article_content(ns['content'])
+            ns['title'] = self.delete_trash_from_article_content(ns['title'])
+            ns['description'] = self.delete_trash_from_article_content(ns['description'])
 
         old_articles = self.article.find()
         old_sources_hashes = [x['hash'] for x in old_articles]
