@@ -14,7 +14,7 @@ from lib import tools
 import time
 from geopy.geocoders import Nominatim
 import operator
-
+from urlextract import URLExtract
 
 def remove(duplicate):
     final_list = []
@@ -611,8 +611,46 @@ class MongoConnection(object):
         content = re.sub(r'\w+… ?$', '', content)  # remove end characters with ...
         content = re.sub(r'… ?$', '', content)  # remove end ...
         content = re.sub(r'�', '', content)  # remove �
+        extractor = URLExtract()
+        urls = extractor.find_urls(content)
+        for url in urls:
+            content = content.replace(url, '')
+        content = re.sub(r'(?:\w+\.pdf|\w+\.txt|\w+\.doc|\w+\.docx'
+                      r'|\w+\.odt|\w+\.rtf|\w+\.tex|\w+\.wks'
+                      r'|\w+\.wps|\w+\.wpd|\w+\.exe|\w+\.3g2'
+                      r'|\w+\.3gp|\w+\.avi|\w+\.flv|\w+\.h264'
+                      r'|\w+\.m4v|\w+\.mkv|\w+\.mov|\w+\.mp4'
+                      r'|\w+\.mpg|\w+\.mpeg|\w+\.rm|\w+\.swf'
+                      r'|\w+\.vob|\w+\.wmv|\w+\.bak|\w+\.cab'
+                      r'|\w+\.cfg|\w+\.cpl|\w+\.cur|\w+\.dll'
+                      r'|\w+\.dmp|\w+\.drv|\w+\.icns|\w+\.ico'
+                      r'|\w+\.ini|\w+\.lnk|\w+\.msi|\w+\.sys'
+                      r'|\w+\.tmp|\w+\.ods|\w+\.xlr|\w+\.xls'
+                      r'|\w+\.xlsx|\w+\.c|\w+\.class|\w+\.cpp'
+                      r'|\w+\.cs|\w+\.h|\w+\.java|\w+\.sh'
+                      r'|\w+\.swift|\w+\.vb|\w+\.key|\w+\.odp'
+                      r'|\w+\.pps|\w+\.ppt|\w+\.pptx|\w+\.asp'
+                      r'|\w+\.aspx|\w+\.cer|\w+\.cfm|\w+\.cgi'
+                      r'|\w+\.pl|\w+\.css|\w+\.htm|\w+\.html'
+                      r'|\w+\.js|\w+\.jsp|\w+\.part|\w+\.php'
+                      r'|\w+\.py|\w+\.rss|\w+\.xhtml|\w+\.ai'
+                      r'|\w+\.bmp|\w+\.gif|\w+\.ico|\w+\.jpeg'
+                      r'|\w+\.jpg|\w+\.png|\w+\.ps|\w+\.psd'
+                      r'|\w+\.svg|\w+\.tif|\w+\.tiff|\w+\.fnt'
+                      r'|\w+\.fon|\w+\.otf|\w+\.ttf|\w+\.apk'
+                      r'|\w+\.bat|\w+\.bin|\w+\.cgi|\w+\.pl'
+                      r'|\w+\.com|\w+\.gadget|\w+\.jar|\w+\.py'
+                      r'|\w+\.wsf|\w+\.csv|\w+\.dat|\w+\.db'
+                      r'|\w+\.dbf|\w+\.log|\w+\.mdb|\w+\.sav'
+                      r'|\w+\.sql|\w+\.tar|\w+\.xml|\w+\.bin'
+                      r'|\w+\.dmg|\w+\.iso|\w+\.toast|\w+\.vcd'
+                      r'|\w+\.7z|\w+\.arj|\w+\.deb|\w+\.pkg'
+                      r'|\w+\.rar|\w+\.rpm|\w+\.tar.gz|\w+\.z'
+                      r'|\w+\.zip|\w+\.aif|\w+\.cds|\w+\.mid'
+                      r'|\w+\.midi|\w+\.mp3|\w+\.mpa|\w+\.ogg'
+                      r'|\w+\.wav|\w+\.wma|\w+\.wpl)', '', content)
         content = re.sub(r'www\.\S+', '', content)  # remove url1
-        content = re.sub(r'http:\/\/\S+', '', content)  # remove url2
+        content = re.sub(r'https?:\/\/\S+', '', content)  # remove url2
         content = re.sub('[→]+', '', content)  # remove strange symbols
 
         content = re.sub('Click here to join', '', content)  # remove links
