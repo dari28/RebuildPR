@@ -65,8 +65,8 @@ def find_family(location, addr, lang="en"):
         keys = list(address.keys())
         level = addr_len - 1
         tp = keys[0]
-        if not (level > 5 or tp in ['road', 'river', 'islet', 'island', 'stream', 'restaurant', 'cafe', 'peak',
-                                    'supermarket', 'guest_house', 'neighbourhood', 'water', 'hamlet', 'building']):
+        if not (level > 3 or tp in ['road', 'river', 'islet', 'island', 'stream', 'restaurant', 'cafe', 'peak', 'memorial',
+                                    'supermarket', 'guest_house', 'neighbourhood', 'water', 'hamlet', 'building', 'address29']):
             if (addr_len == 1) or (len(addr.split(',')) == 1):
                 added_id = mongodb.location.insert_one({'place_id': location.raw['place_id'],
                                                         'name': (location._address.split(',')[0]),
@@ -137,8 +137,8 @@ def recursive_geodata_find(params):
             keys = list(address.keys())
             level = addr_len - 1
             tp = keys[0]
-            if not (level > 5 or tp in ['road', 'river', 'islet', 'island', 'stream', 'restaurant', 'cafe', 'peak',
-                                        'supermarket', 'guest_house', 'neighbourhood', 'water', 'hamlet', 'building']):
+            if not (level > 3 or tp in ['road', 'river', 'islet', 'island', 'stream', 'restaurant', 'cafe', 'peak', 'memorial',
+                                    'supermarket', 'guest_house', 'neighbourhood', 'water', 'hamlet', 'building', 'address29']):
                 locations.append(loc)
                 break
     else:
