@@ -1303,11 +1303,19 @@ class MongoConnection(object):
                     "tag": "$_id.tag",
                     "phrase": "$_id.phrase"
                 },
-                "count": {"$sum": 1}
+                "count": {"$sum": 1},
+                # "phrase_length": {'$strLenCP': "$_id.phrase" }
             }},
-            {'$sort': {'count': -1, '_id.tag': 1, '_id.phrase': 1}},
         ]
 
+        debug_sort = False if 'debug_sort' not in params else params['debug_sort']
+        if debug_sort:
+            pipeline += [
+                {'$project': {"phrase_length": {'$strLenCP': "$_id.phrase"}, "count": "$count"}},
+                {'$sort': {'phrase_length': -1, 'count': -1, '_id.tag': 1, '_id.phrase': 1}}
+            ]
+        else:
+            pipeline += [{'$sort': {'count': -1, '_id.tag': 1, '_id.phrase': 1}}]
 
         pipeline += [{'$skip': start}]
         more = True if len(list(self.entity.aggregate(pipeline, allowDiskUse=True))) > length else False
@@ -1328,11 +1336,18 @@ class MongoConnection(object):
                 # {'$replaceRoot': {'newRoot': '$tag_list'}}
             ]
         else:
-            pipeline += [
-                {'$project': {
-                    'tag': '$_id.tag', "phrase": "$_id.phrase", "count": "$count", "_id": 0
-                }},
-            ]
+            if debug_sort:
+                pipeline += [
+                    {'$project': {
+                        'tag': '$_id.tag', "phrase": "$_id.phrase", "phrase_length": "$phrase_length", "count": "$count", "_id": 0
+                    }},
+                ]
+            else:
+                pipeline += [
+                    {'$project': {
+                        'tag': '$_id.tag', "phrase": "$_id.phrase", "count": "$count", "_id": 0
+                    }},
+                ]
         return list(self.entity.aggregate(pipeline, allowDiskUse=True)), more
 
     def show_tagged_article_list(self, params):
