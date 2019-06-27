@@ -1089,11 +1089,10 @@ class MongoConnection(object):
             articles = []
             for article in f_articles:
                 source_name = article['source']['name']
-                if source_name & (not self.check_source(source_name)):
-                    articles.append(article)
+                if self.check_source(source_name):
+                    pass
                 else:
-                    if (article['sorce']['id'] is None) and (len(list(self.source.find_one({'name': source_name}))) == 0):
-                        self.add_bad_source(source_name)
+                    articles.append(article)
             self.update_article_list_one_q(q, language, articles)
             if articles:
                 published_at_list = sorted([article['publishedAt'] for article in articles])
