@@ -426,9 +426,10 @@ class MongoConnection(object):
             )
         return ids
 
-    def add_article_locations(self, article_id):
+    def add_article_locations(self, entity_id):
 
-        article = self.entity.find_one({'_id': article_id})
+        article = self.entity.find_one({'_id': entity_id})
+        print('entity_id: ', entity_id)
         if 'location' in article['tags']:
             tags = article['tags']['location']
             art = self.article.find_one({'_id': article['article_id']})
@@ -440,7 +441,7 @@ class MongoConnection(object):
             for tag in list(tags):
                 location = recursive_geodata_find({'tag': tag['word'], 'lang': lang})
                 locations.extend(location) if location is not None else None
-            self.entity.update_one({'_id': article_id}, {'$set': {'locations': locations}})
+            self.entity.update_one({'_id': entity_id}, {'$set': {'locations': locations}})
 
     # def find_articles_by_location(self, params):
     #     if 'location' not in params:
