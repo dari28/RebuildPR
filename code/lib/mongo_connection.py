@@ -1,6 +1,5 @@
 """"Connection class to mongoDB"""
 
-from news import languages_dict
 import pymongo
 from bson import ObjectId, errors
 from news import NewsCollection
@@ -452,33 +451,24 @@ class MongoConnection(object):
     #     return articles
 
     def aggregate_articles_by_locations(self, params):
-        pipeline = []
         if 'locations' in params:
             locations = params['locations']
             if not isinstance(locations, list):
                 locations = [locations]
-            pipeline += [
-                {"$match": {
-                    "locations": {
-                        "$in": locations
-                    }
-                }}
-            ]
+            location_match = {"$in": locations}
         else:
-            pipeline += [
-                {"$match": {
-                    "locations": {
-                        "$exists": False
-                    }
-                }}
-            ]
-        pipeline += [
+            location_match = {"$exists": False}
+
+        pipeline = [
+            {"$match": {
+                "locations": location_match
+            }},
             {"$addFields": {
                 "tags": {"$objectToArray": "$tags"}
             }},
             {"$unwind": "$tags"},
             {"$unwind": "$tags.v"}
-            ]
+        ]
         if 'keywords' in params:
             kw = params['keywords']
             if not isinstance(kw, list):
@@ -1220,10 +1210,6 @@ class MongoConnection(object):
                 }},
             ]
         return list(self.entity.aggregate(pipeline, allowDiskUse=True)), more
-
-    def show_language_list(self):
-        l_list = [{'code': k, 'name': v} for k, v in languages_dict.items()]
-        return l_list
 
     def show_tagged_article_list(self, params):
         search_param = dict()
