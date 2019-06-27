@@ -227,6 +227,7 @@ def add_article_locations(params):
 
 def get_tags_from_article(params):
     with MongoConnection() as mongodb:
+        retrain = False if 'retrain' not in params else params['retrain']
         language = 'en' if 'language' not in params else params['language']
 
         if 'article_id' not in params:
@@ -243,7 +244,10 @@ def get_tags_from_article(params):
 
         article = mongodb.article.find_one({'_id': article_id})
         if not article:
-            return None
+            if retrain:
+                mongodb.article.delete_one({'_id': article_id})
+            else:
+                return None
 
         if 'content' in article and article['content']:
             tags_content = get_tags(article['content'], language, 'content')
