@@ -1,5 +1,4 @@
 import re
-from urlextract import URLExtract
 
 from lib import tools, stanford_module as stanford
 from lib.text import Text
@@ -13,48 +12,6 @@ from nlp.config import description_tag, STANFORD
 # import jnius
 import numpy as np
 from lib import nlp
-
-
-def drop_urls_from_text(text):
-    extractor = URLExtract()
-    urls = extractor.find_urls(text)
-    for url in urls:
-        text = text.replace(url, '')
-        print(url)
-    return re.sub(r'(?:\w+\.pdf|\w+\.txt|\w+\.doc|\w+\.docx'
-                  r'|\w+\.odt|\w+\.rtf|\w+\.tex|\w+\.wks'
-                  r'|\w+\.wps|\w+\.wpd|\w+\.exe|\w+\.3g2'
-                  r'|\w+\.3gp|\w+\.avi|\w+\.flv|\w+\.h264'
-                  r'|\w+\.m4v|\w+\.mkv|\w+\.mov|\w+\.mp4'
-                  r'|\w+\.mpg|\w+\.mpeg|\w+\.rm|\w+\.swf'
-                  r'|\w+\.vob|\w+\.wmv|\w+\.bak|\w+\.cab'
-                  r'|\w+\.cfg|\w+\.cpl|\w+\.cur|\w+\.dll'
-                  r'|\w+\.dmp|\w+\.drv|\w+\.icns|\w+\.ico'
-                  r'|\w+\.ini|\w+\.lnk|\w+\.msi|\w+\.sys'
-                  r'|\w+\.tmp|\w+\.ods|\w+\.xlr|\w+\.xls'
-                  r'|\w+\.xlsx|\w+\.c|\w+\.class|\w+\.cpp'
-                  r'|\w+\.cs|\w+\.h|\w+\.java|\w+\.sh'
-                  r'|\w+\.swift|\w+\.vb|\w+\.key|\w+\.odp'
-                  r'|\w+\.pps|\w+\.ppt|\w+\.pptx|\w+\.asp'
-                  r'|\w+\.aspx|\w+\.cer|\w+\.cfm|\w+\.cgi'
-                  r'|\w+\.pl|\w+\.css|\w+\.htm|\w+\.html'
-                  r'|\w+\.js|\w+\.jsp|\w+\.part|\w+\.php'
-                  r'|\w+\.py|\w+\.rss|\w+\.xhtml|\w+\.ai'
-                  r'|\w+\.bmp|\w+\.gif|\w+\.ico|\w+\.jpeg'
-                  r'|\w+\.jpg|\w+\.png|\w+\.ps|\w+\.psd'
-                  r'|\w+\.svg|\w+\.tif|\w+\.tiff|\w+\.fnt'
-                  r'|\w+\.fon|\w+\.otf|\w+\.ttf|\w+\.apk'
-                  r'|\w+\.bat|\w+\.bin|\w+\.cgi|\w+\.pl'
-                  r'|\w+\.com|\w+\.gadget|\w+\.jar|\w+\.py'
-                  r'|\w+\.wsf|\w+\.csv|\w+\.dat|\w+\.db'
-                  r'|\w+\.dbf|\w+\.log|\w+\.mdb|\w+\.sav'
-                  r'|\w+\.sql|\w+\.tar|\w+\.xml|\w+\.bin'
-                  r'|\w+\.dmg|\w+\.iso|\w+\.toast|\w+\.vcd'
-                  r'|\w+\.7z|\w+\.arj|\w+\.deb|\w+\.pkg'
-                  r'|\w+\.rar|\w+\.rpm|\w+\.tar.gz|\w+\.z'
-                  r'|\w+\.zip|\w+\.aif|\w+\.cds|\w+\.mid'
-                  r'|\w+\.midi|\w+\.mp3|\w+\.mpa|\w+\.ogg'
-                  r'|\w+\.wav|\w+\.wma|\w+\.wpl)', '', text)
 
 
 def union_res(result1, result2):
@@ -198,7 +155,6 @@ def union_res_with_article_id(result1, result2):
 
 
 def get_tags(text, language="en", article_type="default"):
-    text = drop_urls_from_text(text)
     with MongoConnection() as mongodb:
         is_money_regex_model_exist = True
 
