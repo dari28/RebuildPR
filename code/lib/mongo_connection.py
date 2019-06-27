@@ -416,6 +416,22 @@ class MongoConnection(object):
 
         return inserted_ids, deleted_ids
 
+    def add_bad_source(self, source_name):
+        self.source.insert({'unofficial': True, 'name': source_name})
+
+    def remove_bad_source(self, source_id):
+        if not isinstance(source_id, ObjectId):
+            source_id = ObjectId(source_id)
+        self.source.delete_one({'_id': source_id})
+
+    def remove_all_bad_source(self):
+        self.source.delete_many({'unofficial': True})
+
+    def check_source(self, source_name):
+        source = list(self.source.find_one({'name': source_name}))
+        if len(source) > 0:
+            return source[0]['unofficial']
+
     def delete_source_list_by_ids(self, ids):
         """Delete sources by the database"""
         for id in ids:
@@ -426,9 +442,10 @@ class MongoConnection(object):
             )
         return ids
 
-    def add_article_locations(self, article_id):
+    def add_article_locations(self, entity_id):
 
-        article = self.entity.find_one({'_id': article_id})
+        article = self.entity.find_one({'_id': entity_id})
+        print('entity_id: ', entity_id)
         if 'location' in article['tags']:
             tags = article['tags']['location']
             art = self.article.find_one({'_id': article['article_id']})
@@ -440,7 +457,7 @@ class MongoConnection(object):
             for tag in list(tags):
                 location = recursive_geodata_find({'tag': tag['word'], 'lang': lang})
                 locations.extend(location) if location is not None else None
-            self.entity.update_one({'_id': article_id}, {'$set': {'locations': locations}})
+            self.entity.update_one({'_id': entity_id}, {'$set': {'locations': locations}})
 
     # def find_articles_by_location(self, params):
     #     if 'location' not in params:
@@ -1076,7 +1093,14 @@ class MongoConnection(object):
             _id = phrase['_id']
             q = phrase['phrase']
             language = phrase['language']
-            articles, _, status = NewsCollection.get_everything(q, language)  # Only first page
+            f_articles, _, status = NewsCollection.get_everything(q, language)  # Only first page
+            articles = []
+            for article in f_articles:
+                source_name = article['source']['name']
+                if self.check_source(source_name):
+                    pass
+                else:
+                    articles.append(article)
             self.update_article_list_one_q(q, language, articles)
             if articles:
                 published_at_list = sorted([article['publishedAt'] for article in articles])

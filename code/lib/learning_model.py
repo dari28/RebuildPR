@@ -222,7 +222,7 @@ def add_article_locations(params):
     article_id = params['article_id']
     if not isinstance(article_id, ObjectId):
         article_id = ObjectId(article_id)
-    mongodb.add_article_locations(article_id=article_id)
+    mongodb.add_article_locations(entity_id=article_id)
 
 
 def get_tags_from_article(params):

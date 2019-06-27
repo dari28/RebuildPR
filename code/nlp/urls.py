@@ -54,6 +54,10 @@ urlpatterns = [
     url(r'^add_locations_to_untrained_articles/?$', views.add_locations_to_untrained_articles),
     url(r'^fill_up_geolocation/?$', views.fill_up_geolocation),
 
+    url(r'^add_bad_source/?$', views.add_bad_source),
+    url(r'^remove_bad_source/?$', views.remove_bad_source),
+    url(r'^remove_all_bad_source/?$', views.remove_all_bad_source),
+
 
     url(r'^update_category/?$', views.update_category),
     # url(r'^show_category/?$', views.show_category),  # DONT WORK
