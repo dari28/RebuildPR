@@ -128,6 +128,36 @@ def get_source_list(request):
     results = {'status': True, 'response': {'sources': sources, 'more': more}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
+
+@api_view(['POST'])
+def add_bad_source(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    if 'source_name' not in params:
+        raise EnvironmentError('source_name must be in params')
+    mongodb.add_bad_source(params['source_name'])
+    results = {'status': True, 'response': {}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def remove_bad_source(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    if 'source_id' not in params:
+        raise EnvironmentError('source_id must be in params')
+    mongodb.remove_bad_source(params['source_id'])
+    results = {'status': True, 'response': {}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def remove_all_bad_source(request):
+    mongodb = mongo.MongoConnection()
+    mongodb.remove_all_bad_source()
+    results = {'status': True, 'response': {}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
 # ***************************** ARTILES ******************************** #
 
 

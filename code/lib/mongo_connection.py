@@ -416,6 +416,22 @@ class MongoConnection(object):
 
         return inserted_ids, deleted_ids
 
+    def add_bad_source(self, source_name):
+        self.source.insert({'unofficial': True, 'name': source_name})
+
+    def remove_bad_source(self, source_id):
+        if not isinstance(source_id, ObjectId):
+            source_id = ObjectId(source_id)
+        self.source.delete_one({'_id': source_id})
+
+    def remove_all_bad_source(self):
+        self.source.delete_many({'unofficial': True})
+
+    def check_source(self, source_name):
+        source = list(self.source.find_one({'name': source_name}))
+        if len(source) > 0:
+            return source[0]['unofficial']
+
     def delete_source_list_by_ids(self, ids):
         """Delete sources by the database"""
         for id in ids:
@@ -1069,7 +1085,15 @@ class MongoConnection(object):
             _id = phrase['_id']
             q = phrase['phrase']
             language = phrase['language']
-            articles, _, status = NewsCollection.get_everything(q, language)  # Only first page
+            f_articles, _, status = NewsCollection.get_everything(q, language)  # Only first page
+            articles = []
+            for article in f_articles:
+                source_name = article['source']['name']
+                if source_name & (not self.check_source(source_name)):
+                    articles.append(article)
+                else:
+                    if (article['sorce']['id'] is None) and (len(list(self.source.find_one({'name': source_name}))) == 0):
+                        self.add_bad_source(source_name)
             self.update_article_list_one_q(q, language, articles)
             if articles:
                 published_at_list = sorted([article['publishedAt'] for article in articles])
