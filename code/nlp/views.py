@@ -108,6 +108,24 @@ def fix_one_article_by_id(request):
 
 
 @api_view(['POST'])
+def dev_update_sources_by_articles_url(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    mongodb.dev_update_sources_by_articles_url(params)
+    results = {'status': True, 'response': {}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def dev_update_sources_by_one_article(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    mongodb.dev_update_sources_by_one_article(params)
+    results = {'status': True, 'response': {}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
 def remove_dubles_articles_and_entities(request):
     # params = request.data
     mongodb = mongo.MongoConnection()

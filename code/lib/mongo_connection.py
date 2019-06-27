@@ -672,6 +672,8 @@ class MongoConnection(object):
 
     def fix_one_article_by_id(self, params):
         _id = params['_id']
+        if not isinstance(_id, ObjectId):
+            _id = ObjectId(_id)
         article = self.article.find_one({'_id': _id})
         try:
             if 'content' not in article or not article['content']:
@@ -732,6 +734,12 @@ class MongoConnection(object):
                 print(ex)
                 print('Error in article {}'.format(article['_id']))
                 pass
+
+    def dev_update_sources_by_one_article(self, params):
+        _id = params['_id']
+        if not isinstance(_id, ObjectId):
+            _id = ObjectId(_id)
+        source_name = self.article.find_one({'_id': _id, 'source.id': None}, {'source.name': 1})
 
     def update_article_list_one_q(self, q, language, new_articles):
         new_articles_hash = new_articles.copy()
