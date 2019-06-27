@@ -1170,8 +1170,21 @@ class MongoConnection(object):
             if tag not in tag_list:
                 raise EnvironmentError('Value of the field "tag" {} must be in {}'.format(tag, tag_list))
 
+        include_articles_without_sources = False if 'include_articles_without_sources' not in params else params["include_articles_without_sources"]
         language = "en" if "language" not in params else params["language"]
-
+        if include_articles_without_sources:
+            language_pipeline = []
+        else:
+            language_pipeline = [
+            {'$lookup': {
+                'from': 'article',
+                'localField': 'article_id',
+                'foreignField': '_id',
+                'as': 'article'
+            }},
+            {'$match': {'article.source.language': language}},
+            {'$project': {'article': 0}}
+        ]
         # RETURN COUNT OF SELECTED TAGS
 
         # pipeline = [
@@ -1200,16 +1213,8 @@ class MongoConnection(object):
         # ]
 
         # RETURN COUNT OF ARTICLE WHICH CONTAIN SELECTED TAGS
-
-        pipeline = [
-            {'$lookup': {
-                'from': 'article',
-                'localField': 'article_id',
-                'foreignField': '_id',
-                'as': 'article'
-            }},
-            {'$match': {'article.source.language': language}},
-            {'$project': {'article': 0}},
+        pipeline = language_pipeline
+        pipeline += [
             {"$addFields": {
                 "tags": {"$objectToArray": "$tags"}
             }},
