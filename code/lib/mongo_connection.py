@@ -616,6 +616,7 @@ class MongoConnection(object):
         content = re.sub(r'\w+… ?$', '', content)  # remove end characters with ...
         content = re.sub(r'… ?$', '', content)  # remove end ...
         content = re.sub(r'�', '', content)  # remove �
+        content = re.sub(r'[\xc2\xa0]+', '', content)  # remove spaces
         extractor = URLExtract()
         urls = extractor.find_urls(content)
         for url in urls:
@@ -668,6 +669,37 @@ class MongoConnection(object):
         content = re.sub("[‘’]", "'", content)  # change single-quotes to normal single-quotes
         content = re.sub('[ ]{2,}', ' ', content)  # change 2+ spaces to one space
         return content
+
+    def fix_one_article_by_id(self, params):
+        _id = params['_id']
+        article = self.article.find_one({'_id': _id})
+        try:
+            if 'content' not in article or not article['content']:
+                self.article.delete_one({'_id': article['_id']})
+
+            if 'original_content' in article:
+                content = article['original_content']
+            else:
+                content = article['content']
+                article['original_content'] = content
+
+            content = self.delete_trash_from_article_content(content)
+            article['content'] = content
+            article['title'] = self.delete_trash_from_article_content(article['title'])
+            article['description'] = self.delete_trash_from_article_content(article['description'])
+            self.article.update_one(
+                {'_id': article['_id']},
+                {'$set': {
+                    'content': article['content'],
+                    'title': article['title'],
+                    'description': article['description'],
+                    'original_content': article['original_content']
+                }}
+            )
+        except Exception as ex:
+            print(ex)
+            print('Error in article {}'.format(article['_id']))
+            pass
 
     def fix_article_content(self):
         # articles_without_content_fix = self.article.find({'original_content': {'$exists': False}})
