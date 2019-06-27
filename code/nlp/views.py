@@ -9,6 +9,7 @@ from nlp import tasks
 from lib import learning_model as model, nlp
 # from lib.linguistic_functions import replace_str_numerals
 from background_task.models import Task
+from news import languages_dict
 # ***************************** TEST FUNCTIONS ******************************** #
 
 # noinspection PyUnusedLocal
@@ -367,7 +368,7 @@ def tag_stat(request):
 @api_view(['POST'])
 def show_language_list(request):
     mongodb = mongo.MongoConnection()
-    language = mongodb.show_language_list()
+    language = [{'code': k, 'name': v} for k, v in languages_dict.items()]
     results = {'status': True, 'response': {'language': language}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
