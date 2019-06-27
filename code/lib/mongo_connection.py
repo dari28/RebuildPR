@@ -455,7 +455,7 @@ class MongoConnection(object):
         pipeline = []
         if 'locations' in params:
             locations = params['locations']
-            if isinstance(locations, list):
+            if not isinstance(locations, list):
                 locations = [locations]
             pipeline += [
                 {"$match": {
