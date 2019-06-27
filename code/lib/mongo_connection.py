@@ -726,6 +726,9 @@ class MongoConnection(object):
 
         search_param = dict()
 
+        if 'source_id' in params:
+            params['id'] = params.pop('source_id')
+
         search_fields = ['name', 'id']
         search_fields_list = ['language', 'country', 'category']
         # Convert str to list
@@ -742,7 +745,9 @@ class MongoConnection(object):
                 if field in params:
                     search_param['source.'+field] = {'$in': params[field]}
 
-        # articles = [x for articles in self.q_article.find({'q': {'$in': q}}, {'_id': 0, 'articles': 1}) for x in articles['articles']]
+        start = 0 if 'start' not in params else params['start']
+        length = 10 if 'length' not in params else params['length']
+
         article_pipeline = [
             {'$project': {
                 'q': {'$toLower': "$q"},
@@ -751,19 +756,33 @@ class MongoConnection(object):
             {'$match': {
                 'q': {'$in': q}
             }},
+            {'$unwind': '$articles'},
+            {'$project': {
+                'article_ids': '$articles',
+                '_id': 0
+            }},
+            {'$lookup': {
+                'from': 'article',
+                'localField': 'article_ids',
+                'foreignField': '_id',
+                'as': 'articles'
+            }},
+            {'$project': {
+                'articles': '$articles'
+            }},
+            {'$unwind': '$articles'},
             {'$project': {
                 'articles': '$articles',
-                '_id': 0
-            }}
+                'source': '$articles.source'
+            }},
+            {'$match': search_param},
+            {'$replaceRoot': {'newRoot': '$articles'}},
+            {'$sort': {'_id': 1}},
+            {'$skip': start},
+            {'$limit': length + 1}
         ]
-        article_ids = [x for article in list(self.q_article.aggregate(article_pipeline)) for x in article['articles']]
 
-        search_param['_id'] = {'$in': article_ids}
-
-        start = 0 if 'start' not in params else params['start']
-        length = 10 if 'length' not in params else params['length']
-        # full_artilces = list(self.article.find({'_id': {"$in": articles['articles']}}))
-        full_articles = list(self.article.find(search_param).sort("_id", 1).skip(start).limit(length + 1))
+        full_articles = list(self.q_article.aggregate(article_pipeline))
         more = True if len(full_articles) > length else False
         return full_articles[:length], more
 
