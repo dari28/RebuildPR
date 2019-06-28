@@ -740,6 +740,8 @@ class MongoConnection(object):
         content = re.sub(r'\w+… ?$', '', content)  # remove end characters with ...
         content = re.sub(r'… ?$', '', content)  # remove end ...
         content = re.sub(r'�', '', content)  # remove �
+        content = re.sub(r'\x0a', '', content)  # remove /r
+        content = re.sub(r'\x0d', '', content)  # remove /n
         content = re.sub(r'[\xc2\xa0]+', ' ', content)  # remove spaces
         extractor = URLExtract()
         urls = extractor.find_urls(content)
@@ -793,8 +795,8 @@ class MongoConnection(object):
         content = re.sub("[‘’]", "'", content)  # change single-quotes to normal single-quotes
         content = re.sub("'", "", content)  # remove single-quotes to normal single-quotes
         content = re.sub("[/]+", "/", content)  # get only one /
-        content = re.sub(" /", "", content)  # remove / with space before
-        content = re.sub("/ ", "", content)  # remove / with space after
+        content = re.sub(" /", " ", content)  # remove / with space before
+        content = re.sub("/ ", " ", content)  # remove / with space after
         content = re.sub('[ ]{2,}', ' ', content)  # change 2+ spaces to one space
         return content
 
