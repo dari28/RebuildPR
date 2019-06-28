@@ -25,6 +25,113 @@ def remove(duplicate):
     return final_list
 
 
+def find_loc_by_name(name):
+    print('search: {0}'.format(name))
+    main_url = 'https://nominatim.openstreetmap.org/'
+    search = 'search.php?q=' + name + '&polygon_geojson=1&viewbox='
+    url = None
+    for i in range(3):
+        try:
+            url = requests.get(main_url + search).text
+        except Exception as e:
+            print(e)
+            print('sleep_5')
+            time.sleep(5)
+            if i == 2:
+                return None
+        else:
+            break
+    if not url:
+        return None
+    soup = BeautifulSoup(url, 'lxml')
+    content = soup.find('div', id='content')
+    search_results = content.find('div', id='searchresults')
+    loc_type = None
+    loc_url = None
+    while loc_type in ['road', 'river', 'islet', 'island', 'stream', 'restaurant', 'cafe', 'peak', 'memorial', 'address100', 'other:30', 'other:19',
+                       'supermarket', 'guest_house', 'neighbourhood', 'water', 'hamlet', 'building', 'address29', None]:
+        res = search_results.find_next('div')
+        if res['class'] == ["noresults"]:
+            print('location {} is not found'.format(name))
+            return None
+        loc_url = res.find('a')['href']
+        loc_type = res.find('span', {'class': 'type'}).get_text().replace('(', '').replace(')', '')
+    if loc_url:
+        loc_id = loc_url.split('place_id=')[1]
+        find_loc_by_id(loc_id)
+    else:
+        print('no such location: {}'.format(name))
+
+
+def find_loc_by_id(loc_id):
+    mongodb = MongoConnection()
+    if len(list(mongodb.location.find({'place_id': loc_id}))) > 0:
+        print('location {0} already in db'.format(loc_id))
+        return None
+    main_url = 'https://nominatim.openstreetmap.org/'
+    loc_url = 'details.php?place_id=' + loc_id
+    parents_list = []
+    loc_link = None
+    for i in range(3):
+        try:
+            loc_link = requests.get(main_url + loc_url).text
+        except Exception as e:
+            print(e)
+            print('sleep_5')
+            time.sleep(5)
+            if i == 2:
+                return None
+        else:
+            break
+    if not loc_link:
+        return None
+    loc_info = BeautifulSoup(loc_link, 'lxml')
+    loc_details = loc_info.find('table', {'id': 'locationdetails'})
+    details_trs = loc_details.find_all('tr')
+    loc_name = None
+    centre_point = None
+    loc_type = None
+    for tr in details_trs:
+        if tr.find('td').get_text() == 'Name':
+            nm = tr.find_all('td')[1].find_all('div', {'class': 'line'})
+            for n in nm:
+                full_text = n.get_text()
+                l_name = n.find('span').get_text()
+                name_type = full_text.replace(l_name, '')
+                if (name_type == ' (int_name)') or (name_type == ' (name)'):
+                    loc_name = l_name
+                    break
+        if tr.find('td').get_text() == 'Centre Point':
+            centre_point = tr.find_all('td')[1].get_text().replace('(', '').replace(')', '')
+        if tr.find('td').get_text() == 'Rank':
+            loc_type = tr.find_all('td')[1].get_text()
+    address_table = loc_info.find('table', {'id': 'address'})
+    body = address_table.find('tbody')
+    trs = body.find_all('tr')
+    for tr in trs:
+        links = tr.find_all('a')
+        for link in links:
+            text = link.get_text()
+            if text == 'details >':
+                parent_link = link['href']
+                parent_id = parent_link.split('place_id=')[1]
+                if parent_id != loc_id:
+                    parents_list.append(parent_id)
+                    find_loc_by_id(parent_id)
+        if tr['class'] == ["notused"]:
+            break
+    if (loc_name is not None) & (loc_id is not None) & (centre_point is not None):
+        mongodb.location.insert_one({'place_id': loc_id,
+                                    'name': loc_name,
+                                    'location': {'latitude': centre_point.split(',')[0], 'longitude': centre_point.split(',')[1]},
+                                    'parents': parents_list, 'type': loc_type, 'level': len(parents_list)})
+        print('location {} added sucsess'.format(loc_name))
+    else:
+        print('something is wrong: loc_name: {0}, '
+              'loc_id: {1}, '
+              'centre_point: {2}'.format(loc_name, loc_id, centre_point))
+
+
 def locator(text, lang="en", limit=1):
     geolocator = Nominatim(user_agent="specify_your_app_name_here", timeout=10)
     trigger = True
@@ -286,9 +393,9 @@ class MongoConnection(object):
             common_name = name.split('–')[0].strip()
             official_name = name.split('–')[1].strip() if len(name.split('–')) > 1 else common_name.strip()
             if common_name:
-                recursive_geodata_find({'tag': common_name})
+                find_loc_by_name(common_name)
             else:
-                recursive_geodata_find({'tag': official_name})
+                find_loc_by_name(official_name)
         #     country_code = list(self.iso3166.find({'$or': [{'name': official_name}, {'name': common_name},
         #                                                    {'official_name': official_name}, {'official_name': common_name}]}))
         #
@@ -317,7 +424,7 @@ class MongoConnection(object):
             st = dict()
             state = row.find('td').get_text().replace('\n', '').replace('\r', '').replace(u'\xa0', u'')
             state = re.sub(r'[[a-z,0-9].]', '', state)
-            recursive_geodata_find({'tag': state})
+            find_loc_by_name(state)
         #     description = []
         #     for desc in row.findAll('td')[2:]:
         #         d = desc.get_text().replace('\n', '').replace('\r', '').replace(u'\xa0', u'')
@@ -349,7 +456,7 @@ class MongoConnection(object):
         soup = BeautifulSoup(url, 'lxml')
         pr_city = soup.findAll('a', title=re.compile('Population Demographics and Statistics'))
         for city in pr_city:
-            recursive_geodata_find({'tag': city.get_text()})
+            find_loc_by_name(city.get_text())
         #     ct = dict()
         #     state = self.location.find_one({'name': "Puerto Rico"})
         #     if state:
@@ -1202,6 +1309,14 @@ class MongoConnection(object):
             {'$limit': length + 1}
         ]
         list_to_show = list(self.entity.aggregate(pipeline))
+        more = True if len(list_to_show) > length else False
+        return list_to_show[:length], more
+
+    def show_source_list(self, params):
+        bad = False if 'bad' not in params else params['bad']
+        start = 0 if 'start' not in params else params['start']
+        length = 10 if 'length' not in params else params['length']
+        list_to_show = list(self.source.find({'bad': True})) if bad else list(self.source.find())
         more = True if len(list_to_show) > length else False
         return list_to_show[:length], more
 

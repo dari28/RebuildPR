@@ -8,6 +8,7 @@ urlpatterns = [
     url(r'^test_exception_work/?$', views.test_exception_work),
     # **************** Sources *****************
     url(r'^get_source_list/?$', views.get_source_list),
+    url(r'^show_source_list/?$', views.show_source_list),
     # **************** Articles ****************
     url(r'^get_article_list/?$', views.get_article_list),
     url(r'^get_article_by_id/?$', views.get_article_by_id),

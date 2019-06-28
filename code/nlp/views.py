@@ -433,6 +433,15 @@ def show_language_list(request):
 
 
 @api_view(['POST'])
+def show_source_list(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    sources, more = mongodb.show_source_list(params)
+    results = {'status': True, 'response': {'sources': sources, 'more': more}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
 def show_tagged_article_list(request):
     params = request.data
     mongodb = mongo.MongoConnection()
