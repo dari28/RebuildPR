@@ -393,9 +393,9 @@ class MongoConnection(object):
             common_name = name.split('–')[0].strip()
             official_name = name.split('–')[1].strip() if len(name.split('–')) > 1 else common_name.strip()
             if common_name:
-                find_loc_by_name(common_name)
+                find_loc_by_name(common_name.decode('utf-8'))
             else:
-                find_loc_by_name(official_name)
+                find_loc_by_name(official_name.decode('utf-8'))
         #     country_code = list(self.iso3166.find({'$or': [{'name': official_name}, {'name': common_name},
         #                                                    {'official_name': official_name}, {'official_name': common_name}]}))
         #
@@ -424,7 +424,7 @@ class MongoConnection(object):
             st = dict()
             state = row.find('td').get_text().replace('\n', '').replace('\r', '').replace(u'\xa0', u'')
             state = re.sub(r'[[a-z,0-9].]', '', state)
-            find_loc_by_name(state)
+            find_loc_by_name(state.decode('utf-8'))
         #     description = []
         #     for desc in row.findAll('td')[2:]:
         #         d = desc.get_text().replace('\n', '').replace('\r', '').replace(u'\xa0', u'')
@@ -456,7 +456,7 @@ class MongoConnection(object):
         soup = BeautifulSoup(url, 'lxml')
         pr_city = soup.findAll('a', title=re.compile('Population Demographics and Statistics'))
         for city in pr_city:
-            find_loc_by_name(city.get_text())
+            find_loc_by_name(city.get_text().decode('utf-8'))
         #     ct = dict()
         #     state = self.location.find_one({'name': "Puerto Rico"})
         #     if state:
