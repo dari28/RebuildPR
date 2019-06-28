@@ -39,7 +39,10 @@ urlpatterns = [
     # ****************** Fixes *******************
     url(r'^fix_article_content/?$', views.fix_article_content),
     url(r'^fix_one_article_by_id/?$', views.fix_one_article_by_id),
+    url(r'^dev_find_article_ids_with_tag_length_more_than_length/?$', views.dev_find_article_ids_with_tag_length_more_than_length),
     url(r'^remove_dubles_articles_and_entities/?$', views.remove_dubles_articles_and_entities),
+    url(r'^fix_article_content_and_retrain_entity_bt_article_ids/?$', views.fix_article_content_and_retrain_entity_bt_article_ids),
+
     url(r'^get_tags_from_all_articles/?$', views.get_tags_from_all_articles),
     # ***************** Fill up db from zero ***************
     url(r'^fill_up_db_from_zero/?$', views.fill_up_db_from_zero),

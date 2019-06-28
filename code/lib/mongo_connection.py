@@ -684,6 +684,8 @@ class MongoConnection(object):
         content = re.sub(' - ', ' ', content)  # change hyphen to normal hyphen
         content = re.sub('[”“]', '', content)  # change double-quotes to normal double-quotes
         content = re.sub("[‘’]", "'", content)  # change single-quotes to normal single-quotes
+        content = re.sub("'", "", content)  # remove single-quotes to normal single-quotes
+        content = re.sub(" / ", "", content)  # remove /
         content = re.sub('[ ]{2,}', ' ', content)  # change 2+ spaces to one space
         return content
 
@@ -751,6 +753,23 @@ class MongoConnection(object):
                 print(ex)
                 print('Error in article {}'.format(article['_id']))
                 pass
+
+
+    def dev_find_article_ids_with_tag_length_more_than_length(self, params):
+        length = params['length']
+
+        articles_ids = list(self.entity.aggregate([
+            {"$addFields": {
+                "tags": {"$objectToArray": "$tags"}
+            }},
+            {"$unwind": "$tags"},
+            {"$unwind": "$tags.v"},
+            {'$project': {"phrase_length": {'$strLenCP': "$tags.v.word"}, 'article_id': '$article_id'}},
+            {'$match': {"phrase_length": {'$gt': length}}},
+            {'$project': {'article_id': '$article_id'}}
+        ]))
+
+        return articles_ids
 
     def dev_update_sources_by_one_article(self, params):
         _id = params['_id']

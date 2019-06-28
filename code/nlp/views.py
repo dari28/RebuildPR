@@ -108,6 +108,30 @@ def fix_one_article_by_id(request):
 
 
 @api_view(['POST'])
+def dev_find_article_ids_with_tag_length_more_than_length(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    article_ids = mongodb.dev_find_article_ids_with_tag_length_more_than_length(params)
+    article_ids = [x['article_id'] for x in article_ids]
+    results = {'status': True, 'response': {'article_ids': article_ids, 'total': len(article_ids)}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def fix_article_content_and_retrain_entity_bt_article_ids(request):
+    params = request.data
+    article_ids = params['article_ids']
+    with mongo.MongoConnection() as mongodb:
+        for article_id in article_ids:
+            mongodb.fix_one_article_by_id({"_id": article_id})
+            model.get_tags_from_article({
+                "retrain": True,
+                "article_id": article_id
+            })
+    results = {'status': True, 'response': {}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+@api_view(['POST'])
 def dev_update_sources_by_articles_url(request):
     params = request.data
     mongodb = mongo.MongoConnection()
