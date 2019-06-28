@@ -792,7 +792,9 @@ class MongoConnection(object):
         content = re.sub('[”“]', '', content)  # change double-quotes to normal double-quotes
         content = re.sub("[‘’]", "'", content)  # change single-quotes to normal single-quotes
         content = re.sub("'", "", content)  # remove single-quotes to normal single-quotes
-        content = re.sub(" / ", "", content)  # remove /
+        content = re.sub("[/]+", "/", content)  # get only one /
+        content = re.sub(" /", "", content)  # remove / with space before
+        content = re.sub("/ ", "", content)  # remove / with space after
         content = re.sub('[ ]{2,}', ' ', content)  # change 2+ spaces to one space
         return content
 
