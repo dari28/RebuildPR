@@ -696,6 +696,21 @@ class MongoConnection(object):
             if not self.source.find_one({"name": source_name}):
                 self.source.insert_one({'id': source_name, "name": source_name, "url": source_name, "unofficial": True})
 
+    def fix_article_source_with_null_id(self):
+        articles = self.article.find({"source.id": None})
+        articles_without_update = []
+        for article in articles:
+            article_id = article["_id"]
+            article_source_name = article["source"]["name"]
+            source = self.source.find_one({"name": article_source_name})
+            if source and 'unofficial' in source and source['unofficial']:
+                self.article.update_one(
+                    {"_id": article_id},
+                    {"$set": {"source.id": source['id'], "source.name": source['name']}}
+                )
+            else:
+                articles_without_update += article_id
+
     def fix_one_article_by_id(self, params):
         _id = params['_id']
         if not isinstance(_id, ObjectId):

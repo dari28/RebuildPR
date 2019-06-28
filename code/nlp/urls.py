@@ -38,6 +38,7 @@ urlpatterns = [
     # ********************************************
     # ****************** Fixes *******************
     url(r'^fix_sources_and_add_official_field/?$', views.fix_sources_and_add_official_field),
+    url(r'^fix_article_source_with_null_id/?$', views.fix_article_source_with_null_id),
     url(r'^fix_article_content/?$', views.fix_article_content),
     url(r'^fix_one_article_by_id/?$', views.fix_one_article_by_id),
     url(r'^dev_find_article_ids_with_tag_length_more_than_length/?$', views.dev_find_article_ids_with_tag_length_more_than_length),

@@ -97,6 +97,15 @@ def fix_sources_and_add_official_field(request):
 
 
 @api_view(['POST'])
+def fix_article_source_with_null_id(request):
+    # params = request.data
+    mongodb = mongo.MongoConnection()
+    mongodb.fix_article_source_with_null_id()
+    results = {'status': True, 'response': {}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
 def fix_article_content(request):
     # params = request.data
     mongodb = mongo.MongoConnection()
