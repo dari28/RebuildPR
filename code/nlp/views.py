@@ -87,6 +87,13 @@ def train_on_default_list(request):
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 # *******************************FIX*********************************** #
+@api_view(['POST'])
+def fix_sources_and_add_official_field(request):
+    # params = request.data
+    mongodb = mongo.MongoConnection()
+    mongodb.fix_sources_and_add_official_field()
+    results = {'status': True, 'response': {}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
 @api_view(['POST'])

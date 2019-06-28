@@ -689,6 +689,13 @@ class MongoConnection(object):
         content = re.sub('[ ]{2,}', ' ', content)  # change 2+ spaces to one space
         return content
 
+    def fix_sources_and_add_official_field(self):
+        ans = self.source.update_many({"language": {"$exists": True},  "unofficial": {"$exists": False}}, {"$set": {"unofficial": False}})
+        source_names = self.article.distinct("source.name", {"source.language": {"$exists": False}, 'source.id': None})
+        for source_name in source_names:
+            if not self.source.find_one({"name": source_name}):
+                self.source.insert_one({'id': source_name, "name": source_name, "url": source_name, "unofficial": True})
+
     def fix_one_article_by_id(self, params):
         _id = params['_id']
         if not isinstance(_id, ObjectId):
@@ -805,10 +812,13 @@ class MongoConnection(object):
                     {'name': article['source']['name']}
                 ]
             })
-            if source:
-                article['source']['language'] = source['language']
-                article['source']['category'] = source['category']
-                article['source']['country'] = source['country']
+            if source and 'unofficial' in source:
+                if source['unofficial']:
+                    article['source']['id'] = source['id']
+                else:
+                    article['source']['language'] = source['language']
+                    article['source']['category'] = source['category']
+                    article['source']['country'] = source['country']
             inserted_ids.append(self.article.insert_one(article).inserted_id)
 
         current_article_ids = [x for articles in self.q_article.find({'q': q, 'language': language}) for x in articles['articles']]
