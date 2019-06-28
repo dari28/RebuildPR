@@ -26,7 +26,7 @@ def remove(duplicate):
 
 
 def find_loc_by_name(name):
-    print('search: {0}'.format(name))
+    # print('search: {0}'.format(name))
     main_url = 'https://nominatim.openstreetmap.org/'
     search = 'search.php?q=' + name + '&polygon_geojson=1&viewbox='
     url = None
@@ -52,21 +52,21 @@ def find_loc_by_name(name):
                        'supermarket', 'guest_house', 'neighbourhood', 'water', 'hamlet', 'building', 'address29', None]:
         res = search_results.find_next('div')
         if res['class'] == ["noresults"]:
-            print('location {} is not found'.format(name))
+            # print('location {} is not found'.format(name))
             return None
         loc_url = res.find('a')['href']
         loc_type = res.find('span', {'class': 'type'}).get_text().replace('(', '').replace(')', '')
     if loc_url:
         loc_id = loc_url.split('place_id=')[1]
         find_loc_by_id(loc_id)
-    else:
-        print('no such location: {}'.format(name))
+    # else:
+        # print('no such location: {}'.format(name))
 
 
 def find_loc_by_id(loc_id):
     mongodb = MongoConnection()
     if len(list(mongodb.location.find({'place_id': loc_id}))) > 0:
-        print('location {0} already in db'.format(loc_id))
+        # print('location {0} already in db'.format(loc_id))
         return None
     main_url = 'https://nominatim.openstreetmap.org/'
     loc_url = 'details.php?place_id=' + loc_id
@@ -125,11 +125,11 @@ def find_loc_by_id(loc_id):
                                     'name': loc_name,
                                     'location': {'latitude': centre_point.split(',')[0], 'longitude': centre_point.split(',')[1]},
                                     'parents': parents_list, 'type': loc_type, 'level': len(parents_list)})
-        print('location {} added sucsess'.format(loc_name))
-    else:
-        print('something is wrong: loc_name: {0}, '
-              'loc_id: {1}, '
-              'centre_point: {2}'.format(loc_name, loc_id, centre_point))
+        # print('location {} added sucsess'.format(loc_name))
+    # else:
+        # print('something is wrong: loc_name: {0}, '
+        #       'loc_id: {1}, '
+        #       'centre_point: {2}'.format(loc_name, loc_id, centre_point))
 
 
 def locator(text, lang="en", limit=1):
