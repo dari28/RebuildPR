@@ -417,7 +417,7 @@ class MongoConnection(object):
         return inserted_ids, deleted_ids
 
     def add_bad_source(self, source_name):
-        self.source.insert({'unofficial': True, 'name': source_name})
+        self.source.insert({'bad': True, 'name': source_name})
 
     def remove_bad_source(self, source_id):
         if not isinstance(source_id, ObjectId):
@@ -425,12 +425,12 @@ class MongoConnection(object):
         self.source.delete_one({'_id': source_id})
 
     def remove_all_bad_source(self):
-        self.source.delete_many({'unofficial': True})
+        self.source.delete_many({'bad': True})
 
     def check_source(self, source_name):
         source = list(self.source.find_one({'name': source_name}))
         if len(source) > 0:
-            return source[0]['unofficial']
+            return source[0]['bad']
 
     def delete_source_list_by_ids(self, ids):
         """Delete sources by the database"""
