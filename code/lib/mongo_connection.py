@@ -633,7 +633,7 @@ class MongoConnection(object):
         content = re.sub(r'\w+… ?$', '', content)  # remove end characters with ...
         content = re.sub(r'… ?$', '', content)  # remove end ...
         content = re.sub(r'�', '', content)  # remove �
-        content = re.sub(r'[\xc2\xa0]+', '', content)  # remove spaces
+        content = re.sub(r'[\xc2\xa0]+', ' ', content)  # remove spaces
         extractor = URLExtract()
         urls = extractor.find_urls(content)
         for url in urls:
