@@ -240,14 +240,14 @@ def get_tags_from_article(params):
                 raise EnvironmentError('\'article_id\' field is not a valid ObjectId, it must be a 12-byte input or a 24-character hex string')
 
         if mongodb.entity.find_one({'trained': True, 'article_id': article_id}):
-            return None
+            if retrain:
+                mongodb.entity.delete_one({'trained': True, 'article_id': article_id})
+            else:
+                return None
 
         article = mongodb.article.find_one({'_id': article_id})
         if not article:
-            if retrain:
-                mongodb.article.delete_one({'_id': article_id})
-            else:
-                return None
+            return None
 
         if 'content' in article and article['content']:
             tags_content = get_tags(article['content'], language, 'content')

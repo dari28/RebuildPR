@@ -740,7 +740,7 @@ class MongoConnection(object):
         content = re.sub(r'\w+… ?$', '', content)  # remove end characters with ...
         content = re.sub(r'… ?$', '', content)  # remove end ...
         content = re.sub(r'�', '', content)  # remove �
-        content = re.sub(r'[\xc2\xa0]+', '', content)  # remove spaces
+        content = re.sub(r'[\xc2\xa0]+', ' ', content)  # remove spaces
         extractor = URLExtract()
         urls = extractor.find_urls(content)
         for url in urls:
@@ -791,8 +791,17 @@ class MongoConnection(object):
         content = re.sub(' - ', ' ', content)  # change hyphen to normal hyphen
         content = re.sub('[”“]', '', content)  # change double-quotes to normal double-quotes
         content = re.sub("[‘’]", "'", content)  # change single-quotes to normal single-quotes
+        content = re.sub("'", "", content)  # remove single-quotes to normal single-quotes
+        content = re.sub(" / ", "", content)  # remove /
         content = re.sub('[ ]{2,}', ' ', content)  # change 2+ spaces to one space
         return content
+
+    def fix_sources_and_add_official_field(self):
+        ans = self.source.update_many({"language": {"$exists": True},  "unofficial": {"$exists": False}}, {"$set": {"unofficial": False}})
+        source_names = self.article.distinct("source.name", {"source.language": {"$exists": False}, 'source.id': None})
+        for source_name in source_names:
+            if not self.source.find_one({"name": source_name}):
+                self.source.insert_one({'id': source_name, "name": source_name, "url": source_name, "unofficial": True})
 
     def fix_one_article_by_id(self, params):
         _id = params['_id']
@@ -859,6 +868,23 @@ class MongoConnection(object):
                 print('Error in article {}'.format(article['_id']))
                 pass
 
+
+    def dev_find_article_ids_with_tag_length_more_than_length(self, params):
+        length = params['length']
+
+        articles_ids = list(self.entity.aggregate([
+            {"$addFields": {
+                "tags": {"$objectToArray": "$tags"}
+            }},
+            {"$unwind": "$tags"},
+            {"$unwind": "$tags.v"},
+            {'$project': {"phrase_length": {'$strLenCP': "$tags.v.word"}, 'article_id': '$article_id'}},
+            {'$match': {"phrase_length": {'$gt': length}}},
+            {'$project': {'article_id': '$article_id'}}
+        ]))
+
+        return articles_ids
+
     def dev_update_sources_by_one_article(self, params):
         _id = params['_id']
         if not isinstance(_id, ObjectId):
@@ -893,10 +919,13 @@ class MongoConnection(object):
                     {'name': article['source']['name']}
                 ]
             })
-            if source:
-                article['source']['language'] = source['language']
-                article['source']['category'] = source['category']
-                article['source']['country'] = source['country']
+            if source and 'unofficial' in source:
+                if source['unofficial']:
+                    article['source']['id'] = source['id']
+                else:
+                    article['source']['language'] = source['language']
+                    article['source']['category'] = source['category']
+                    article['source']['country'] = source['country']
             inserted_ids.append(self.article.insert_one(article).inserted_id)
 
         current_article_ids = [x for articles in self.q_article.find({'q': q, 'language': language}) for x in articles['articles']]
