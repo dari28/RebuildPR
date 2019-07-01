@@ -53,6 +53,8 @@ def find_loc_by_name(name):
         if res['class'] == ["noresults"]:
             print('location is not found')
             return None
+        if res is None:
+            return None
         loc_url = res.find('a')['href']
         loc_type = res.find('span', {'class': 'type'}).get_text().replace('(', '').replace(')', '')
     if loc_url:
