@@ -802,7 +802,7 @@ class MongoConnection(object):
         content = re.sub(r'�', '', content)  # remove �
         # content = re.sub(r'\x0a', '', content)  # remove /r
         # content = re.sub(r'\x0d', '', content)  # remove /n
-        content = re.sub(r'[\xc2\xa0]+', ' ', content)  # remove spaces
+        content = re.sub(r'[\u00A0]+', ' ', content, flags=re.U)  # remove spaces
         content = re.sub(r'[\r\n\t\f\v]+', ' ', content)  # change spec symbols to one space
         content = re.sub(r'[\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u200b\u202b\u205f\u2060\u3000]+', ' ', content, flags=re.U)  # remove spaces
         content = re.sub(r'[ ]{2,}', ' ', content)  # change 2+ spaces to one space
