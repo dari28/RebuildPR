@@ -138,7 +138,11 @@ def dev_find_article_ids_with_tag_length_more_than_length(request):
     mongodb = mongo.MongoConnection()
     article_ids = mongodb.dev_find_article_ids_with_tag_length_more_than_length(params)
     article_ids = [x['article_id'] for x in article_ids]
-    results = {'status': True, 'response': {'article_ids': article_ids, 'total': len(article_ids)}, 'error': {}}
+    dictinct_article_ids = []
+    for x in article_ids:
+        if x not in dictinct_article_ids:
+            dictinct_article_ids.append(x)
+    results = {'status': True, 'response': {'article_ids': dictinct_article_ids, 'total': len(dictinct_article_ids)}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 
