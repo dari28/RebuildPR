@@ -48,8 +48,7 @@ def find_loc_by_name(name):
     search_results = content.find('div', id='searchresults')
     loc_type = None
     loc_url = None
-    while loc_type in ['road', 'river', 'islet', 'island', 'stream', 'restaurant', 'cafe', 'peak', 'memorial', 'address100', 'other:30', 'other:19',
-                       'supermarket', 'guest_house', 'neighbourhood', 'water', 'hamlet', 'building', 'address29', None]:
+    while loc_type not in ['country', 'state', 'county', 'city']:
         res = search_results.find_next('div')
         if res['class'] == ["noresults"]:
             # print('location {} is not found'.format(name))
