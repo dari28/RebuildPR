@@ -77,7 +77,7 @@ def find_loc_by_name(name):
             location_type = None
         if location_type in ['Country', 'State', 'County', 'City']:
             loc_url = location_url
-
+            break
     if loc_url:
         loc_id = loc_url.split('place_id=')[1]
         find_loc_by_id(loc_id)
