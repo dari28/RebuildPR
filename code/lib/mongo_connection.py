@@ -53,12 +53,19 @@ def find_loc_by_name(name):
         if res['class'] == ["noresults"]:
             print('location is not found')
             return None
-        location_url = res.find('a')['href']
-        location_type = res.find('span', {'class': 'type'}).get_text().replace('(', '').replace(')', '')
-        if location_type in ['Country', 'State', 'County', 'City']:
-            loc_url = location_url
         if res is None:
             return None
+        if res.find('a')['href'] is not None:
+            location_url = res.find('a')['href']
+        else:
+            location_url = None
+        if res.find('span', {'class': 'type'}).get_text().replace('(', '').replace(')', '') is not None:
+            location_type = res.find('span', {'class': 'type'}).get_text().replace('(', '').replace(')', '')
+        else:
+            location_type = None
+        if location_type in ['Country', 'State', 'County', 'City']:
+            loc_url = location_url
+
     if loc_url:
         loc_id = loc_url.split('place_id=')[1]
         find_loc_by_id(loc_id)
