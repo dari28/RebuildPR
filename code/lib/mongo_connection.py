@@ -29,7 +29,7 @@ def find_loc_by_name(name):
     with MongoConnection() as mongodb:
         if len(list(mongodb.location.find({'tags': {'$in': [name]}}))) > 0:
             print('location already in db')
-            return None
+            return mongodb.location.find_one({'tags': {'$in': [name]}})['_id']
         print('search...')
         main_url = 'https://nominatim.openstreetmap.org/'
         search = 'search.php?q=' + name + '&polygon_geojson=1&viewbox='
@@ -93,16 +93,18 @@ def find_loc_by_name(name):
                 break
         if loc_url:
             loc_id = loc_url.split('place_id=')[1]
-            find_loc_by_id(loc_id)
+            return find_loc_by_id(loc_id, name)
         else:
             print('no such location')
+            return None
 
 
-def find_loc_by_id(loc_id):
+def find_loc_by_id(loc_id, tag=None):
     with MongoConnection() as mongodb:
         if len(list(mongodb.location.find({'place_id': loc_id}))) > 0:
+            loc_id = mongodb.location.update_one({'place_id': loc_id}, {'$addToSet': {'tags': tag}}).upserted_id
             print('location already in db')
-            return None
+            return loc_id
         main_url = 'https://nominatim.openstreetmap.org/'
         loc_url = 'details.php?place_id=' + loc_id
         parents_list = []
@@ -183,13 +185,21 @@ def find_loc_by_id(loc_id):
             if tr['class'] == ["notused"]:
                 break
         if (loc_name is not None) & (loc_id is not None) & (centre_point is not None):
-            mongodb.location.insert_one({'place_id': loc_id,
-                                         'name': loc_name,
-                                         'location': {'latitude': centre_point.split(',')[0], 'longitude': centre_point.split(',')[1]},
-                                         'parents': parents_list, 'type': loc_type, 'level': len(parents_list)})
+            if tag:
+                loc_id = mongodb.location.insert_one({'place_id': loc_id,
+                                             'name': loc_name,
+                                             'location': {'latitude': centre_point.split(',')[0], 'longitude': centre_point.split(',')[1]},
+                                             'parents': parents_list, 'type': loc_type, 'level': len(parents_list), 'tags': [tag]}).inserted_id
+            else:
+                loc_id = mongodb.location.insert_one({'place_id': loc_id,
+                                             'name': loc_name,
+                                             'location': {'latitude': centre_point.split(',')[0], 'longitude': centre_point.split(',')[1]},
+                                             'parents': parents_list, 'type': loc_type, 'level': len(parents_list)}).inserted_id
             print('location added success')
+            return loc_id
         else:
             print('location not added')
+            return None
 
 
 def locator(text, lang="en", limit=1):
@@ -622,7 +632,7 @@ class MongoConnection(object):
                 lang = "en"
             locations = []
             for tag in list(tags):
-                location = recursive_geodata_find({'tag': tag['word'], 'lang': lang})
+                location = find_loc_by_name(tag['word'])
                 locations.extend(location) if location is not None else None
             self.entity.update_one({'_id': entity_id}, {'$set': {'locations': locations}})
 
