@@ -26,6 +26,10 @@ def remove(duplicate):
 
 
 def find_loc_by_name(name):
+    mongodb = MongoConnection()
+    if len(list(mongodb.location.find({'tags': {'$in': [name]}}))) > 0:
+        print('location already in db')
+        return None
     print('search...')
     main_url = 'https://nominatim.openstreetmap.org/'
     search = 'search.php?q=' + name + '&polygon_geojson=1&viewbox='
@@ -1181,6 +1185,11 @@ class MongoConnection(object):
                 article['tags'] = tags['tags']
             else:
                 article['tags'] = None
+            locations = self.entity.find_one({'article_id': _id})
+            if (locations is not None) & (locations['locations'] is not None):
+                article['locations'] = locations['locations']
+            else:
+                article['locations'] = None
             return article
         else:
             raise EnvironmentError('No article with \'_id\' {}'.format(_id))
