@@ -1005,6 +1005,30 @@ class MongoConnection(object):
             _id = ObjectId(_id)
         source_name = self.article.find_one({'_id': _id, 'source.id': None}, {'source.name': 1})
 
+    def fix_original_fields(self, params):
+        list_of_articles = params['article_ids']
+        for article_id in list_of_articles:
+            if not isinstance(article_id, ObjectId):
+                article_id = ObjectId(article_id)
+            article = self.article.find_one({'_id': article_id})
+            article_hash = article['hash']
+            date = article['publishedAt']
+            q = article['original_content'].split(' ')[0]
+            articles, tc, st = NewsCollection.get_everything(q, 'en', from_date=date, to_date=date)
+            new_articles_hash = articles.copy()
+            for ns in new_articles_hash:
+                hasher = hashlib.md5()
+                hasher.update(json.dumps(ns).encode('utf-8'))
+                ns_hash = hasher.hexdigest()
+                if ns_hash == article_hash:
+                    article['original_content'] = ns['content']
+                    article['original_title'] = ns['title']
+                    article['original_description'] = ns['description']
+                    article['content'] = self.delete_trash_from_article_content(ns['content'])
+                    article['title'] = self.delete_trash_from_article_content(ns['title'])
+                    article['description'] = self.delete_trash_from_article_content(ns['description'])
+                    self.article.update_one({'hash': article_hash}, {'$set': article}, upsert=True)
+
     def update_article_list_one_q(self, q, language, new_articles):
         new_articles_hash = new_articles.copy()
         new_hash_list = []

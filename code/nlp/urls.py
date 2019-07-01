@@ -42,6 +42,7 @@ urlpatterns = [
     url(r'^fix_article_source_with_null_id/?$', views.fix_article_source_with_null_id),
     url(r'^fix_article_content/?$', views.fix_article_content),
     url(r'^fix_one_article_by_id/?$', views.fix_one_article_by_id),
+    url(r'^fix_original_fields/?$', views.fix_original_fields),
     url(r'^dev_find_article_ids_with_tag_length_more_than_length/?$', views.dev_find_article_ids_with_tag_length_more_than_length),
     url(r'^remove_dubles_articles_and_entities/?$', views.remove_dubles_articles_and_entities),
     url(r'^fix_article_content_and_retrain_entity_bt_article_ids/?$', views.fix_article_content_and_retrain_entity_bt_article_ids),
