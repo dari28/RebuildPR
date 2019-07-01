@@ -46,7 +46,6 @@ def find_loc_by_name(name):
         print('url: Fail!')
         return None
     soup = BeautifulSoup(url, 'lxml')
-    print(soup)
     if soup.find('div', id='content') is not None:
         content = soup.find('div', id='content')
         print('content: OK')
