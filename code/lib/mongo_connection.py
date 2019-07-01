@@ -1184,12 +1184,12 @@ class MongoConnection(object):
             if tags:
                 article['tags'] = tags['tags']
             else:
-                article['tags'] = None
+                article['tags'] = {}
             locations = self.entity.find_one({'article_id': _id})
             if locations and ('locations' in locations):
                 article['locations'] = locations['locations']
             else:
-                article['locations'] = None
+                article['locations'] = []
             return article
         else:
             raise EnvironmentError('No article with \'_id\' {}'.format(_id))
