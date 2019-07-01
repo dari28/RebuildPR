@@ -396,8 +396,8 @@ def fill_up_db_from_zero(request):
 
 @api_view(['POST'])
 def update_country_list(request):
-    mongodb = mongo.MongoConnection()
-    mongodb.update_country_list()
+    with mongo.MongoConnection() as mongodb:
+        mongodb.update_country_list()
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -406,8 +406,8 @@ def update_country_list(request):
 
 @api_view(['POST'])
 def update_state_list(request):
-    mongodb = mongo.MongoConnection()
-    mongodb.update_state_list()
+    with mongo.MongoConnection() as mongodb:
+        mongodb.update_state_list()
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
@@ -416,8 +416,8 @@ def update_state_list(request):
 
 @api_view(['POST'])
 def update_pr_city_list(request):
-    mongodb = mongo.MongoConnection()
-    mongodb.update_pr_city_list()
+    with mongo.MongoConnection() as mongodb:
+        mongodb.update_pr_city_list()
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
 

@@ -26,170 +26,170 @@ def remove(duplicate):
 
 
 def find_loc_by_name(name):
-    mongodb = MongoConnection()
-    if len(list(mongodb.location.find({'tags': {'$in': [name]}}))) > 0:
-        print('location already in db')
-        return None
-    print('search...')
-    main_url = 'https://nominatim.openstreetmap.org/'
-    search = 'search.php?q=' + name + '&polygon_geojson=1&viewbox='
-    url = None
-    for i in range(3):
-        try:
-            url = requests.get(main_url + search).text
-        except Exception as e:
-            print(e)
-            print('sleep_5')
-            time.sleep(5)
-            if i == 2:
+    with MongoConnection() as mongodb:
+        if len(list(mongodb.location.find({'tags': {'$in': [name]}}))) > 0:
+            print('location already in db')
+            return None
+        print('search...')
+        main_url = 'https://nominatim.openstreetmap.org/'
+        search = 'search.php?q=' + name + '&polygon_geojson=1&viewbox='
+        url = None
+        for i in range(3):
+            try:
+                url = requests.get(main_url + search).text
+            except Exception as e:
+                print(e)
+                print('sleep_5')
+                time.sleep(5)
+                if i == 2:
+                    return None
+            else:
+                print('url: OK')
+                break
+        if not url:
+            print('url: Fail!')
+            return None
+        soup = BeautifulSoup(url, 'lxml')
+        if soup.find('div', id='content') is not None:
+            content = soup.find('div', id='content')
+            print('content: OK')
+        else:
+            print('content: Fail!')
+            return None
+        if content.find('div', id='searchresults') is not None:
+            search_results = content.find('div', id='searchresults')
+            print('search results: OK')
+        else:
+            print('search results: Fail!')
+            return None
+        loc_type = None
+        loc_url = None
+        if search_results.find_all('div') is not None:
+            results = search_results.find_all('div')
+            print('results: OK')
+        else:
+            print('results: Fail!')
+            return None
+        for res in results:
+            if res['class'] == ["noresults"]:
+                print('location is not found')
                 return None
-        else:
-            print('url: OK')
-            break
-    if not url:
-        print('url: Fail!')
-        return None
-    soup = BeautifulSoup(url, 'lxml')
-    if soup.find('div', id='content') is not None:
-        content = soup.find('div', id='content')
-        print('content: OK')
-    else:
-        print('content: Fail!')
-        return None
-    if content.find('div', id='searchresults') is not None:
-        search_results = content.find('div', id='searchresults')
-        print('search results: OK')
-    else: 
-        print('search results: Fail!')
-        return None
-    loc_type = None
-    loc_url = None
-    if search_results.find_all('div') is not None:
-        results = search_results.find_all('div')
-        print('results: OK')
-    else:
-        print('results: Fail!')
-        return None
-    for res in results:
-        if res['class'] == ["noresults"]:
-            print('location is not found')
-            return None
-        if res is None:
-            return None
-        if res.find('a')['href'] is not None:
-            location_url = res.find('a')['href']
-        else:
-            location_url = None
-        if (res.find('span', {'class': 'type'}) is not None):
-            if (res.find('span', {'class': 'type'}).get_text().replace('(', '').replace(')', '') is not None):
-                location_type = res.find('span', {'class': 'type'}).get_text().replace('(', '').replace(')', '')
+            if res is None:
+                return None
+            if res.find('a')['href'] is not None:
+                location_url = res.find('a')['href']
+            else:
+                location_url = None
+            if (res.find('span', {'class': 'type'}) is not None):
+                if (res.find('span', {'class': 'type'}).get_text().replace('(', '').replace(')', '') is not None):
+                    location_type = res.find('span', {'class': 'type'}).get_text().replace('(', '').replace(')', '')
+                else:
+                    location_type = None
             else:
                 location_type = None
+            if location_type in ['Country', 'State', 'County', 'City']:
+                loc_url = location_url
+                print('loc type: OK')
+                break
+        if loc_url:
+            loc_id = loc_url.split('place_id=')[1]
+            find_loc_by_id(loc_id)
         else:
-            location_type = None
-        if location_type in ['Country', 'State', 'County', 'City']:
-            loc_url = location_url
-            print('loc type: OK')
-            break
-    if loc_url:
-        loc_id = loc_url.split('place_id=')[1]
-        find_loc_by_id(loc_id)
-    else:
-        print('no such location')
+            print('no such location')
 
 
 def find_loc_by_id(loc_id):
-    mongodb = MongoConnection()
-    if len(list(mongodb.location.find({'place_id': loc_id}))) > 0:
-        print('location already in db')
-        return None
-    main_url = 'https://nominatim.openstreetmap.org/'
-    loc_url = 'details.php?place_id=' + loc_id
-    parents_list = []
-    loc_link = None
-    for i in range(3):
-        try:
-            loc_link = requests.get(main_url + loc_url).text
-        except Exception as e:
-            print(e)
-            print('sleep_5')
-            time.sleep(5)
-            if i == 2:
-                return None
+    with MongoConnection() as mongodb:
+        if len(list(mongodb.location.find({'place_id': loc_id}))) > 0:
+            print('location already in db')
+            return None
+        main_url = 'https://nominatim.openstreetmap.org/'
+        loc_url = 'details.php?place_id=' + loc_id
+        parents_list = []
+        loc_link = None
+        for i in range(3):
+            try:
+                loc_link = requests.get(main_url + loc_url).text
+            except Exception as e:
+                print(e)
+                print('sleep_5')
+                time.sleep(5)
+                if i == 2:
+                    return None
+            else:
+                print('loc link: OK')
+                break
+        if not loc_link:
+            print('loc link: Fail!')
+            return None
+        loc_info = BeautifulSoup(loc_link, 'lxml')
+        if loc_info.find('table', {'id': 'locationdetails'}):
+            loc_details = loc_info.find('table', {'id': 'locationdetails'})
+            print('loc details: OK')
         else:
-            print('loc link: OK')
-            break
-    if not loc_link:
-        print('loc link: Fail!')
-        return None
-    loc_info = BeautifulSoup(loc_link, 'lxml')
-    if loc_info.find('table', {'id': 'locationdetails'}):
-        loc_details = loc_info.find('table', {'id': 'locationdetails'})
-        print('loc details: OK')
-    else:
-        print('loc details: Fail!')
-        return None
-    if loc_details.find_all('tr') is not None:
-        details_trs = loc_details.find_all('tr')
-        print('details: OK')
-    else:
-        print('details: Fail!')
-        return None
-    loc_name = None
-    centre_point = None
-    loc_type = None
-    for tr in details_trs:
-        if tr.find('td').get_text() == 'Name':
-            nm = tr.find_all('td')[1].find_all('div', {'class': 'line'})
-            for n in nm:
-                full_text = n.get_text()
-                l_name = n.find('span').get_text()
-                name_type = full_text.replace(l_name, '')
-                if (name_type == ' (int_name)') or (name_type == ' (name)'):
-                    loc_name = l_name
-                    break
-        if tr.find('td').get_text() == 'Centre Point':
-            centre_point = tr.find_all('td')[1].get_text().replace('(', '').replace(')', '')
-        if tr.find('td').get_text() == 'Rank':
-            loc_type = tr.find_all('td')[1].get_text()
-    if loc_info.find('table', {'id': 'address'}) is not None:
-        address_table = loc_info.find('table', {'id': 'address'})
-        print('address: OK')
-    else:
-        print('address: Fail!')
-        return None
-    if address_table.find('tbody') is not None:
-        body = address_table.find('tbody')
-        print('body: OK')
-    else:
-        print('body: Fail!')
-        return None
-    if body.find_all('tr') is not None:
-        trs = body.find_all('tr')
-        print('trs: OK')
-    else:
-        print('trs: Fail!')
-        return None
-    for tr in trs:
-        links = tr.find_all('a')
-        for link in links:
-            text = link.get_text()
-            if text == 'details >':
-                parent_link = link['href']
-                parent_id = parent_link.split('place_id=')[1]
-                if parent_id != loc_id:
-                    parents_list.append(parent_id)
-                    find_loc_by_id(parent_id)
-        if tr['class'] == ["notused"]:
-            break
-    if (loc_name is not None) & (loc_id is not None) & (centre_point is not None):
-        mongodb.location.insert_one({'place_id': loc_id,
-                                     'name': loc_name,
-                                     'location': {'latitude': centre_point.split(',')[0], 'longitude': centre_point.split(',')[1]},
-                                     'parents': parents_list, 'type': loc_type, 'level': len(parents_list)})
-        print('location added success')
-    else:
-        print('location not added')
+            print('loc details: Fail!')
+            return None
+        if loc_details.find_all('tr') is not None:
+            details_trs = loc_details.find_all('tr')
+            print('details: OK')
+        else:
+            print('details: Fail!')
+            return None
+        loc_name = None
+        centre_point = None
+        loc_type = None
+        for tr in details_trs:
+            if tr.find('td').get_text() == 'Name':
+                nm = tr.find_all('td')[1].find_all('div', {'class': 'line'})
+                for n in nm:
+                    full_text = n.get_text()
+                    l_name = n.find('span').get_text()
+                    name_type = full_text.replace(l_name, '')
+                    if (name_type == ' (int_name)') or (name_type == ' (name)'):
+                        loc_name = l_name
+                        break
+            if tr.find('td').get_text() == 'Centre Point':
+                centre_point = tr.find_all('td')[1].get_text().replace('(', '').replace(')', '')
+            if tr.find('td').get_text() == 'Rank':
+                loc_type = tr.find_all('td')[1].get_text()
+        if loc_info.find('table', {'id': 'address'}) is not None:
+            address_table = loc_info.find('table', {'id': 'address'})
+            print('address: OK')
+        else:
+            print('address: Fail!')
+            return None
+        if address_table.find('tbody') is not None:
+            body = address_table.find('tbody')
+            print('body: OK')
+        else:
+            print('body: Fail!')
+            return None
+        if body.find_all('tr') is not None:
+            trs = body.find_all('tr')
+            print('trs: OK')
+        else:
+            print('trs: Fail!')
+            return None
+        for tr in trs:
+            links = tr.find_all('a')
+            for link in links:
+                text = link.get_text()
+                if text == 'details >':
+                    parent_link = link['href']
+                    parent_id = parent_link.split('place_id=')[1]
+                    if parent_id != loc_id:
+                        parents_list.append(parent_id)
+                        find_loc_by_id(parent_id)
+            if tr['class'] == ["notused"]:
+                break
+        if (loc_name is not None) & (loc_id is not None) & (centre_point is not None):
+            mongodb.location.insert_one({'place_id': loc_id,
+                                         'name': loc_name,
+                                         'location': {'latitude': centre_point.split(',')[0], 'longitude': centre_point.split(',')[1]},
+                                         'parents': parents_list, 'type': loc_type, 'level': len(parents_list)})
+            print('location added success')
+        else:
+            print('location not added')
 
 
 def locator(text, lang="en", limit=1):
@@ -1186,7 +1186,7 @@ class MongoConnection(object):
             else:
                 article['tags'] = None
             locations = self.entity.find_one({'article_id': _id})
-            if locations and locations['locations']:
+            if locations and ('locations' in locations):
                 article['locations'] = locations['locations']
             else:
                 article['locations'] = None

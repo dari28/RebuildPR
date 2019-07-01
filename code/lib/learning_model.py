@@ -307,12 +307,12 @@ def get_tags_from_untrained_articles():
 
 
 def add_locations_to_untrained_articles():
-    mongodb = MongoConnection()
+    with MongoConnection() as mongodb:
 
-    article_ids = [x['_id'] for x in mongodb.entity.find({'locations': {'$exists': False}})]
+        article_ids = [x['_id'] for x in mongodb.entity.find({'locations': {'$exists': False}})]
 
-    for article_id in article_ids:
-        add_article_locations({'article_id': article_id})
+        for article_id in article_ids:
+            add_article_locations({'article_id': article_id})
 
 
 def train_on_list(train_text, name, language):
