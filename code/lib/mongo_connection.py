@@ -849,7 +849,7 @@ class MongoConnection(object):
         content = re.sub('Click here', '', content)  # remove links
 
         content = re.sub('[\r\n\t\f\v]+', ' ', content)  # change spec symbols to one space
-        content = re.sub('[-—\-]+', '-', content)  # change hyphen to normal hyphen
+        content = re.sub('[-—\-]+', '-', content)  # change hyphen to normal hyphen: Add 0x2010 - 0x2014
         content = re.sub(' - ', ' ', content)  # change hyphen to normal hyphen
         content = re.sub('[”“]', '', content)  # change double-quotes to normal double-quotes
         content = re.sub("[‘’]", "'", content)  # change single-quotes to normal single-quotes
@@ -897,17 +897,34 @@ class MongoConnection(object):
                 content = article['content']
                 article['original_content'] = content
 
+            if 'original_title' in article:
+                title = article['original_title']
+            else:
+                title = article['title']
+                article['original_title'] = title
+
+            if 'original_description' in article:
+                description = article['original_description']
+            else:
+                description = article['description']
+                article['original_description'] = description
+
             content = self.delete_trash_from_article_content(content)
             article['content'] = content
-            article['title'] = self.delete_trash_from_article_content(article['title'])
-            article['description'] = self.delete_trash_from_article_content(article['description'])
+            title = self.delete_trash_from_article_content(title)
+            article['title'] = self.delete_trash_from_article_content(title)
+            description = self.delete_trash_from_article_content(description)
+            article['description'] = self.delete_trash_from_article_content(description)
+
             self.article.update_one(
                 {'_id': article['_id']},
                 {'$set': {
                     'content': article['content'],
                     'title': article['title'],
                     'description': article['description'],
-                    'original_content': article['original_content']
+                    'original_content': article['original_content'],
+                    'original_title': article['original_title'],
+                    'original_description': article['original_description'],
                 }}
             )
         except Exception as ex:
