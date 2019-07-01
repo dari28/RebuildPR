@@ -799,7 +799,7 @@ class MongoConnection(object):
         content = re.sub(r'\[\+(\d)+ \w+\]$', '', content)  # remove [+657 chars] at the end
         content = re.sub(r'\w+… ?$', '', content)  # remove end characters with ...
         content = re.sub(r'… ?$', '', content)  # remove end ...
-        content = re.sub(r'�', '', content)  # remove �
+        content = re.sub(r'\ufffd', '', content, flags=re.U)  # remove �
         # content = re.sub(r'\x0a', '', content)  # remove /r
         # content = re.sub(r'\x0d', '', content)  # remove /n
         content = re.sub(r'[\xc2\xa0]+', ' ', content)  # remove spaces
