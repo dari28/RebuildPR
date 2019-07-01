@@ -26,7 +26,7 @@ def remove(duplicate):
 
 
 def find_loc_by_name(name):
-    # print('search: {0}'.format(name))
+    print('search...')
     main_url = 'https://nominatim.openstreetmap.org/'
     search = 'search.php?q=' + name + '&polygon_geojson=1&viewbox='
     url = None
@@ -48,24 +48,24 @@ def find_loc_by_name(name):
     search_results = content.find('div', id='searchresults')
     loc_type = None
     loc_url = None
-    while loc_type not in ['country', 'state', 'county', 'city']:
+    while loc_type not in ['Country', 'State', 'County', 'City']:
         res = search_results.find_next('div')
         if res['class'] == ["noresults"]:
-            # print('location {} is not found'.format(name))
+            print('location is not found')
             return None
         loc_url = res.find('a')['href']
         loc_type = res.find('span', {'class': 'type'}).get_text().replace('(', '').replace(')', '')
     if loc_url:
         loc_id = loc_url.split('place_id=')[1]
         find_loc_by_id(loc_id)
-    # else:
-        # print('no such location: {}'.format(name))
+    else:
+        print('no such location')
 
 
 def find_loc_by_id(loc_id):
     mongodb = MongoConnection()
     if len(list(mongodb.location.find({'place_id': loc_id}))) > 0:
-        # print('location {0} already in db'.format(loc_id))
+        print('location already in db')
         return None
     main_url = 'https://nominatim.openstreetmap.org/'
     loc_url = 'details.php?place_id=' + loc_id
@@ -121,10 +121,10 @@ def find_loc_by_id(loc_id):
             break
     if (loc_name is not None) & (loc_id is not None) & (centre_point is not None):
         mongodb.location.insert_one({'place_id': loc_id,
-                                    'name': loc_name,
-                                    'location': {'latitude': centre_point.split(',')[0], 'longitude': centre_point.split(',')[1]},
-                                    'parents': parents_list, 'type': loc_type, 'level': len(parents_list)})
-        # print('location {} added sucsess'.format(loc_name))
+                                     'name': loc_name,
+                                     'location': {'latitude': centre_point.split(',')[0], 'longitude': centre_point.split(',')[1]},
+                                     'parents': parents_list, 'type': loc_type, 'level': len(parents_list)})
+        print('location added success')
     # else:
         # print('something is wrong: loc_name: {0}, '
         #       'loc_id: {1}, '
