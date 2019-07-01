@@ -1186,7 +1186,7 @@ class MongoConnection(object):
             else:
                 article['tags'] = None
             locations = self.entity.find_one({'article_id': _id})
-            if (locations is not None) & (locations['locations'] is not None):
+            if locations and locations['locations']:
                 article['locations'] = locations['locations']
             else:
                 article['locations'] = None
