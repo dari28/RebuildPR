@@ -40,23 +40,31 @@ def find_loc_by_name(name):
             if i == 2:
                 return None
         else:
+            print('url: OK')
             break
     if not url:
+        print('url: Fail!')
         return None
     soup = BeautifulSoup(url, 'lxml')
     if soup.find('div', id='content') is not None:
         content = soup.find('div', id='content')
-    else: 
+        print('content: OK')
+    else:
+        print('content: Fail!')
         return None
     if content.find('div', id='searchresults') is not None:
         search_results = content.find('div', id='searchresults')
+        print('search results: OK')
     else: 
+        print('search results: Fail!')
         return None
     loc_type = None
     loc_url = None
     if search_results.find_all('div') is not None:
         results = search_results.find_all('div')
+        print('results: OK')
     else:
+        print('results: Fail!')
         return None
     for res in results:
         if res['class'] == ["noresults"]:
@@ -77,6 +85,7 @@ def find_loc_by_name(name):
             location_type = None
         if location_type in ['Country', 'State', 'County', 'City']:
             loc_url = location_url
+            print('loc type: OK')
             break
     if loc_url:
         loc_id = loc_url.split('place_id=')[1]
@@ -104,17 +113,23 @@ def find_loc_by_id(loc_id):
             if i == 2:
                 return None
         else:
+            print('loc link: OK')
             break
     if not loc_link:
+        print('loc link: Fail!')
         return None
     loc_info = BeautifulSoup(loc_link, 'lxml')
     if loc_info.find('table', {'id': 'locationdetails'}):
         loc_details = loc_info.find('table', {'id': 'locationdetails'})
+        print('loc details: OK')
     else:
+        print('loc details: Fail!')
         return None
     if loc_details.find_all('tr') is not None:
         details_trs = loc_details.find_all('tr')
+        print('details: OK')
     else:
+        print('details: Fail!')
         return None
     loc_name = None
     centre_point = None
@@ -135,15 +150,21 @@ def find_loc_by_id(loc_id):
             loc_type = tr.find_all('td')[1].get_text()
     if loc_info.find('table', {'id': 'address'}) is not None:
         address_table = loc_info.find('table', {'id': 'address'})
+        print('address: OK')
     else:
+        print('address: Fail!')
         return None
     if address_table.find('tbody') is not None:
         body = address_table.find('tbody')
+        print('body: OK')
     else:
+        print('body: Fail!')
         return None
     if body.find_all('tr') is not None:
         trs = body.find_all('tr')
-    else: 
+        print('trs: OK')
+    else:
+        print('trs: Fail!')
         return None
     for tr in trs:
         links = tr.find_all('a')
@@ -163,10 +184,8 @@ def find_loc_by_id(loc_id):
                                      'location': {'latitude': centre_point.split(',')[0], 'longitude': centre_point.split(',')[1]},
                                      'parents': parents_list, 'type': loc_type, 'level': len(parents_list)})
         print('location added success')
-    # else:
-        # print('something is wrong: loc_name: {0}, '
-        #       'loc_id: {1}, '
-        #       'centre_point: {2}'.format(loc_name, loc_id, centre_point))
+    else:
+        print('location not added')
 
 
 def locator(text, lang="en", limit=1):
