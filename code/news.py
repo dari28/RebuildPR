@@ -1,7 +1,8 @@
 import requests
 from datetime import datetime, timedelta
 
-API_KEY = 'aa5ed9dc9edb4b49b3fe02edc73eca22'  # '886e070469344e0381be2fc5cdf24830'
+# API_KEY = 'aa5ed9dc9edb4b49b3fe02edc73eca22'
+API_KEY = '886e070469344e0381be2fc5cdf24830'
 
 TOP_HEADLINES_URL = 'https://newsapi.org/v2/top-headlines'
 EVERYTHING_URL = 'https://newsapi.org/v2/everything'
