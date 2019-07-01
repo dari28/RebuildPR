@@ -99,8 +99,14 @@ def find_loc_by_id(loc_id):
     if not loc_link:
         return None
     loc_info = BeautifulSoup(loc_link, 'lxml')
-    loc_details = loc_info.find('table', {'id': 'locationdetails'})
-    details_trs = loc_details.find_all('tr')
+    if loc_info.find('table', {'id': 'locationdetails'}):
+        loc_details = loc_info.find('table', {'id': 'locationdetails'})
+    else:
+        return None
+    if loc_details.find_all('tr') is not None:
+        details_trs = loc_details.find_all('tr')
+    else:
+        return None
     loc_name = None
     centre_point = None
     loc_type = None
@@ -118,9 +124,18 @@ def find_loc_by_id(loc_id):
             centre_point = tr.find_all('td')[1].get_text().replace('(', '').replace(')', '')
         if tr.find('td').get_text() == 'Rank':
             loc_type = tr.find_all('td')[1].get_text()
-    address_table = loc_info.find('table', {'id': 'address'})
-    body = address_table.find('tbody')
-    trs = body.find_all('tr')
+    if loc_info.find('table', {'id': 'address'}) is not None:
+        address_table = loc_info.find('table', {'id': 'address'})
+    else:
+        return None
+    if address_table.find('tbody') is not None:
+        body = address_table.find('tbody')
+    else:
+        return None
+    if body.find_all('tr') is not None:
+        trs = body.find_all('tr')
+    else: 
+        return None
     for tr in trs:
         links = tr.find_all('a')
         for link in links:
