@@ -866,7 +866,7 @@ class MongoConnection(object):
         content = re.sub(r' -', ' ', content)  # change hyphen to normal hyphen
         content = re.sub(r'- ', ' ', content)  # change hyphen to normal hyphen
         content = re.sub(r'[ ]{2,}', ' ', content)  # change 2+ spaces to one space
-        content = re.sub(r'[\u201c\u201d\u201e\u201f"]', '', content, flags=re.U)  # change double-quotes to normal double-quotes
+        content = re.sub(r'[\u201c\u201d\u201e\u201f"]', "'", content, flags=re.U)  # change double-quotes to normal double-quotes
         content = re.sub(r"[\u2018\u2019\u201a\u201b']", "'", content, flags=re.U)  # change single-quotes to normal single-quotes
         content = re.sub(r" '", " ", content)  # remove single-quotes with space before
         content = re.sub(r"' ", " ", content)  # remove single-quotes with space after
@@ -1697,4 +1697,3 @@ class MongoConnection(object):
 
     def show_category(self, params):
         raise Exception("Function in progress")
-
