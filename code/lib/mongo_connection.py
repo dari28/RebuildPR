@@ -48,13 +48,16 @@ def find_loc_by_name(name):
     search_results = content.find('div', id='searchresults')
     loc_type = None
     loc_url = None
-    while loc_type not in ['Country', 'State', 'County', 'City']:
-        res = search_results.find_next('div')
+    results = search_results.find_all('div')
+    for res in results:
         if res['class'] == ["noresults"]:
             print('location is not found')
             return None
-        loc_url = res.find('a')['href']
-        loc_type = res.find('span', {'class': 'type'}).get_text().replace('(', '').replace(')', '')
+        location_url = res.find('a')['href']
+        location_type = res.find('span', {'class': 'type'}).get_text().replace('(', '').replace(')', '')
+        if location_type in ['Country', 'State', 'County', 'City']:
+            loc_url = location_url
+            loc_type = location_type
     if loc_url:
         loc_id = loc_url.split('place_id=')[1]
         find_loc_by_id(loc_id)
