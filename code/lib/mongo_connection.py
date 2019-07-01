@@ -44,11 +44,20 @@ def find_loc_by_name(name):
     if not url:
         return None
     soup = BeautifulSoup(url, 'lxml')
-    content = soup.find('div', id='content')
-    search_results = content.find('div', id='searchresults')
+    if soup.find('div', id='content') is not None:
+        content = soup.find('div', id='content')
+    else: 
+        return None
+    if content.find('div', id='searchresults') is not None:
+        search_results = content.find('div', id='searchresults')
+    else: 
+        return None
     loc_type = None
     loc_url = None
-    results = search_results.find_all('div')
+    if search_results.find_all('div') is not None:
+        results = search_results.find_all('div')
+    else:
+        return None
     for res in results:
         if res['class'] == ["noresults"]:
             print('location is not found')
