@@ -124,6 +124,15 @@ def fix_one_article_by_id(request):
 
 
 @api_view(['POST'])
+def fix_original_fields(request):
+    params = request.data
+    mongodb = mongo.MongoConnection()
+    mongodb.fix_original_fields(params)
+    results = {'status': True, 'response': {}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
 def dev_find_article_ids_with_tag_length_more_than_length(request):
     params = request.data
     mongodb = mongo.MongoConnection()

@@ -1005,7 +1005,8 @@ class MongoConnection(object):
             _id = ObjectId(_id)
         source_name = self.article.find_one({'_id': _id, 'source.id': None}, {'source.name': 1})
 
-    def fix_original_fields(self, list_of_articles):
+    def fix_original_fields(self, params):
+        list_of_articles = params['article_ids']
         for article_id in list_of_articles:
             if not isinstance(article_id, ObjectId):
                 article_id = ObjectId(article_id)
