@@ -946,10 +946,25 @@ class MongoConnection(object):
                     content = article['content']
                     article['original_content'] = content
 
+                if 'original_title' in article:
+                    title = article['original_title']
+                else:
+                    title = article['title']
+                    article['original_title'] = title
+
+                if 'original_description' in article:
+                    description = article['original_description']
+                else:
+                    description = article['description']
+                    article['original_description'] = description
+
                 content = self.delete_trash_from_article_content(content)
                 article['content'] = content
-                article['title'] = self.delete_trash_from_article_content(article['title'])
-                article['description'] = self.delete_trash_from_article_content(article['description'])
+                title = self.delete_trash_from_article_content(title)
+                article['title'] = self.delete_trash_from_article_content(title)
+                description = self.delete_trash_from_article_content(description)
+                article['description'] = self.delete_trash_from_article_content(description)
+
                 self.article.update_one(
                     {'_id': article['_id']},
                     {'$set': {
@@ -963,7 +978,6 @@ class MongoConnection(object):
                 print(ex)
                 print('Error in article {}'.format(article['_id']))
                 pass
-
 
     def dev_find_article_ids_with_tag_length_more_than_length(self, params):
         length = params['length']
@@ -996,6 +1010,8 @@ class MongoConnection(object):
             ns['hash'] = hasher.hexdigest()
             new_hash_list.append(ns['hash'])
             ns['original_content'] = ns['content']
+            ns['original_title'] = ns['title']
+            ns['original_description'] = ns['description']
             ns['content'] = self.delete_trash_from_article_content(ns['content'])
             ns['title'] = self.delete_trash_from_article_content(ns['title'])
             ns['description'] = self.delete_trash_from_article_content(ns['description'])
