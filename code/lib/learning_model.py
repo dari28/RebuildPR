@@ -435,11 +435,11 @@ def predict_entity_polyglot(entities, data, language=None):
             matches.append(match)
 
     # Check polarity word
-    polarity_word = set(set_tag).intersection(set(polarity_word_dict.values()))
-    if len(polarity_word) > 0:
-        parser_iter = tools.ParsePolyglotPolarity(polyglot_text.words, polarity_word, data_predict, polarity_word_dict)
-        for match in parser_iter:
-            matches.append(match)
+    # polarity_word = set(set_tag).intersection(set(polarity_word_dict.values()))
+    # if len(polarity_word) > 0:
+    #     parser_iter = tools.ParsePolyglotPolarity(polyglot_text.words, polarity_word, data_predict, polarity_word_dict)
+    #     for match in parser_iter:
+    #         matches.append(match)
 
     dict_tag = {}
     for entity in entities:
