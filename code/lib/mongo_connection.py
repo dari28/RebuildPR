@@ -59,7 +59,7 @@ def find_loc_by_name(name):
             location_url = res.find('a')['href']
         else:
             location_url = None
-        if res.find('span', {'class': 'type'}).get_text().replace('(', '').replace(')', '') is not None:
+        if (res.find('span', {'class': 'type'}) is not None) & (res.find('span', {'class': 'type'}).get_text().replace('(', '').replace(')', '') is not None):
             location_type = res.find('span', {'class': 'type'}).get_text().replace('(', '').replace(')', '')
         else:
             location_type = None
