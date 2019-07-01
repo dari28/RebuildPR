@@ -800,9 +800,12 @@ class MongoConnection(object):
         content = re.sub(r'\w+… ?$', '', content)  # remove end characters with ...
         content = re.sub(r'… ?$', '', content)  # remove end ...
         content = re.sub(r'�', '', content)  # remove �
-        content = re.sub(r'\x0a', '', content)  # remove /r
-        content = re.sub(r'\x0d', '', content)  # remove /n
+        # content = re.sub(r'\x0a', '', content)  # remove /r
+        # content = re.sub(r'\x0d', '', content)  # remove /n
         content = re.sub(r'[\xc2\xa0]+', ' ', content)  # remove spaces
+        content = re.sub(r'[\r\n\t\f\v]+', ' ', content)  # change spec symbols to one space
+        content = re.sub(r'[\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u200b\u202b\u205f\u2060\u3000]+', ' ', content, flags=re.U)  # remove spaces
+        content = re.sub(r'[ ]{2,}', ' ', content)  # change 2+ spaces to one space
         extractor = URLExtract()
         urls = extractor.find_urls(content)
         for url in urls:
@@ -843,21 +846,22 @@ class MongoConnection(object):
                       r'|\w+\.wav|\w+\.wma|\w+\.wpl)', '', content)
         content = re.sub(r'www\.\S+', '', content)  # remove url1
         content = re.sub(r'https?:\/\/\S+', '', content)  # remove url2
-        content = re.sub('[→]+', '', content)  # remove strange symbols
+        content = re.sub(r'[→]+', '', content)  # remove strange symbols
 
-        content = re.sub('Click here to join', '', content)  # remove links
-        content = re.sub('Click here', '', content)  # remove links
+        content = re.sub(r'Click here to join', '', content)  # remove links
+        content = re.sub(r'Click here', '', content)  # remove links
 
-        content = re.sub('[\r\n\t\f\v]+', ' ', content)  # change spec symbols to one space
-        content = re.sub('[-—\-]+', '-', content)  # change hyphen to normal hyphen: Add 0x2010 - 0x2014
-        content = re.sub(' - ', ' ', content)  # change hyphen to normal hyphen
-        content = re.sub('[”“]', '', content)  # change double-quotes to normal double-quotes
-        content = re.sub("[‘’]", "'", content)  # change single-quotes to normal single-quotes
-        content = re.sub("'", "", content)  # remove single-quotes to normal single-quotes
-        content = re.sub("[/]+", "/", content)  # get only one /
-        content = re.sub(" /", " ", content)  # remove / with space before
-        content = re.sub("/ ", " ", content)  # remove / with space after
-        content = re.sub('[ ]{2,}', ' ', content)  # change 2+ spaces to one space
+        content = re.sub(r'[\u2010\u2011\u2012\u2013\u2014]', '-', content, flags=re.U)  # change hyphen to normal hyphen
+        content = re.sub(r'[-]{2,}', '-', content)  # change 2+ hyphen to one hyphen
+        content = re.sub(r' -', ' ', content)  # change hyphen to normal hyphen
+        content = re.sub(r'- ', ' ', content)  # change hyphen to normal hyphen
+        content = re.sub(r'[ ]{2,}', ' ', content)  # change 2+ spaces to one space
+        content = re.sub(r'[\u201c\u201d\u201e\u201f"]', '', content, flags=re.U)  # change double-quotes to normal double-quotes
+        content = re.sub(r"[\u2018\u2019\u201a\u201b']", "", content, flags=re.U)  # change single-quotes to normal single-quotes
+        content = re.sub(r"[/]+", "/", content)  # get only one /
+        content = re.sub(r" /", " ", content)  # remove / with space before
+        content = re.sub(r"/ ", " ", content)  # remove / with space after
+        content = re.sub(r'[ ]{2,}', ' ', content)  # change 2+ spaces to one space
         return content
 
     def fix_sources_and_add_official_field(self):
