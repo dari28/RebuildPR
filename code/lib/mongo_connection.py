@@ -739,6 +739,8 @@ class MongoConnection(object):
         content = re.sub(r'\w+… ?$', '', content)  # remove end characters with ...
         content = re.sub(r'… ?$', '', content)  # remove end ...
         content = re.sub(r'�', '', content)  # remove �
+        content = re.sub(r'\x0a', '', content)  # remove /r
+        content = re.sub(r'\x0d', '', content)  # remove /n
         content = re.sub(r'[\xc2\xa0]+', ' ', content)  # remove spaces
         extractor = URLExtract()
         urls = extractor.find_urls(content)
@@ -791,7 +793,9 @@ class MongoConnection(object):
         content = re.sub('[”“]', '', content)  # change double-quotes to normal double-quotes
         content = re.sub("[‘’]", "'", content)  # change single-quotes to normal single-quotes
         content = re.sub("'", "", content)  # remove single-quotes to normal single-quotes
-        content = re.sub(" / ", "", content)  # remove /
+        content = re.sub("[/]+", "/", content)  # get only one /
+        content = re.sub(" /", " ", content)  # remove / with space before
+        content = re.sub("/ ", " ", content)  # remove / with space after
         content = re.sub('[ ]{2,}', ' ', content)  # change 2+ spaces to one space
         return content
 
@@ -801,6 +805,21 @@ class MongoConnection(object):
         for source_name in source_names:
             if not self.source.find_one({"name": source_name}):
                 self.source.insert_one({'id': source_name, "name": source_name, "url": source_name, "unofficial": True})
+
+    def fix_article_source_with_null_id(self):
+        articles = self.article.find({"source.id": None})
+        articles_without_update = []
+        for article in articles:
+            article_id = article["_id"]
+            article_source_name = article["source"]["name"]
+            source = self.source.find_one({"name": article_source_name})
+            if source and 'unofficial' in source and source['unofficial']:
+                self.article.update_one(
+                    {"_id": article_id},
+                    {"$set": {"source.id": source['id'], "source.name": source['name']}}
+                )
+            else:
+                articles_without_update += article_id
 
     def fix_one_article_by_id(self, params):
         _id = params['_id']

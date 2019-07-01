@@ -4,12 +4,16 @@
 # import pattern.text.fr as fr_patt
 # import pattern.text.it as it_patt
 # import pattern.text.nl as nl_patt
-from num2words import num2words
 from polyglot.downloader import downloader
 from polyglot.decorators import memoize
 import pymorphy2
 import re
 
+from lib.regexs import en_cardinal_numerals as en_numerals
+from lib.regexs import en_ordinal_numerals as en_o_numerals
+from lib.regexs import nums_billion
+from lib.tools import remove_digits
+from num2words import num2words
 # from nltk.stem.wordnet import WordNetLemmatizer
 
 #import lib.de_tag_pattern as de_patt
@@ -142,29 +146,15 @@ def replace_numerals(input_string, lang):
                 pass
     return new_string
 
-from lib.regexs import en_cardinal_numerals as en_numerals
-from lib.regexs import en_ordinal_numerals as en_o_numerals
-from lib.regexs import nums_billion
-from lib.tools import remove_digits
-from num2words import num2words
-
 
 def replace_num_to_word_around_money_sign(input_string):
     try:
-        # input_string = re.sub(r"(?<=\$)\d+", lambda m: num2words(m.group()), input_string)
-        # input_string = re.sub(r"(?<=\$\s)\d+", lambda m: num2words(m.group()), input_string)
-        # input_string = re.sub(r"\d+(?<=\s\$)", lambda m: num2words(m.group()), input_string)
-        # input_string = re.sub(r"\d+(?<=\$)", lambda m: num2words(m.group()), input_string)
         input_string = re.sub(r"((?<=\$\s)|(?<=\$))\d+", lambda m: num2words(m.group()), input_string)
         input_string = re.sub(r"\d+((?<=\$)|(?<=\s\$))", lambda m: num2words(m.group()), input_string)
     except Exception as ex:
         print(ex)
         pass
     return input_string
-    # for match in a1:
-    #    a = num2words(input_string[match.start(): match.end()])
-    #    re.replace(match, num2words(match))
-    #    print(a)
 
 
 def replace_str_numerals(input_string):
@@ -217,7 +207,7 @@ def replace_str_numerals(input_string):
                         #####
                         numerals[[num for num,i in enumerate(numerals) if i ==numeral][catch_pos]]+=' '+numb #ordinal[numb]
                         checked_text |= text_part
-######################ADD ORDINALS INTO LIST#############################################
+# **************************ADD ORDINALS INTO LIST******************************************* #
     # for numeral in en_o_numerals.findall(input_string):
     #     text_part = re.search(numeral,input_string)
     #     text_part = set(range(text_part.start(), text_part.end()))
@@ -260,8 +250,9 @@ def replace_str_numerals(input_string):
             digit = sum(digit) +float(float_part)
         else:
             digit=sum(digit)
-        output = re.sub('((\b)|(?!\d))'+numeral+'((?!\w)|(?!\D))',' '+str(digit)+ORDINAL,output,re.I|re.U)  #whitespace crutch, error in regular expression, it capture whitespace after two-digit-prefix numeral
+        output = re.sub('((\b)|(?!\d))'+numeral+'((?!\w)|(?!\D))',' '+str(digit)+ORDINAL, output, re.I|re.U)  # whitespace crutch, error in regular expression, it capture whitespace after two-digit-prefix numeral
     return output
+
 
 if __name__ == '__main__':
     print(replace_numerals(u'1 slovo 23 24 slovo e', 'cz'))
