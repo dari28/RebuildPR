@@ -161,6 +161,16 @@ def fix_article_content_and_retrain_entity_bt_article_ids(request):
     return JsonResponse(results, encoder=JSONEncoderHttp)
 
 @api_view(['POST'])
+def delete_trash_from_article_content(request):
+    params = request.data
+    text = params['text']
+    with mongo.MongoConnection() as mongodb:
+        ans = mongodb.delete_trash_from_article_content(text)
+    results = {'status': True, 'response': {'before': text, 'after': ans}, 'error': {}}
+    return JsonResponse(results, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
 def dev_update_sources_by_articles_url(request):
     params = request.data
     mongodb = mongo.MongoConnection()
