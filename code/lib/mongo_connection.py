@@ -860,6 +860,7 @@ class MongoConnection(object):
 
         content = re.sub(r'Click here to join', '', content)  # remove links
         content = re.sub(r'Click here', '', content)  # remove links
+        content = re.sub(r'</?\w+>', '', content)  # remove html tags
 
         content = re.sub(r'[\u2010\u2011\u2012\u2013\u2014]', '-', content, flags=re.U)  # change hyphen to normal hyphen
         content = re.sub(r'[-]{2,}', '-', content)  # change 2+ hyphen to one hyphen
@@ -869,11 +870,12 @@ class MongoConnection(object):
         content = re.sub(r'[\u201c\u201d\u201e\u201f"]', "'", content, flags=re.U)  # change double-quotes to normal double-quotes
         content = re.sub(r"[\u2018\u2019\u201a\u201b']", "'", content, flags=re.U)  # change single-quotes to normal single-quotes
         # content = re.sub(r" '", " ", content)  # remove single-quotes with space before
-       #  content = re.sub(r"' ", " ", content)  # remove single-quotes with space after
+        # content = re.sub(r"' ", " ", content)  # remove single-quotes with space after
         content = re.sub(r"[/]+", "/", content)  # get only one /
         content = re.sub(r" /", " ", content)  # remove / with space before
         content = re.sub(r"/ ", " ", content)  # remove / with space after
         content = re.sub(r'[ ]{2,}', ' ', content)  # change 2+ spaces to one space
+        content = content.strip()
         return content
 
     def fix_sources_and_add_official_field(self):
