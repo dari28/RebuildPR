@@ -602,7 +602,7 @@ class MongoConnection(object):
                 {"$match": {'level': 0}},
                 {"$group": {"_id": "$_id"}},
                 {"$project": {'_id': 1}},
-                {'sort': {'_id': 1}},
+                {'$sort': {'_id': 1}},
                 {'$skip': start},
                 {'$limit': length + 1}
             ]))
