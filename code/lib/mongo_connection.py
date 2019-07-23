@@ -465,7 +465,8 @@ class MongoConnection(object):
             locations = []
             for tag in list(tags):
                 location = find_loc_by_name(tag['word'])
-                locations.extend(location) if location is not None else None
+                if location:
+                    locations.extend(location)
             self.entity.update_one({'_id': entity_id}, {'$set': {'locations': locations}})
 
     # def find_articles_by_location(self, params):
