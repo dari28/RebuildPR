@@ -135,7 +135,7 @@ def fix_original_fields(request):
 @api_view(['POST'])
 def fix_entity_location(request):
     mongodb = mongo.MongoConnection()
-    mongodb.entity.update({}, {"$unset": {"location": 1}}, multi=True)
+    mongodb.entity.update({}, {"$unset": {"locations": 1}}, multi=True)
     model.add_locations_to_untrained_articles()
     results = {'status': True, 'response': {}, 'error': {}}
     return JsonResponse(results, encoder=JSONEncoderHttp)
