@@ -487,6 +487,7 @@ class MongoConnection(object):
             locations = params['locations']
             if not isinstance(locations, list):
                 locations = [locations]
+            locations = [location if isinstance(location, ObjectId) else ObjectId(location) for location in locations]
             location_match = {"$in": locations}
         else:
             location_match = {"$exists": False}
