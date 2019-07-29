@@ -1023,9 +1023,9 @@ class MongoConnection(object):
 
         tag = params['tag'].lower()  # Case insensitive
 
-        if tag not in ['person', 'location', 'organisation', 'date', 'time', 'misc', 'negative words', 'positive words']:
+        if tag not in ['person', 'location', 'organization', 'date', 'time', 'misc', 'negative words', 'positive words']:
             raise EnvironmentError("\'Tag\' field must be in one of the words : "
-                                   "(person', 'location', 'organisation', 'date', 'time', 'misc', 'negative words', 'positive words')")
+                                   "(person', 'location', 'organization', 'date', 'time', 'misc', 'negative words', 'positive words')")
         if 'tag_word' not in params:
             raise EnvironmentError('Request must contain \'tag_word\' field')
 
