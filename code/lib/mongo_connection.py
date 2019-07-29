@@ -611,10 +611,11 @@ class MongoConnection(object):
             location = params['location']
             loc_id = ObjectId(location) if not isinstance(location, ObjectId) else location
             loc = self.location.find_one({'_id': loc_id})
+            place_id = loc['place_id']
             if not loc:
                 raise EnvironmentError('No element with such _id')
             pipeline1 = [
-                {"$match": {'parents': {'$in': [loc_id]}, 'level': loc['level'] + 1, }},
+                {"$match": {'parents': {'$in': [place_id]}, 'level': loc['level'] + 1, }},
                 {"$group": {"_id": "$_id"}},
                 {"$project": {'_id': 1}}
             ]
@@ -622,7 +623,7 @@ class MongoConnection(object):
             pipeline2 = [
                 {"$match": {'level': loc['level'] + 1}},
                 {"$unwind": "$parents"},
-                {"$match": {'parents': loc_id}},
+                {"$match": {'parents': place_id}},
                 {"$group": {"_id": "$_id"}},
                 {"$project": {'_id': 1}}
             ]
