@@ -77,7 +77,7 @@ url(r'^delete_trash_from_article_content/?$', views.delete_trash_from_article_co
     url(r'^predict_entity/?$', views.predict_entity),
     url(r'^get_tags_from_article/?$', views.get_tags_from_article),
 
-    url(r'^dev_update_sources_by_articles_url/?$', views.dev_update_sources_by_articles_url),
+    # url(r'^dev_update_sources_by_articles_url/?$', views.dev_update_sources_by_articles_url),
     url(r'^dev_update_sources_by_one_article/?$', views.dev_update_sources_by_one_article),
 ]
 
