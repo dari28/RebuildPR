@@ -599,16 +599,36 @@ class MongoConnection(object):
     def get_locations_by_level(self, params):
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
+        is_only_nonempty = 'only_nonempty' in params and params['only_nonempty']
+        if is_only_nonempty:
+            entity_locations = list(self.entity.aggregate([
+                {'$project': {'locations': 1, '_id': 0}},
+                {'$unwind': '$locations'},
+                {'$group': {'_id': None, 'locations': {'$addToSet': "$locations"}}},
 
+            ]))
+            try:
+                entity_locations_unpacked = entity_locations[0]['locations']
+            except Exception as ex:
+                entity_locations_unpacked = []
         if 'location' not in params:
-            locations = list(self.location.aggregate([
-                {"$match": {'level': 0}},
-                {"$group": {"_id": "$_id"}},
-                {"$project": {'_id': 1}},
-                {'$sort': {'_id': 1}},
+            pipeline = [
+                {'$match': {'level': 0}},
+                {'$group': {'_id': '$_id'}},
+                {'$project': {'_id': 1}},
+                {'$sort': {'_id': 1}}
+            ]
+
+            if is_only_nonempty:
+                pipeline += [
+                    {'$match': {'_id': {'$in': entity_locations_unpacked}}}
+                ]
+
+            pipeline += [
                 {'$skip': start},
                 {'$limit': length + 1}
-            ]))
+            ]
+            locations = list(self.location.aggregate(pipeline))
         else:
             location = params['location']
             loc_id = ObjectId(location) if not isinstance(location, ObjectId) else location
@@ -620,17 +640,17 @@ class MongoConnection(object):
             place_id = loc['place_id']
 
             pipeline1 = [
-                {"$match": {'parents': {'$in': [place_id]}, 'level': loc['level'] + 1, }},
-                {"$group": {"_id": "$_id"}},
-                {"$project": {'_id': 1}}
+                {'$match': {'parents': {'$in': [place_id]}, 'level': loc['level'] + 1, }},
+                {'$group': {'_id': '$_id'}},
+                {'$project': {'_id': 1}}
             ]
 
             pipeline2 = [
-                {"$match": {'level': loc['level'] + 1}},
-                {"$unwind": "$parents"},
-                {"$match": {'parents': place_id}},
-                {"$group": {"_id": "$_id"}},
-                {"$project": {'_id': 1}}
+                {'$match': {'level': loc['level'] + 1}},
+                {'$unwind': '$parents'},
+                {'$match': {'parents': place_id}},
+                {'$group': {'_id': '$_id'}},
+                {'$project': {'_id': 1}}
             ]
 
             pipeline1 += [
@@ -1447,7 +1467,6 @@ class MongoConnection(object):
                     "phrase": "$_id.phrase"
                 },
                 "count": {"$sum": 1},
-                # "phrase_length": {'$strLenCP': "$_id.phrase" }
             }},
         ]
 
