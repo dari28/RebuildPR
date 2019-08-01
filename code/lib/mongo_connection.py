@@ -600,6 +600,7 @@ class MongoConnection(object):
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
         is_only_nonempty = 'only_nonempty' in params and params['only_nonempty']
+        entity_locations_unpacked = []
         if is_only_nonempty:
             entity_locations = list(self.entity.aggregate([
                 {'$project': {'locations': 1, '_id': 0}},
@@ -1039,23 +1040,36 @@ class MongoConnection(object):
         return full_articles[:length], more
 
     def get_article_list_by_tag(self, params):
-        if 'tag' not in params:
-            raise EnvironmentError('Request must contain \'tag\' field')
-
-        tag = params['tag'].lower()  # Case insensitive
-
-        if tag not in ['person', 'location', 'organization', 'date', 'time', 'misc', 'negative words', 'positive words']:
-            raise EnvironmentError("\'Tag\' field must be in one of the words : "
-                                   "(person', 'location', 'organization', 'date', 'time', 'misc', 'negative words', 'positive words')")
         if 'tag_word' not in params:
             raise EnvironmentError('Request must contain \'tag_word\' field')
 
         tag_word = params['tag_word'].lower()  # Case insensitive
 
+        if 'tag' not in params:
+            # raise EnvironmentError('Request must contain \'tag\' field')
+            tag_match = {'tags.v.word': tag_word}
+        else:
+            tag = params['tag'].lower()  # Case insensitive
+
+            if tag not in ['person', 'location', 'organization', 'date', 'time', 'misc', 'negative words', 'positive words']:
+                raise EnvironmentError("\'Tag\' field must be in one of the words : "
+                                       "(person', 'location', 'organization', 'date', 'time', 'misc', 'negative words', 'positive words')")
+            tag_match = {'tags.k': tag, 'tags.v.word': tag_word}
+
         start = 0 if 'start' not in params else params['start']
         length = 10 if 'length' not in params else params['length']
         language = "en" if "language" not in params else params["language"]
         pipeline = [
+            {"$addFields": {
+                "tags": {"$objectToArray": "$tags"}
+            }},
+            {"$unwind": "$tags"},
+            {"$unwind": "$tags.v"},
+            {'$match': tag_match},
+            {'$group': {
+                '_id': "$article_id",
+            }},
+            {'$project': {'article_id': '$_id', '_id': 0}},
             {'$lookup': {
                 'from': "article",
                 'localField': "article_id",
@@ -1064,12 +1078,13 @@ class MongoConnection(object):
             }},
             {'$unwind': '$article'},
             {'$match': {
-                'tags.{}.word'.format(tag): tag_word,
                 'article.content': {'$ne': None},
                 'article.source.language': language
             }},
+
             {'$project': {
                 '_id': 0, 'article_id': '$article._id', 'author': '$article.author', 'title': '$article.title', 'publishedAt': '$article.publishedAt'}},
+
             {'$sort': {
                 'article_id': 1
             }}
