@@ -9,6 +9,7 @@ code/__pycache__/
 code/lib/__pycache__/
 code/nlp/__pycache__/
 code/newsAPI/__pycache__/
+code/tests/.ipynb_checkpoints
 *.pyc
 *.log
 code/profiles/

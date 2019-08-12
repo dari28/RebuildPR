@@ -154,25 +154,41 @@ def standford_default_install():
 
 
 def unlock_all_tasks():
-    for task in Task.objects.all():
-        if task.locked_by:
-            task.locked_by = None
-            task.locked_at = None
-            task.save()
-
+    try:
+        for task in Task.objects.all():
+            if task.locked_by:
+                task.locked_by = None
+                task.locked_at = None
+                task.save()
+    except:
+        print('server_tunning.py  error in Unlock_all_task function')
 
 # def add_admin_user():
 #     mongo = MongoConnection()
 #     if not mongo.users.find_one({'_id': ADMIN_USER}):
 #         mongo.users.insert_one({'_id': ADMIN_USER})
 
-
+def test():
+    from unittest.mock import patch
+    patch
 def execution_at_startup():
     """Function that executes the necessary code at startup"""
-    polyglot_default_install()
-    standford_default_install()
-    add_polyglot_default()
-    add_standford_default()
+    from collections import OrderedDict
+    #TODO sometimes issue:  when programm trying get some additional modules from polyglot server and it  doesnt response,  the programm fall
+    load_list = OrderedDict({
+    'polyglot_install':polyglot_default_install,
+    'polyglot_add':add_polyglot_default,
+    'standford_install':standford_default_install,
+    'standford_add':add_standford_default})
+
+    for select in load_list:
+        try:
+            load_list[select]()
+        except:
+            import traceback
+            trace = traceback.format_exc()
+            print('{2}\n\n {0}\n\n{1}\n{2}'.format(select, trace,'='*80))
+
     # create_folder()
     # add_final_processing()
     unlock_all_tasks()
