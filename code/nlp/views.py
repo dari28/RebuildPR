@@ -227,7 +227,7 @@ def delete_trash_from_article_content(request):
     """
     :param request:{"text":'some    text'}
     :return:
-    :required: {"text":1}
+    :required:
     """   
     params = request.data
     text = params['text']
@@ -274,7 +274,7 @@ def get_source_list(request):
     "length": 3
 }
     :return:
-    :required:{'language': 0, 'country': 0, 'deleted': 0, 'name': 0, 'id': 0, 'category': 0, 'start': 0, 'length': 0}
+    :required:
     """
     params = request.data
     with mongo.MongoConnection() as mongodb:
@@ -290,7 +290,7 @@ def add_bad_source(request):
 
     :param request: {"source_name":'some_name',"source_id": "5d14b4f2c4092420e6da913a"}
     :return:
-    :required:{"source_name":1,'_id': 0, 'True': 0, 'start': 0, 'length': 0}
+    :required:
     """
     params = request.data
     if 'source_name' not in params:
@@ -305,7 +305,7 @@ def remove_bad_source(request):
     """
     :param request:{"source_id":'test_id',"start": 0,"length": 2}
     :return:
-    :required:{'start': 0, 'length': 0}
+    :required:
     """
     params = request.data
     if 'source_id' not in params:
@@ -320,7 +320,7 @@ def remove_all_bad_source(request):
     """
     :param request:{"length": 2}
     :return:
-    :required:{ 'start': 0, 'length': 0}
+    :required:
     """
     with mongo.MongoConnection() as mongodb:
         mongodb.remove_all_bad_source()
@@ -437,7 +437,7 @@ def get_location_info_by_id(request):
     """
     :param request:{"_id": "5cfe253fcfc738d1eafae9ae"}
     :return:
-    :required:{'str': 1}
+    :required:
     """
     params = request.data
     with mongo.MongoConnection() as mongodb:
@@ -469,7 +469,7 @@ def get_phrase_list(request):
     "deleted": false
      }
     :return:
-    :required:{'start': 0, 'length': 0, 'deleted': 0}
+    :required:
     """
     params = request.data
     with mongo.MongoConnection() as mongodb:
@@ -486,7 +486,7 @@ def update_phrase_list(request):
     "deleted": false
 }
     :return:
-    :required:{ 'deleted': 0, 'ids': 1}
+    :required:
     """
     params = request.data
     with mongo.MongoConnection() as mongodb:
@@ -629,7 +629,7 @@ def show_article_list(request):
 }
 
     :return:
-    :required:{'start': 0, 'length': 0, 'status': 0}
+    :required:
     """
     params = request.data
     with mongo.MongoConnection() as mongodb:
@@ -642,7 +642,7 @@ def get_geoposition(request):
     """
     :param request:{"text": "Puerto Rico" }
     :return:
-    :required:{'text': 1}
+    :required:
     """
     params = request.data
     geoposition = geo.get_geoposition(params)
@@ -692,7 +692,7 @@ def show_source_list(request):
 {
 	"length": 2
 }     :return:
-    :required:{'start': 0, 'length': 0}
+    :required:
     """
     params = request.data
     with mongo.MongoConnection() as mongodb:
@@ -711,7 +711,7 @@ def show_tagged_article_list(request):
     "language": "en"
     }
     :return:
-    :required:{ 'status': 0, 'start': 0, 'length': 0}
+    :required:
     """
     params = request.data
     with mongo.MongoConnection() as mongodb:

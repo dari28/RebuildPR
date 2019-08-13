@@ -69,3 +69,12 @@ def convert_doc(method):
         return arguments, output, require
 
 
+if __name__ == '__main__':
+    print('Hello world')
+    import sys, os
+    sys.path.insert(0, '/home/user/projects/python_pr_relations_nlp/code')
+    #print(sys.path)
+    os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-1.8.0-openjdk-amd64"
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", 'newsAPI.settings')
+    from django import setup
+    setup()

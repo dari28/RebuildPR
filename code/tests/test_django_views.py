@@ -7,26 +7,31 @@ sys.path.insert(0,'/home/user/projects/python_pr_relations_nlp/code')
 #print(sys.path)
 os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-1.8.0-openjdk-amd64"
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE",'newsAPI.settings')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", 'newsAPI.settings')
 
-os.environ.get("DJANGO_SETTINGS_MODULE")
+#os.environ.get("DJANGO_SETTINGS_MODULE")
 
 from copy import deepcopy
-from json import loads
+from json import loads,dumps
 from django import setup
 setup()
 
 from django.test import LiveServerTestCase, RequestFactory
+from  django.test import TestCase, Client
 from django.http.response import JsonResponse
 
 from tests.utils_4test import convert_doc
 from nlp import urls
+import re
+from unittest.mock import patch
+import mongomock
 
 
-class DjangoApiTests(LiveServerTestCase):
+
+#class DjangoApiTests(LiveServerTestCase):
+class DjangoApiTests(TestCase):
 
 
-   request_factory = RequestFactory()
 
    EXPECTED_RETURN_TYPE = {'status': bool,
                            'response': dict,
@@ -35,32 +40,26 @@ class DjangoApiTests(LiveServerTestCase):
    ERROR_STRUCTURE = {"MessageError": str,
                       "TypeError": str,
                       "TracebackError": str}
-
-   def check_api(self, api_method):
+   CLIENT = Client()
+   def check_api(self, api_method, url='test'):
         '''
         Method for automatization of django views testing
         :param api_method: any function or method with correct __doc__ attribute
         :return: None
         '''
-        def response_check(api_method, request, tested_argv=None):
+        def response_check(api_method, request, tested_argv=None, url=url):
             try:
-                #TODO methods must content default 'option' and expected one method post or get, using few methods unsupported
-                methods = api_method.view_class.http_method_names
-                request_factory = {'get': self.request_factory.get,
-                                   'post': self.request_factory.post}
-                print(request)
-                if 'get' in methods:
-                    test_request = request_factory['get'](path='test', data=request)
-                elif 'post' in methods:
-                    test_request = request_factory['post'](path='test', data=request)
 
-                response = api_method(test_request)
+                response = self.CLIENT.post('/{0}/'.format(re.findall('[\w_]+', url, re.IGNORECASE)[0]),
+                                            data=dumps({}), content_type='application/json')
+
             except:
 
                 trace = traceback.format_exc()
                 print("Exception occured:\n{}\n\n".format(trace))
-                raise AssertionError(
-                    '\napi_function:{0} \nexectution error with arguments {1}'.format(api_method.__name__, request))
+                execution_error = 'api_function:{0}  exectution error with arguments {1}'.format(api_method.__name__, request)
+                raise AssertionError(execution_error)
+
             else:
 
                 with self.subTest('Check response type'):
@@ -143,16 +142,15 @@ class DjangoApiTests(LiveServerTestCase):
 
    def test_vievs_from_urls(self):
 
-        from unittest.mock import patch
-        import mongomock
+
         with patch('pymongo.MongoClient', mongomock.MongoClient):
             for function_with_url in urls.urlpatterns:
 
                 function = function_with_url.callback
                 name = function_with_url.callback.__name__
-
+                url = function_with_url._regex
                 with self.subTest(name):
-                     self.check_api(function)
+                     self.check_api(function, url)
 
 
 if __name__ == '__main__':
