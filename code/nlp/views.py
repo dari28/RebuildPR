@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
+import geoposition as geo
 from bson import ObjectId, errors
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from lib import mongo_connection as mongo
 from lib.json_encoder import JSONEncoderHttp
-import geoposition as geo
+from lib import learning_model as model
+from lib import nlp
 from nlp import tasks
-from lib import learning_model as model, nlp
 from background_task.models import Task
 from news import languages_dict
 # ***************************** TEST FUNCTIONS ******************************** #
@@ -53,7 +54,8 @@ def update_source_list_from_server(request):
     :param request:
     :return:
     :required:
-    """   
+    """
+
     # if not Task.objects.filter(task_name=tasks.update_source_list_from_server.name).exists():
     tasks.update_source_list_from_server()
     return JsonResponse({}, encoder=JSONEncoderHttp)
@@ -65,7 +67,7 @@ def get_tags_from_article(request):
     :param request:
     :return:
     :required:
-    """   
+    """
     params = request.data
     entity = model.get_tags_from_article(params=params)
     return JsonResponse({'entity': entity}, encoder=JSONEncoderHttp)
@@ -332,9 +334,19 @@ def remove_all_bad_source(request):
 @api_view(['POST'])
 def get_article_list(request):
     """
-    :param request:
+    :param request:{"used_filter_phrase": ["Moscow","Puerto Rico"],
+                    "language": ["es", "en"],
+                    "country": ["us","ca", "gb"],
+                    "deleted": false,
+                    "category": ["general","technology"],
+                    "start": 0,
+                    "length": 2 }
+
     :return:
-    :required:
+    :required: {"used_filter_phrase": 0, "language": 0,
+                           "country": 0, "deleted": 0,
+                          "category": 0, "start": 0,
+                            "length": 0 }
     """   
     params = request.data
     with mongo.MongoConnection() as mongodb:
@@ -347,12 +359,17 @@ def get_article_list(request):
 @api_view(['POST'])
 def get_article_list_by_tag(request):
     """
-    :param request:
+    :param request:{ "tag": "person",
+                     "tag_word": "trump",
+                     "start": 0,
+                     "length": 2  }
+
     :return:
-    :required:
+    :required:{"tag": 1, "tag_word": 0,"start": 0, "length": 2 }
     """   
     params = request.data
     with mongo.MongoConnection() as mongodb:
+        #fixme add check for tag param
         articles, more, total = mongodb.get_article_list_by_tag(params=params)
     return JsonResponse({'articles': articles, 'more': more, 'total': total}, encoder=JSONEncoderHttp)
 
@@ -360,9 +377,10 @@ def get_article_list_by_tag(request):
 @api_view(['POST'])
 def get_article_by_id(request):
     """
-    :param request:
+    :param request:{"_id": "5cf16f2758504869f99fc631"}
+
     :return:
-    :required:
+    :required:{"_id":1}
     """   
     params = request.data
     with mongo.MongoConnection() as mongodb:
@@ -376,14 +394,19 @@ def get_article_by_id(request):
 @api_view(['POST'])
 def get_tag_list(request):
     """
-    :param request:
+    :param request: {
+    "text": "Example of text do not put text in unicode format charachers",
+    "language": "en"
+}
+
     :return:
-    :required:
+    :required: {"text":1, "languge":0}
     """   
     data = request.data['text']
     language = 'en'
     if 'language' in request.data:
         language = request.data['language']
+    #fixme add raise asserts then missing mandatory parameter
     tags = model.get_tags(data, language)
 
     return JsonResponse({'tags': tags}, encoder=JSONEncoderHttp)
@@ -419,14 +442,16 @@ def predict_entity(request):
 @api_view(['POST'])
 def parse_currency(request):
     """
-    :param request:
+    :param request:{  "text": "a 1 billion two million 111 dollars in the jar" }
+
     :return:
-    :required:
+    :required: {"text":1}
     """   
     params = request.data
 
     if not params or 'text' not in params:
-        raise Exception("Field \'text\' must be")
+        raise Exception('Missing mandatory parameter \'<\'text\'>\'')
+
 
     ans = nlp.parse_currency(params['text'])
     return JsonResponse({'predict': ans}, encoder=JSONEncoderHttp)
@@ -497,10 +522,13 @@ def update_phrase_list(request):
 @api_view(['POST'])
 def add_phrase_list(request):
     """
-    :param request:
+    :param request:{"phrases": ["Puerto Rico","Puerto Rican"],
+                    "language": "en"
+}
+
     :return:
-    :required:
-    """   
+    :required:{ "phrases": 1,"language": 0}
+    """
     params = request.data
     with mongo.MongoConnection() as mongodb:
         mongodb.add_phrases(params=params)
@@ -510,9 +538,9 @@ def add_phrase_list(request):
 @api_view(['POST'])
 def delete_phrase_list(request):
     """
-    :param request:
+    :param request:{"ids": ["5cee9954920bbd21ed227595", "5cee9954920bbd21ed227597"]}
     :return:
-    :required:
+    :required: {"ids":1}
     """   
     params = request.data
     with mongo.MongoConnection() as mongodb:
@@ -664,9 +692,12 @@ def fill_up_geolocation(request):
 @api_view(['POST'])
 def tag_stat(request):
     """
-    :param request:
+    :param request:{"tag": "person",
+                    "start": 5,
+                    "length": 4 }
+
     :return:
-    :required:
+    :required: {"tag": 0, "start": 0, "length": 0 }
     """   
     params = request.data
     with mongo.MongoConnection() as mongodb:
@@ -809,9 +840,13 @@ def load_iso(request):
 @api_view(['POST'])
 def aggregate_articles_by_locations(request):
     """
-    :param request:
+    :param request:{"locations": "5d08dc603d955a389fbb414f",
+                    "start" : 0,
+                    "length": 1 }
+
     :return:
-    :required:
+    :required: {"locations": 0, "start" : 0, "length": 0}
+
     """   
     params = request.data
     with mongo.MongoConnection() as mongodb:
@@ -835,9 +870,13 @@ def tag_stat_by_articles_list(request):
 @api_view(['POST'])
 def get_locations_by_level(request):
     """
-    :param request:
+    :param request:{"location": "5cfa289a4b751a8e96a44151",
+                    "start" : 0,
+                    "length": 1
+}
+
     :return:
-    :required:
+    :required:{"location": 0, "start" : 0, "length": 0}
     """   
     params = request.data
     with mongo.MongoConnection() as mongodb:

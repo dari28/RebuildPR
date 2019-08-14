@@ -106,10 +106,10 @@ class DjangoApiTests(TestCase):
                                         expected_key],
                                     'Unexpected type response error:{0}{1}'.format(expected_key,
                                                                                     response_dict["error"][expected_key]))
-
-                        self.assertEqual(response_dict['error']["MessageError"],
-                                         "Missing mandatory parameter \'<'{0}'>\'".format(tested_argv),
-                                         'Unexpected MessageError')
+                        if tested_argv is not None:
+                            self.assertEqual(response_dict['error']["MessageError"],
+                                             "Missing mandatory parameter \'<'{0}'>\'".format(tested_argv),
+                                             'Unexpected MessageError')
 
         #with self.subTest('Check  function/method __doc__ attribute not empty'):
         self.assertIsNotNone(api_method.__doc__,
@@ -149,6 +149,7 @@ class DjangoApiTests(TestCase):
                 function = function_with_url.callback
                 name = function_with_url.callback.__name__
                 url = function_with_url._regex
+
                 with self.subTest(name):
                      self.check_api(function, url)
 

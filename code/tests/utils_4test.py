@@ -5,7 +5,9 @@ def param_check(key:str,value:str)-> dict:
 
     if not re.findall('[\S]+', value, re.IGNORECASE):
         return {key:loads('null')}
-    return {key: loads(value.replace('\'', '"'))}
+    value  = value.replace('\'', '"')
+    value =  value.replace('\r\n', '')
+    return {key: loads(value)}
 
 def convert_doc(method):
     method_doc = method.__doc__
@@ -18,10 +20,10 @@ def convert_doc(method):
         #  it lead  necessity use loops for processing __doc__
 
         param_pattern = re.compile(
-            r'((?<=:param )([\w\d ]+(?=:))([: ]+)([\d\w\s{}\'\":,\[\]]*(?=:param)))',
+            r'((?<=:param )([\w\d ]+(?=:))([: ]+)([\d\w\s{}\'\":,\[\]\.]*(?=:param)))',
             re.IGNORECASE)
         param_pre_pattern = re.compile(
-            r'((?<=:param )([\w\d ]+(?=:))([: ]+)([\d\w\s{}\'\":,\[\]]*(?=:return)))',
+            r'((?<=:param )([\w\d ]+(?=:))([: ]+)([\d\w\s{}\'\":,\[\]\.]*(?=:return)))',
             re.IGNORECASE)
         return_pattern = re.compile(
             '(?<=:return: )(?:[\d\w\s{}\'\":,\[\]]*(?=:required)|[\d\w\s{}\'\":,\[\]]*)',

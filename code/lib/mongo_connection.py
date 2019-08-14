@@ -1041,7 +1041,7 @@ class MongoConnection(object):
 
     def get_article_list_by_tag(self, params):
         if 'tag_word' not in params:
-            raise EnvironmentError('Request must contain \'tag_word\' field')
+            raise EnvironmentError('Missing mandatory parameter \'<\'tag_word\'>\'')
 
         tag_word = params['tag_word'].lower()  # Case insensitive
 
@@ -1110,7 +1110,7 @@ class MongoConnection(object):
 
     def get_article_by_id(self, params):
         if '_id' not in params:
-            raise EnvironmentError('Request must contain \'_id\' field')
+            raise EnvironmentError('Missing mandatory parameter \'<\'_id\'>\'')
 
         _id = params['_id']
 
@@ -1164,7 +1164,8 @@ class MongoConnection(object):
     def add_phrases(self, params):
         """Adding phrase to the database"""
         if 'phrases' not in params:
-            raise EnvironmentError('Request must contain \'phrases\' field')
+            raise EnvironmentError('Missing mandatory parameter \'<\'phrases\'>\'')
+
         phrases = params['phrases']
         if not isinstance(phrases, list):
             phrases = [phrases]
@@ -1210,7 +1211,8 @@ class MongoConnection(object):
     def delete_phrases(self, params):
         """Delete phrase by the database"""
         if 'ids' not in params:
-            raise EnvironmentError('Request must contain \'ids\' field')
+            raise EnvironmentError('Missing mandatory parameter \'<\'ids\'>\'')
+
         ids = params['ids']
         if isinstance(ids, str):
             ids = list(ids)
