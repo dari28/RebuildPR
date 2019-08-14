@@ -28,7 +28,7 @@ import mongomock
 
 
 
-#class DjangoApiTests(LiveServerTestCase):
+
 class DjangoApiTests(TestCase):
 
 
@@ -47,11 +47,11 @@ class DjangoApiTests(TestCase):
         :param api_method: any function or method with correct __doc__ attribute
         :return: None
         '''
-        def response_check(api_method, request, tested_argv=None, url=url):
+        def response_check(url, request, tested_argv=None):
             try:
 
                 response = self.CLIENT.post('/{0}/'.format(re.findall('[\w_]+', url, re.IGNORECASE)[0]),
-                                            data=dumps({}), content_type='application/json')
+                                            data=dumps(request), content_type='application/json')
 
             except:
 
@@ -135,9 +135,9 @@ class DjangoApiTests(TestCase):
         for name, data in sub_tests_request:
 
             if name == 'full_request':
-                response_check(api_method, data)
+                response_check(url, data)
             else:
-                response_check(api_method, data, name)
+                response_check(url, data, name)
 
 
    def test_vievs_from_urls(self):
