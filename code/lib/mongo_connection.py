@@ -1161,6 +1161,12 @@ class MongoConnection(object):
 
     # ***************************** Phrases ******************************** #
 
+    def add_default_phrases(self):
+        self.add_phrases(params={
+            "phrases": ["Puerto Rico", "Puerto Rican"],
+            "language": "en"
+        })
+
     def add_phrases(self, params):
         """Adding phrase to the database"""
         if 'phrases' not in params:

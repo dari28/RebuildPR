@@ -32,16 +32,155 @@ def test_work(request):
     return JsonResponse({'test_ans': 'IT Works'}, encoder=JSONEncoderHttp)
 
 
-# ***************************** TASKS ******************************** #
+# ***************************** SOURCES ******************************** #
+
+
+@api_view(['POST'])
+def get_source_list(request):
+    params = request.data
+    with mongo.MongoConnection() as mongodb:
+        sources, more = mongodb.get_sources(params=params)
+    return JsonResponse({'sources': sources, 'more': more}, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def add_bad_source(request):
+    params = request.data
+    if 'source_name' not in params:
+        raise EnvironmentError('source_name must be in params')
+    with mongo.MongoConnection() as mongodb:
+        mongodb.add_bad_source(params['source_name'])
+    return JsonResponse({}, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def remove_bad_source(request):
+    params = request.data
+    if 'source_id' not in params:
+        raise EnvironmentError('source_id must be in params')
+    with mongo.MongoConnection() as mongodb:
+        mongodb.remove_bad_source(params['source_id'])
+    return JsonResponse({}, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def remove_all_bad_source(request):
+    with mongo.MongoConnection() as mongodb:
+        mongodb.remove_all_bad_source()
+    return JsonResponse({}, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def show_source_list(request):
+    params = request.data
+    with mongo.MongoConnection() as mongodb:
+        sources, more = mongodb.show_source_list(params)
+    return JsonResponse({'sources': sources, 'more': more}, encoder=JSONEncoderHttp)
+
+
+# ***************************** ARTILES ******************************** #
+
+
+@api_view(['POST'])
+def get_article_list(request):
+    params = request.data
+    with mongo.MongoConnection() as mongodb:
+        articles, more = mongodb.get_q_article_list(params=params)
+    return JsonResponse({'articles': articles, 'more': more}, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def get_article_by_id(request):
+    params = request.data
+    with mongo.MongoConnection() as mongodb:
+        article = mongodb.get_article_by_id(params=params)
+    return JsonResponse({'article': article}, encoder=JSONEncoderHttp)
 
 # noinspection PyUnusedLocal
 
 
 @api_view(['POST'])
-def update_source_list_from_server(request):
-    # if not Task.objects.filter(task_name=tasks.update_source_list_from_server.name).exists():
-    tasks.update_source_list_from_server()
+def get_article_list_by_tag(request):
+    params = request.data
+    with mongo.MongoConnection() as mongodb:
+        articles, more, total = mongodb.get_article_list_by_tag(params=params)
+    return JsonResponse({'articles': articles, 'more': more, 'total': total}, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def show_article_list(request):
+    params = request.data
+    with mongo.MongoConnection() as mongodb:
+        response, more = mongodb.show_article_list(params=params)
+    return JsonResponse({'article': response, 'more': more}, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def show_tagged_article_list(request):
+    params = request.data
+    with mongo.MongoConnection() as mongodb:
+        articles, trained, untrained, more = mongodb.show_tagged_article_list(params=params)
+    return JsonResponse({'trained count': trained, 'untrained count': untrained, 'trained articles': articles, 'more': more}, encoder=JSONEncoderHttp)
+
+
+# ***************************** TAGS ******************************** #
+
+
+@api_view(['POST'])
+def get_tag_list(request):
+    data = request.data['text']
+    language = 'en'
+    if 'language' in request.data:
+        language = request.data['language']
+    tags = model.get_tags(data, language)
+
+    return JsonResponse({'tags': tags}, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def tag_stat(request):
+    params = request.data
+    with mongo.MongoConnection() as mongodb:
+        tags, more = mongodb.tag_stat(params=params)
+    return JsonResponse({'tags': tags, 'more': more}, encoder=JSONEncoderHttp)
+
+
+# ***************************** PHRASES ******************************** #
+
+
+@api_view(['POST'])
+def get_phrase_list(request):
+    params = request.data
+    with mongo.MongoConnection() as mongodb:
+        phrases, more = mongodb.get_phrases(params=params)
+    return JsonResponse({'phrases': phrases, 'more': more}, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def add_phrase_list(request):
+    params = request.data
+    with mongo.MongoConnection() as mongodb:
+        mongodb.add_phrases(params=params)
     return JsonResponse({}, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def delete_phrase_list(request):
+    params = request.data
+    with mongo.MongoConnection() as mongodb:
+        mongodb.delete_phrases(params=params)
+    return JsonResponse({}, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def update_phrase_list(request):
+    params = request.data
+    with mongo.MongoConnection() as mongodb:
+        mongodb.update_phrases(params=params)
+    return JsonResponse({}, encoder=JSONEncoderHttp)
+
+
+# ***************************** ENTITY ******************************** #
 
 
 @api_view(['POST'])
@@ -50,10 +189,89 @@ def get_tags_from_article(request):
     entity = model.get_tags_from_article(params=params)
     return JsonResponse({'entity': entity}, encoder=JSONEncoderHttp)
 
+
+@api_view(['POST'])
+def parse_currency(request):
+    params = request.data
+
+    if not params or 'text' not in params:
+        raise Exception("Field \'text\' must be")
+
+    ans = nlp.parse_currency(params['text'])
+    return JsonResponse({'predict': ans}, encoder=JSONEncoderHttp)
+
+
+# ***************************** OTHER ******************************** #
+
+
+@api_view(['POST'])
+def get_geoposition(request):
+    params = request.data
+    geoposition = geo.get_geoposition(params)
+    return JsonResponse({'geoposition': geoposition}, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def show_language_list(request):
+    language = [{'code': k, 'name': v} for k, v in languages_dict.items()]
+    return JsonResponse({'language': language}, encoder=JSONEncoderHttp)
+
+
+# ***************************** LOCATIONS ******************************** #
+
+
+@api_view(['POST'])
+def get_locations_by_level(request):
+    params = request.data
+    with mongo.MongoConnection() as mongodb:
+        locations, more = mongodb.get_locations_by_level(params=params)
+    return JsonResponse({'locations': locations, 'more': more}, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def aggregate_articles_by_locations(request):
+    params = request.data
+    with mongo.MongoConnection() as mongodb:
+        articles = mongodb.aggregate_articles_by_locations(params=params)
+    return JsonResponse(articles, encoder=JSONEncoderHttp)
+
+
+@api_view(['POST'])
+def get_location_info_by_id(request):
+    params = request.data
+    with mongo.MongoConnection() as mongodb:
+        location = mongodb.get_location_info_by_id(params)
+    return JsonResponse({'location': location}, encoder=JSONEncoderHttp)
+
+
+# ********************* Fill up db from zero ***************
 # noinspection PyUnusedLocal
 
 
 @api_view(['POST'])
+def fill_up_db_from_zero(request):
+    model.fill_up_db_from_zero()
+    return JsonResponse({}, encoder=JSONEncoderHttp)
+
+
+# ********************* END OF Fill up db from zero ********
+
+# noinspection PyUnusedLocal
+
+
+@api_view(['POST'])
+# task
+def update_source_list_from_server(request):
+    # if not Task.objects.filter(task_name=tasks.update_source_list_from_server.name).exists():
+    tasks.update_source_list_from_server()
+    return JsonResponse({}, encoder=JSONEncoderHttp)
+
+
+# noinspection PyUnusedLocal
+
+
+@api_view(['POST'])
+# task
 def get_tags_from_untrained_articles(request):
     # if not Task.objects.filter(task_name=tasks.get_tags_from_untrained_articles.name).exists():
     tasks.get_tags_from_untrained_articles(repeat=Task.NEVER)
@@ -69,6 +287,7 @@ def get_tags_from_all_articles(request):
 
 
 @api_view(['POST'])
+# task
 def train_on_default_list(request):
     params = request.data
     tasks.train_on_default_list(params=params)
@@ -169,84 +388,6 @@ def remove_dubles_articles_and_entities(request):
     with mongo.MongoConnection() as mongodb:
         mongodb.remove_dubles_articles_and_entities()
     return JsonResponse({}, encoder=JSONEncoderHttp)
-# ***************************** SOURCES ******************************** #
-
-
-@api_view(['POST'])
-def get_source_list(request):
-    params = request.data
-    with mongo.MongoConnection() as mongodb:
-        sources, more = mongodb.get_sources(params=params)
-    return JsonResponse({'sources': sources, 'more': more}, encoder=JSONEncoderHttp)
-
-
-@api_view(['POST'])
-def add_bad_source(request):
-    params = request.data
-    if 'source_name' not in params:
-        raise EnvironmentError('source_name must be in params')
-    with mongo.MongoConnection() as mongodb:
-        mongodb.add_bad_source(params['source_name'])
-    return JsonResponse({}, encoder=JSONEncoderHttp)
-
-
-@api_view(['POST'])
-def remove_bad_source(request):
-    params = request.data
-    if 'source_id' not in params:
-        raise EnvironmentError('source_id must be in params')
-    with mongo.MongoConnection() as mongodb:
-        mongodb.remove_bad_source(params['source_id'])
-    return JsonResponse({}, encoder=JSONEncoderHttp)
-
-
-@api_view(['POST'])
-def remove_all_bad_source(request):
-    with mongo.MongoConnection() as mongodb:
-        mongodb.remove_all_bad_source()
-    return JsonResponse({}, encoder=JSONEncoderHttp)
-
-# ***************************** ARTILES ******************************** #
-
-
-@api_view(['POST'])
-def get_article_list(request):
-    params = request.data
-    with mongo.MongoConnection() as mongodb:
-        articles, more = mongodb.get_q_article_list(params=params)
-    return JsonResponse({'articles': articles, 'more': more}, encoder=JSONEncoderHttp)
-
-# noinspection PyUnusedLocal
-
-
-@api_view(['POST'])
-def get_article_list_by_tag(request):
-    params = request.data
-    with mongo.MongoConnection() as mongodb:
-        articles, more, total = mongodb.get_article_list_by_tag(params=params)
-    return JsonResponse({'articles': articles, 'more': more, 'total': total}, encoder=JSONEncoderHttp)
-
-
-@api_view(['POST'])
-def get_article_by_id(request):
-    params = request.data
-    with mongo.MongoConnection() as mongodb:
-        article = mongodb.get_article_by_id(params=params)
-    return JsonResponse({'article': article}, encoder=JSONEncoderHttp)
-
-
-# ***************************** ENTITY ******************************** #
-
-
-@api_view(['POST'])
-def get_tag_list(request):
-    data = request.data['text']
-    language = 'en'
-    if 'language' in request.data:
-        language = request.data['language']
-    tags = model.get_tags(data, language)
-
-    return JsonResponse({'tags': tags}, encoder=JSONEncoderHttp)
 
 
 @api_view(['POST'])
@@ -272,64 +413,11 @@ def predict_entity(request):
 
 
 @api_view(['POST'])
-def parse_currency(request):
-    params = request.data
-
-    if not params or 'text' not in params:
-        raise Exception("Field \'text\' must be")
-
-    ans = nlp.parse_currency(params['text'])
-    return JsonResponse({'predict': ans}, encoder=JSONEncoderHttp)
-
-
-@api_view(['POST'])
-def get_location_info_by_id(request):
-    params = request.data
-    with mongo.MongoConnection() as mongodb:
-        location = mongodb.get_location_info_by_id(params)
-    return JsonResponse({'location': location}, encoder=JSONEncoderHttp)
-
-
-@api_view(['POST'])
 def get_default_entity(request):
     params = request.data
     with mongo.MongoConnection() as mongodb:
         entities = mongodb.get_default_entity(params=params)
     return JsonResponse({'entities': entities}, encoder=JSONEncoderHttp)
-
-# ***************************** PHRASES ******************************** #
-
-
-@api_view(['POST'])
-def get_phrase_list(request):
-    params = request.data
-    with mongo.MongoConnection() as mongodb:
-        phrases, more = mongodb.get_phrases(params=params)
-    return JsonResponse({'phrases': phrases, 'more': more}, encoder=JSONEncoderHttp)
-
-
-@api_view(['POST'])
-def update_phrase_list(request):
-    params = request.data
-    with mongo.MongoConnection() as mongodb:
-        mongodb.update_phrases(params=params)
-    return JsonResponse({}, encoder=JSONEncoderHttp)
-
-
-@api_view(['POST'])
-def add_phrase_list(request):
-    params = request.data
-    with mongo.MongoConnection() as mongodb:
-        mongodb.add_phrases(params=params)
-    return JsonResponse({}, encoder=JSONEncoderHttp)
-
-
-@api_view(['POST'])
-def delete_phrase_list(request):
-    params = request.data
-    with mongo.MongoConnection() as mongodb:
-        mongodb.delete_phrases(params=params)
-    return JsonResponse({}, encoder=JSONEncoderHttp)
 
 
 @api_view(['POST'])
@@ -346,14 +434,6 @@ def delete_permanent_phrase_list(request):
 def download_articles_by_phrases(request):
     with mongo.MongoConnection() as mongodb:
         mongodb.download_articles_by_phrases()
-    return JsonResponse({}, encoder=JSONEncoderHttp)
-
-# noinspection PyUnusedLocal
-
-
-@api_view(['POST'])
-def fill_up_db_from_zero(request):
-    model.fill_up_db_from_zero()
     return JsonResponse({}, encoder=JSONEncoderHttp)
 
 
@@ -394,55 +474,10 @@ def add_locations_to_untrained_articles(request):
 
 
 @api_view(['POST'])
-def show_article_list(request):
-    params = request.data
-    with mongo.MongoConnection() as mongodb:
-        response, more = mongodb.show_article_list(params=params)
-    return JsonResponse({'article': response, 'more': more}, encoder=JSONEncoderHttp)
-
-
-@api_view(['POST'])
-def get_geoposition(request):
-    params = request.data
-    geoposition = geo.get_geoposition(params)
-    return JsonResponse({'geoposition': geoposition}, encoder=JSONEncoderHttp)
-
-
-@api_view(['POST'])
 def fill_up_geolocation(request):
     with mongo.MongoConnection() as mongodb:
         mongodb.fill_up_geolocation(mongodb.location, 'name')
     return JsonResponse({}, encoder=JSONEncoderHttp)
-
-
-@api_view(['POST'])
-def tag_stat(request):
-    params = request.data
-    with mongo.MongoConnection() as mongodb:
-        tags, more = mongodb.tag_stat(params=params)
-    return JsonResponse({'tags': tags, 'more': more}, encoder=JSONEncoderHttp)
-
-
-@api_view(['POST'])
-def show_language_list(request):
-    language = [{'code': k, 'name': v} for k, v in languages_dict.items()]
-    return JsonResponse({'language': language}, encoder=JSONEncoderHttp)
-
-
-@api_view(['POST'])
-def show_source_list(request):
-    params = request.data
-    with mongo.MongoConnection() as mongodb:
-        sources, more = mongodb.show_source_list(params)
-    return JsonResponse({'sources': sources, 'more': more}, encoder=JSONEncoderHttp)
-
-
-@api_view(['POST'])
-def show_tagged_article_list(request):
-    params = request.data
-    with mongo.MongoConnection() as mongodb:
-        articles, trained, untrained, more = mongodb.show_tagged_article_list(params=params)
-    return JsonResponse({'trained count': trained, 'untrained count': untrained, 'trained articles': articles, 'more': more}, encoder=JSONEncoderHttp)
 
 
 @api_view(['POST'])
@@ -513,24 +548,9 @@ def load_iso(request):
 
 
 @api_view(['POST'])
-def aggregate_articles_by_locations(request):
-    params = request.data
-    with mongo.MongoConnection() as mongodb:
-        articles = mongodb.aggregate_articles_by_locations(params=params)
-    return JsonResponse(articles, encoder=JSONEncoderHttp)
-
-
-@api_view(['POST'])
 def tag_stat_by_articles_list(request):
     params = request.data
     with mongo.MongoConnection() as mongodb:
         tags = mongodb.tag_stat_by_articles_list(params=params)
     return JsonResponse(tags, encoder=JSONEncoderHttp)
 
-
-@api_view(['POST'])
-def get_locations_by_level(request):
-    params = request.data
-    with mongo.MongoConnection() as mongodb:
-        locations, more = mongodb.get_locations_by_level(params=params)
-    return JsonResponse({'locations': locations, 'more': more}, encoder=JSONEncoderHttp)

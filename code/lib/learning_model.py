@@ -777,10 +777,7 @@ def fill_up_db_from_zero():
     # Download sources and fill up db.source
     mongodb.update_source_list_from_server()
     # Add start phrases and fill up db.phrase
-    mongodb.add_phrases(params={
-        "phrases": ["Puerto Rico", "Puerto Rican"],
-        "language": "en"
-    })
+    mongodb.add_default_phrases()
     # Download articles from words in db.phrase and fill up db.article and db.q_article
     mongodb.download_articles_by_phrases()
     # Fill up ??? by languages
