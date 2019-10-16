@@ -4,12 +4,13 @@ from pymongo.errors import WriteError
 
 from lib.mongo_connection import MongoConnection
 from lib.tools import punctuation, trim_punkt, get_dir_path
+from nlp.config import UNITS_PATH
 
 
 def install():
     mongo = MongoConnection()
     mongo.units.remove({})
-    with open(get_dir_path('code/install/units'), 'r') as f:
+    with open(UNITS_PATH, 'r') as f:
         for line in f:
             if line.strip():
                 if line.startswith('#'):

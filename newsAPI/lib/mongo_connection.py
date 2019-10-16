@@ -17,6 +17,7 @@ import operator
 import logging
 from urlextract import URLExtract
 
+
 def remove(duplicate):
     final_list = []
     for num in duplicate:
@@ -220,6 +221,7 @@ class MongoConnection(object):
         password = config['password']
         auth_source = 'admin'
         self.connection = pymongo.MongoClient(host=config['mongo_host'], username=user, password=password, authSource=auth_source, connect=True)
+        # self.connection = pymongo.MongoClient(host=config['mongo_host'], connect=True)
         self.mongo_db = self.connection[config['database']]
         self.phrase = self.mongo_db[config['phrase_collection']]
         self.source = self.mongo_db[config['source_collection']]
