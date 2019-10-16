@@ -14,13 +14,15 @@ import os
 # import sys
 import datetime
 # from socket import gethostname, gethostbyname, gethostbyname_ex
-
+LOCAL = False
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-SOURCE_DIR = BASE_DIR
-# SOURCE_DIR = "/home/user/Desktop/python_snatchbot_nlp/web_service"
-# SOURCE_DIR = "/u01/www/python_snatchbot_nlp/web_service"
+if LOCAL:
+    SOURCE_DIR = "/home/user/Desktop/python_snatchbot_nlp/web_service"
+else:
+    SOURCE_DIR = BASE_DIR
+
 IN_PRODUCTION = False
 
 PYINSTRUMENT_PROFILE_DIR = 'profiles'

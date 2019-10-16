@@ -1,12 +1,13 @@
-from newsAPI.settings import SOURCE_DIR, IN_PRODUCTION, BASE_DIR
+from newsAPI.settings import SOURCE_DIR, IN_PRODUCTION, BASE_DIR, LOCAL
 import os
 
 # -*- coding: utf-8 -*-
 LOAD_SPHINX = IN_PRODUCTION
 
-# STANDFORD_DIR = SOURCE_DIR
-
-STANDFORD_DIR = os.path.join(SOURCE_DIR, '..')
+if LOCAL:
+    STANDFORD_DIR = SOURCE_DIR
+else:
+    STANDFORD_DIR = os.path.join(SOURCE_DIR, '..')
 
 POLIGLOT = dict(
     path_polyglot_data=os.path.join(SOURCE_DIR, '../polyglot_data')

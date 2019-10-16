@@ -16,7 +16,7 @@ from geopy.geocoders import Nominatim
 import operator
 import logging
 from urlextract import URLExtract
-
+from newsAPI.settings import LOCAL
 
 def remove(duplicate):
     final_list = []
@@ -220,8 +220,10 @@ class MongoConnection(object):
         user = config['user']
         password = config['password']
         auth_source = 'admin'
-        self.connection = pymongo.MongoClient(host=config['mongo_host'], username=user, password=password, authSource=auth_source, connect=True)
-        # self.connection = pymongo.MongoClient(host=config['mongo_host'], connect=True)
+        if LOCAL:
+            self.connection = pymongo.MongoClient(host=config['mongo_host'], connect=True)
+        else:
+            self.connection = pymongo.MongoClient(host=config['mongo_host'], username=user, password=password, authSource=auth_source, connect=True)
         self.mongo_db = self.connection[config['database']]
         self.phrase = self.mongo_db[config['phrase_collection']]
         self.source = self.mongo_db[config['source_collection']]

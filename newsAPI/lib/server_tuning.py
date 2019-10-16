@@ -154,11 +154,15 @@ def standford_default_install():
 
 
 def unlock_all_tasks():
-    for task in Task.objects.all():
-        if task.locked_by:
-            task.locked_by = None
-            task.locked_at = None
-            task.save()
+    try:
+        for task in Task.objects.all():
+            if task.locked_by:
+                task.locked_by = None
+                task.locked_at = None
+                task.save()
+    except Exception as ex:
+        print(ex)
+        pass
 
 
 # def add_admin_user():
@@ -188,7 +192,7 @@ if __name__ == '__main__':
     # sentences = test.sentences
     # pola = sentences[0].polarity
     # print pola
-    #polyglot_default_install()
+    # polyglot_default_install()
     execution_at_startup()
 
 
