@@ -216,6 +216,9 @@ class MongoConnection(object):
     def __init__(self, config=None, language=None):
         # override the global CONFIG if the config override dict is supplied
         config = dict(MONGO, **config) if config else MONGO
+        user = config['user']
+        password = config['password']
+        auth_source = 'admin'
         self.connection = pymongo.MongoClient(config['mongo_host'], connect=True)
         self.mongo_db = self.connection[config['database']]
         self.phrase = self.mongo_db[config['phrase_collection']]

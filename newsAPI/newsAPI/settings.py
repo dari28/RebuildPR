@@ -18,6 +18,11 @@ import datetime
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+SOURCE_DIR = BASE_DIR
+# SOURCE_DIR = "/home/user/Desktop/python_snatchbot_nlp/web_service"
+# SOURCE_DIR = "/u01/www/python_snatchbot_nlp/web_service"
+IN_PRODUCTION = False
+
 PYINSTRUMENT_PROFILE_DIR = 'profiles'
 
 # Quick-start development settings - unsuitable for production
@@ -33,7 +38,7 @@ DEBUG = False
 
 # ALLOWED_HOSTS = [gethostname(), gethostbyname(gethostname()), '127.0.0.1', 'localhost', '174.129.126.138']
 # ALLOWED_HOSTS = ['localhost', '127.0.0.1', gethostname()] + gethostbyname_ex(gethostname())[2]
-ALLOWED_HOSTS = ['*', ]
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 

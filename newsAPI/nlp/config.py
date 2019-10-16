@@ -1,24 +1,24 @@
+from newsAPI.settings import SOURCE_DIR, IN_PRODUCTION
+import os
+
+# -*- coding: utf-8 -*-
+LOAD_SPHINX = IN_PRODUCTION
+
 POLIGLOT = dict(
-    path_polyglot_data='../polyglot_data',
+    path_polyglot_data=os.path.join(SOURCE_DIR, '../polyglot_data')
 )
 
 STANFORD = dict(
-    # languages=['en', 'zh', 'de', 'es', 'fr', 'ar'],
-    languages=['en'],
-    # # languages=[],
-    crf_english_3class='../stanford_corenlp/classifiers/english.all.3class.distsim.crf.ser.gz',
-    crf_english_4class='../stanford_corenlp/classifiers/english.conll.4class.distsim.crf.ser.gz',
-    crf_english_7class='../stanford_corenlp/classifiers/english.muc.7class.distsim.crf.ser.gz',
-    crf_chinese_7class='../stanford_corenlp/classifiers/chinese.misc.distsim.crf.ser.gz',
-    crf_german_7class='../stanford_corenlp/classifiers/german.conll.hgc_175m_600.crf.ser.gz',
-    crf_spanish_4class='../stanford_corenlp/classifiers/spanish.ancora.distsim.s512.crf.ser.gz',
-    crf_france_3class='../stanford_corenlp/classifiers/france.3class.crf.ser.gz',
+    languages=['en', 'zh', 'de', 'es', 'fr', 'ar'] if IN_PRODUCTION else ['en'],
+    crf_english_3class=os.path.join(SOURCE_DIR, 'stanford_corenlp/classifiers/english.all.3class.distsim.crf.ser.gz'),
+    crf_english_4class=os.path.join(SOURCE_DIR, 'stanford_corenlp/classifiers/english.conll.4class.distsim.crf.ser.gz'),
+    crf_english_7class=os.path.join(SOURCE_DIR, 'stanford_corenlp/classifiers/english.muc.7class.distsim.crf.ser.gz'),
+    crf_chinese_7class=os.path.join(SOURCE_DIR, 'stanford_corenlp/classifiers/chinese.misc.distsim.crf.ser.gz'),
+    crf_german_7class=os.path.join(SOURCE_DIR, 'stanford_corenlp/classifiers/german.conll.hgc_175m_600.crf.ser.gz'),
+    crf_spanish_4class=os.path.join(SOURCE_DIR, 'stanford_corenlp/classifiers/spanish.ancora.distsim.s512.crf.ser.gz'),
+    crf_france_3class=os.path.join(SOURCE_DIR, 'stanford_corenlp/classifiers/france.3class.crf.ser.gz'),
     # path_stanford_ner='./stanford_corenlp/stanford-corenlp-3.8.0.jar',
-    # path_stanford_ner='../stanford_corenlp/stanford-corenlp-3.9.2.jar',
-    path_stanford_ner='../stanford_corenlp/stanford_update.jar',
-
-
-    # path_stanford_ner='../stanford_corenlp/stanford_update.jar',
+    path_stanford_ner=os.path.join(SOURCE_DIR, 'stanford_corenlp/stanford_update.jar')
 )
 
 STANDFORD_PACKAGE = {
@@ -36,43 +36,42 @@ STANDFORD_PACKAGE = {
 
 STANFORD_PREPOSSESSING = dict(
     en={
-        'pos.model': '../stanford_corenlp/pos-tagger/english-left3words-distsim.tagger',
-        # 'pos.model': '../stanford-postagger-full-2018-10-16/models/english-left3words-distsim.tagger',
+        'pos.model': os.path.join(SOURCE_DIR, 'stanford_corenlp/pos-tagger/english-left3words-distsim.tagger'),
         'tokenize.language': 'en',
         'tokenize.options': 'untokenizable=allKeep, invertible=true'
     },
     fr={
-        'pos.model': '../stanford_corenlp/pos-tagger/french.tagger',
+        'pos.model': os.path.join(SOURCE_DIR, 'stanford_corenlp/pos-tagger/french.tagger'),
         'tokenize.language': 'fr',
         'tokenize.options': 'untokenizable=allKeep, invertible=true'
     },
     zh={
-        'pos.model': '../stanford_corenlp/pos-tagger/chinese-distsim.tagger',
+        'pos.model': os.path.join(SOURCE_DIR, 'stanford_corenlp/pos-tagger/chinese-distsim.tagger'),
         'tokenize.language': 'zh',
         'ssplit.boundaryTokenRegex': '\x5B\x2E\xE3\x80\x82\x5D\x7C\x5B\x21\x3F\xEF\xBC\x81\xEF\xBC\x9F\x5D\x2B',
         'ner.language': 'chinese',
         'ner.applyNumericClassifiers': 'true',
         'segment.sighanPostProcessing': 'true',
-        'segment.sighanCorporaDict': '../stanford_corenlp/ch_model/segmenter/chinese',
-        'segment.serDictionary': '../stanford_corenlp/ch_model/segmenter/chinese/dict-chris6.ser.gz',
-        'segment.model': '../stanford_corenlp/ch_model/segmenter/chinese/ctb.gz',
+        'segment.sighanCorporaDict': os.path.join(SOURCE_DIR, 'stanford_corenlp/ch_model/segmenter/chinese'),
+        'segment.serDictionary': os.path.join(SOURCE_DIR, 'stanford_corenlp/ch_model/segmenter/chinese/dict-chris6.ser.gz'),
+        'segment.model': os.path.join(SOURCE_DIR, 'stanford_corenlp/ch_model/segmenter/chinese/ctb.gz'),
     },
     de={
-        'pos.model': '../stanford_corenlp/pos-tagger/german-hgc.tagger',
+        'pos.model': os.path.join(SOURCE_DIR, 'stanford_corenlp/pos-tagger/german-hgc.tagger'),
         'tokenize.language': 'de',
         'ner.applyNumericClassifiers': 'false',
         'tokenize.options': 'untokenizable=allKeep, invertible=true'
     },
     es={
-        'pos.model': '../stanford_corenlp/pos-tagger/spanish-distsim.tagger',
+        'pos.model': os.path.join(SOURCE_DIR, 'stanford_corenlp/pos-tagger/spanish-distsim.tagger'),
         'tokenize.language': 'es',
         'tokenize.options': 'untokenizable=allKeep, invertible=true'
     },
     ar={
         'tokenize.language': 'ar',
-        'segment.model': '../stanford_corenlp/ar_model/segmenter/arabic/arabic-segmenter-atb+bn+arztrain.ser.gz',
+        'segment.model': os.path.join(SOURCE_DIR, 'stanford_corenlp/ar_model/segmenter/arabic/arabic-segmenter-atb+bn+arztrain.ser.gz'),
         'ssplit.boundaryTokenRegex': '[.]|[!?]+|[!\u061F]+',
-        'pos.model': '../stanford_corenlp/ar_model/pos-tagger/arabic/arabic.tagger'
+        'pos.model': os.path.join(SOURCE_DIR, 'stanford_corenlp/ar_model/pos-tagger/arabic/arabic.tagger')
     }
 )
 
@@ -123,8 +122,8 @@ stanford_models = [
 ]
 
 JAVA_CONFIG = dict(
-    # max_size='300000m',
-    max_size='4096m',
+    max_size='300g' if IN_PRODUCTION else '4g',
+    min_size='300m' if IN_PRODUCTION else '128m',
     default_config_crf=dict(
         useClassFeature='true',
         useWord='true',
@@ -197,17 +196,17 @@ description_tag = {
 }
 
 SERVER = dict(
-    # language=['en', 'ru', 'de']
-    # language=['en', 'ru']
     language=['en']
-    # language=['pms', 'lmo', 'gan', 'scn', 'sco', 'ky', 'ps', 'ku', 'pt', 'kn', 'ko', 'km', 'kk', 'ilo', 'pl', 'pa',
-    #          'ka', 'cv', 'als', 'cs', 'cy', 'ce', 'ca', 'se', 'sa', 'sl', 'jv', 'sk', 'sh', 'bar', 'sv', 'sw', 'su',
-    #          'sr', 'sq', 'ja', 'fy', 'fr', 'fi', 'hsb', 'fo', 'fa', 'si', 'it', 'am', 'an', 'vo', 'is', 'sah', 'af',
-    #          'id', 'ia', 'az', 'io', 'ar', 'as', 'yo', 'yi', 'war', 'hr', 'hu', 'ht', 'qu', 'hy', 'he', 'szl', 'hi',
-    #          'dv', 'de', 'da', 'oc', 'tl', 'tk', 'th', 'tg', 'ast', 'te', 'ta', 'or', 'os', 'tt', 'tr', 'pam', 'vec',
-    #          'gv', 'gu', 'gl', 'ga', 'gd', 'ne', 'ceb', 'diq', 'wa', 'nl', 'no', 'nn', 'vls', 'zh', 'bs', 'br', 'be',
-    #          'bg', 'ba', 'arz', 'bo', 'bn', 'my', 'rm', 'mr', 'ms', 'mt', 'ru', 'mk', 'ml', 'mn', 'mg', 'vi', 'es',
-    #          'et', 'eu', 'bpy', 'el', 'en', 'eo', 'lb', 'la', 'ug', 'uk', 'li', 'lv', 'ur', 'lt', 'hif', 'uz', 'ro']
+    # language=[
+    #     'pms', 'lmo', 'gan', 'scn', 'sco', 'ky', 'ps', 'ku', 'pt', 'kn', 'ko', 'km', 'kk', 'ilo', 'pl', 'pa',
+    #     'ka', 'cv', 'als', 'cs', 'cy', 'ce', 'ca', 'se', 'sa', 'sl', 'jv', 'sk', 'sh', 'bar', 'sv', 'sw', 'su',
+    #     'sr', 'sq', 'ja', 'fy', 'fr', 'fi', 'hsb', 'fo', 'fa', 'si', 'it', 'am', 'an', 'vo', 'is', 'sah', 'af',
+    #     'id', 'ia', 'az', 'io', 'ar', 'as', 'yo', 'yi', 'war', 'hr', 'hu', 'ht', 'qu', 'hy', 'he', 'szl', 'hi',
+    #     'dv', 'de', 'da', 'oc', 'tl', 'tk', 'th', 'tg', 'ast', 'te', 'ta', 'or', 'os', 'tt', 'tr', 'pam', 'vec',
+    #     'gv', 'gu', 'gl', 'ga', 'gd', 'ne', 'ceb', 'diq', 'wa', 'nl', 'no', 'nn', 'vls', 'zh', 'bs', 'br', 'be',
+    #     'bg', 'ba', 'arz', 'bo', 'bn', 'my', 'rm', 'mr', 'ms', 'mt', 'ru', 'mk', 'ml', 'mn', 'mg', 'vi', 'es',
+    #     'et', 'eu', 'bpy', 'el', 'en', 'eo', 'lb', 'la', 'ug', 'uk', 'li', 'lv', 'lt', 'hif', 'uz', 'ro', 'ur', 'kok', 'cnr'  # 'ur',
+    # ] if IN_PRODUCTION else ['en']
 )
 
 MONGO = dict(
