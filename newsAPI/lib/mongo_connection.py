@@ -229,22 +229,24 @@ class MongoConnection(object):
             self.connection = pymongo.MongoClient(host=config['mongo_host'], username=user, password=password, authSource=auth_source, connect=True)
 
         self.mongo_db = self.connection[config['database']]
-        self.phrase = self.mongo_db[config['phrase_collection']]
-        self.source = self.mongo_db[config['source_collection']]
-        self.article = self.mongo_db[config['article_collection']]
-        self.q_article = self.mongo_db[config['q_article_collection']]
-        self.location = self.mongo_db[config['location_collection']]
-        self.country = self.mongo_db[config['country_collection']]
-        self.state = self.mongo_db[config['state_collection']]
-        self.pr_city = self.mongo_db[config['pr_city_collection']]
-        self.entity = self.mongo_db[config['entity_collection']]
-        self.default_entity = self.mongo_db[config['default_entity_collection']]
-        self.language = self.mongo_db[config['language_collection']]
-        self.category = self.mongo_db[config['category_collection']]
-        self.iso639 = self.mongo_db[config['iso639_collection']]
-        self.iso3166 = self.mongo_db[config['iso3166_collection']]
-        self.geopy_requests = self.mongo_db[config['geopy_requests_collection']]
-        self.units = self.mongo_db[config['units_collection']]
+        for table in MONGO_TABLES:
+            setattr(self, table, self.mongo_db[config[table + '_collection']])
+        # self.phrase = self.mongo_db[config['phrase_collection']]
+        # self.source = self.mongo_db[config['source_collection']]
+        # self.article = self.mongo_db[config['article_collection']]
+        # self.q_article = self.mongo_db[config['q_article_collection']]
+        # self.location = self.mongo_db[config['location_collection']]
+        # self.country = self.mongo_db[config['country_collection']]
+        # self.state = self.mongo_db[config['state_collection']]
+        # self.pr_city = self.mongo_db[config['pr_city_collection']]
+        # self.entity = self.mongo_db[config['entity_collection']]
+        # self.default_entity = self.mongo_db[config['default_entity_collection']]
+        # self.language = self.mongo_db[config['language_collection']]
+        # self.category = self.mongo_db[config['category_collection']]
+        # self.iso639 = self.mongo_db[config['iso639_collection']]
+        # self.iso3166 = self.mongo_db[config['iso3166_collection']]
+        # self.geopy_requests = self.mongo_db[config['geopy_requests_collection']]
+        # self.units = self.mongo_db[config['units_collection']]
 
     def __enter__(self):
         return self
