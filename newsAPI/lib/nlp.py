@@ -91,9 +91,10 @@ def parse_units(text, convert):
 
     search_text = str(output_text)
 
-    for match in en_cardinal_numerals.finditer(search_text):
-        string = match.string[match.start():match.end()].strip()
-        print(string)
+    # !!!   DON'T USED   !!!
+    # for match in en_cardinal_numerals.finditer(search_text):
+    #     string = match.string[match.start():match.end()].strip()
+    #     # print(string)
 
     for match in r_prices.finditer(search_text):
         string = match.string[match.start():match.end()].strip()
