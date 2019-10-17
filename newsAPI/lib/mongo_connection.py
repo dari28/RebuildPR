@@ -3,7 +3,7 @@
 import pymongo
 from bson import ObjectId, errors
 from news import NewsCollection
-from nlp.config import MONGO  # , TYPE_WITHOUT_FILE, SEND_POST_URL, ADMIN_USER, DEFAULT_USER
+from nlp.config import MONGO, MONGO_TABLES  # , TYPE_WITHOUT_FILE, SEND_POST_URL, ADMIN_USER, DEFAULT_USER
 import hashlib
 import json
 import re
@@ -17,6 +17,7 @@ import operator
 import logging
 from urlextract import URLExtract
 from newsAPI.settings import LOCAL
+
 
 def remove(duplicate):
     final_list = []
@@ -217,13 +218,16 @@ class MongoConnection(object):
     def __init__(self, config=None, language=None):
         # override the global CONFIG if the config override dict is supplied
         config = dict(MONGO, **config) if config else MONGO
+
         user = config['user']
         password = config['password']
         auth_source = 'admin'
+
         if LOCAL:
             self.connection = pymongo.MongoClient(host=config['mongo_host'], connect=True)
         else:
             self.connection = pymongo.MongoClient(host=config['mongo_host'], username=user, password=password, authSource=auth_source, connect=True)
+
         self.mongo_db = self.connection[config['database']]
         self.phrase = self.mongo_db[config['phrase_collection']]
         self.source = self.mongo_db[config['source_collection']]
@@ -284,6 +288,14 @@ class MongoConnection(object):
             tree = json.load(f)
         self.iso3166.insert(tree['3166-1'])
 
+    def check_mongo_connection(self):
+        try:
+            for table in MONGO_TABLES:
+                c_table = getattr(self, table)
+                print('{0:20} : {1}'.format(table, c_table.count({})))
+            print('Mongo database connected.')
+        except Exception as ex:
+            raise EnvironmentError("Problem with mongo connection: " + str(ex))
 # ***************************** GEOLOCATION ******************************** #
 
     def update_country_list(self):

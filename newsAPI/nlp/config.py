@@ -216,27 +216,31 @@ SERVER = dict(
 
 UNITS_PATH = os.path.join(BASE_DIR, 'install/units')
 
+MONGO_TABLES = [
+    'article',
+    'q_article',
+    'phrase',
+    'source',
+    'country',
+    'state',
+    'pr_city',
+    'entity',
+    'default_entity',
+    'language',
+    'category',
+    'location',
+    'iso639',
+    'iso3166',
+    'geopy_requests',
+    'units'
+]
+
 MONGO = dict(
     mongo_host='mongodb://localhost',  # 149.28.85.111:27017
     database='newsAPI',
     user='techlantis',
-    password='devzuzex',
-    article_collection='article',
-    q_article_collection='q_article',
-    phrase_collection='phrase',
-    source_collection='source',
-    country_collection='country',
-    state_collection='state',
-    pr_city_collection='pr_city',
-    entity_collection='entity',
-    default_entity_collection='default_entity',
-    language_collection='language',
-    category_collection='category',
-    location_collection='location',
-    iso639_collection='iso639',
-    iso3166_collection='iso3166',
-    geopy_requests_collection='geopy_requests',
-    units_collection='units',
-    # entity_collection='entity',
-    # intent_collection='intent',
+    password='devzuzex'
 )
+
+for table in MONGO_TABLES:
+    MONGO[table + '_collection'] = table

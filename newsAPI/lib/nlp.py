@@ -1,17 +1,16 @@
 from lib.regexs import *
 from lib import tools
 from lib.mongo_connection import MongoConnection
-# import nlp.config
-
-# mongo = MongoConnection(config.USE_DB)
-mongo = MongoConnection()
-
-ref_units = {}
-for unit_ in mongo.units.find({}):
-    ref_units[unit_['unit']] = set(unit_['variations'])
 
 
 def parse_units(text, convert):
+    # mongo = MongoConnection(config.USE_DB)
+    mongo = MongoConnection()
+
+    ref_units = {}
+    for unit_ in mongo.units.find({}):
+        ref_units[unit_['unit']] = set(unit_['variations'])
+
     def handle_intervals(interval):
         return interval.split('-')
 

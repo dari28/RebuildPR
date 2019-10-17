@@ -173,6 +173,7 @@ def unlock_all_tasks():
 
 def execution_at_startup():
     """Function that executes the necessary code at startup"""
+    MongoConnection().check_mongo_connection()
     polyglot_default_install()
     standford_default_install()
     add_polyglot_default()
