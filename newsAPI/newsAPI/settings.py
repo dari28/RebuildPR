@@ -100,17 +100,17 @@ WSGI_APPLICATION = 'newsAPI.wsgi.application'
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'background_task.sqlite3'),
-    }
     # 'default': {
-    #     'ENGINE': 'django.db.backends.mysql',
-    #     'NAME': 'test',
-    #     'HOST': '127.0.0.1',
-    #     'USER': 'root',
-    #     'PASSWORD': '',
+    #     'ENGINE': 'django.db.backends.sqlite3',
+    #     'NAME': os.path.join(BASE_DIR, 'background_task.sqlite3'),
     # }
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'test',
+        'HOST': '127.0.0.1',
+        'USER': 'root',
+        'PASSWORD': '',
+    }
 }
 AUTHENTICATION_BACKENDS = (
     'mongoengine.django.auth.MongoEngineBackend',
