@@ -40,3 +40,4 @@ urllib3
 unicode
 geopy
 urlextract
+django-core-headers

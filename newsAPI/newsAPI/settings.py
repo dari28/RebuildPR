@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'rest_framework',
     'nlp.apps.NlpConfig',
     'background_task'
@@ -59,9 +60,13 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'nlp.response_middleware.ResponseMiddleware',
     'nlp.middleware.LoggingMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     # 'django.contrib.auth.middleware.AuthenticationMiddleware',
     # 'django.contrib.messages.middleware.MessageMiddleware',
 ]
+
+CORS_ORIGIN_ALLOW_ALL = True
 
 if DEBUG:
     MIDDLEWARE.extend([
