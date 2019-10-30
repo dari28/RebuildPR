@@ -486,8 +486,11 @@ class MongoConnection(object):
             locations = []
             for tag in list(tags):
                 location = find_loc_by_name(tag['word'])
-                if location and location not in locations:
-                    locations.append(location)
+                loc_list = list(self.location.find_one({'_id': location})['parents'])
+                loc_list.append(location)
+                for loc in loc_list:
+                    if loc not in locations:
+                        locations.append(loc)
             self.entity.update_one({'_id': entity_id}, {'$set': {'locations': locations}})
 
     # def find_articles_by_location(self, params):
@@ -662,7 +665,7 @@ class MongoConnection(object):
             place_id = loc['place_id']
 
             pipeline1 = [
-                {'$match': {'parents': {'$in': [place_id]}, 'level': loc['level'] + 1, }},
+                {'$match': {'parents': {'$in': [place_id]}, 'level': loc['level'] + 1, '_id': {'$in': entity_locations_unpacked}}},
                 {'$group': {'_id': '$_id'}},
                 {'$project': {'_id': 1}}
             ]
