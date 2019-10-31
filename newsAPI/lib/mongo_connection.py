@@ -29,7 +29,7 @@ def remove(duplicate):
 
 def find_loc_by_name(name):
     with MongoConnection() as mongodb:
-        if len(list(mongodb.location.find({'tags': {'$in': [name]}}))) > 0:
+        if mongodb.location.count({'tags': {'$in': [name]}}) > 0:
             print('location already in db')
             return mongodb.location.find_one({'tags': {'$in': [name]}})['_id']
         print('search...')
@@ -82,8 +82,8 @@ def find_loc_by_name(name):
                 location_url = res.find('a')['href']
             else:
                 location_url = None
-            if (res.find('span', {'class': 'type'}) is not None):
-                if (res.find('span', {'class': 'type'}).get_text().replace('(', '').replace(')', '') is not None):
+            if res.find('span', {'class': 'type'}) is not None:
+                if res.find('span', {'class': 'type'}).get_text().replace('(', '').replace(')', '') is not None:
                     location_type = res.find('span', {'class': 'type'}).get_text().replace('(', '').replace(')', '')
                 else:
                     location_type = None
@@ -103,7 +103,7 @@ def find_loc_by_name(name):
 
 def find_loc_by_id(loc_id, tag=None):
     with MongoConnection() as mongodb:
-        if len(list(mongodb.location.find({'place_id': loc_id}))) > 0:
+        if mongodb.location.count({'place_id': loc_id}) > 0:
             loc_id = mongodb.location.update_one({'place_id': loc_id}, {'$addToSet': {'tags': tag}}).upserted_id
             print('location already in db')
             return loc_id
@@ -133,7 +133,7 @@ def find_loc_by_id(loc_id, tag=None):
         else:
             print('loc details: Fail!')
             return None
-        if loc_details.find_all('tr') is not None:
+        if not loc_details.find_all('tr'):
             details_trs = loc_details.find_all('tr')
             print('details: OK')
         else:
@@ -188,15 +188,30 @@ def find_loc_by_id(loc_id, tag=None):
                 break
         if (loc_name is not None) & (loc_id is not None) & (centre_point is not None):
             if tag:
-                loc_id = mongodb.location.insert_one({'place_id': loc_id,
-                                             'name': loc_name,
-                                             'location': {'latitude': centre_point.split(',')[0], 'longitude': centre_point.split(',')[1]},
-                                             'parents': parents_list, 'type': loc_type, 'level': len(parents_list), 'tags': [tag]}).inserted_id
+                loc_id = mongodb.location.insert_one({
+                    'place_id': loc_id,
+                    'name': loc_name,
+                    'location': {
+                        'latitude': centre_point.split(',')[0],
+                        'longitude': centre_point.split(',')[1]
+                    },
+                    'parents': parents_list,
+                    'type': loc_type,
+                    'level': len(parents_list),
+                    'tags': [tag]
+                }).inserted_id
             else:
-                loc_id = mongodb.location.insert_one({'place_id': loc_id,
-                                             'name': loc_name,
-                                             'location': {'latitude': centre_point.split(',')[0], 'longitude': centre_point.split(',')[1]},
-                                             'parents': parents_list, 'type': loc_type, 'level': len(parents_list)}).inserted_id
+                loc_id = mongodb.location.insert_one({
+                    'place_id': loc_id,
+                    'name': loc_name,
+                    'location': {
+                        'latitude': centre_point.split(',')[0],
+                        'longitude': centre_point.split(',')[1]
+                    },
+                    'parents': parents_list,
+                    'type': loc_type,
+                    'level': len(parents_list)
+                }).inserted_id
             print('location added success')
             return loc_id
         else:
