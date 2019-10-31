@@ -104,41 +104,36 @@ def find_loc_by_name(name):
 def find_loc_by_id(loc_id, tag=None):
     with MongoConnection() as mongodb:
         if mongodb.location.count({'place_id': loc_id}) > 0:
-            loc_id = mongodb.location.update_one({'place_id': loc_id}, {'$addToSet': {'tags': tag}}).upserted_id
-            print('location already in db')
-            return loc_id
+            if tag:
+                loc_id = mongodb.location.update_one({'place_id': loc_id}, {'$addToSet': {'tags': tag}}).upserted_id
+                return loc_id
+            else:
+                return None
         main_url = 'https://nominatim.openstreetmap.org/'
         loc_url = 'details.php?place_id=' + loc_id
         parents_list = []
         loc_link = None
-        for i in range(3):
+        max_attempts = 3
+        cur_attemps = 0
+        while cur_attemps < max_attempts and not loc_link:
             try:
                 loc_link = requests.get(main_url + loc_url).text
             except Exception as e:
                 print(e)
                 print('sleep_5')
                 time.sleep(5)
-                if i == 2:
-                    return None
-            else:
-                print('loc link: OK')
-                break
+            cur_attemps += 1
+
         if not loc_link:
-            print('loc link: Fail!')
             return None
         loc_info = BeautifulSoup(loc_link, 'lxml')
-        if loc_info.find('table', {'id': 'locationdetails'}):
-            loc_details = loc_info.find('table', {'id': 'locationdetails'})
-            print('loc details: OK')
-        else:
-            print('loc details: Fail!')
+        loc_details = loc_info.find('table', {'id': 'locationdetails'})
+        if not loc_details:
             return None
-        if not loc_details.find_all('tr'):
-            details_trs = loc_details.find_all('tr')
-            print('details: OK')
-        else:
-            print('details: Fail!')
+        details_trs = loc_details.find_all('tr')
+        if not details_trs:
             return None
+
         loc_name = None
         centre_point = None
         loc_type = None
@@ -149,30 +144,22 @@ def find_loc_by_id(loc_id, tag=None):
                     full_text = n.get_text()
                     l_name = n.find('span').get_text()
                     name_type = full_text.replace(l_name, '')
-                    if (name_type == ' (int_name)') or (name_type == ' (name)'):
+                    if name_type == ' (int_name)' or name_type == ' (name)':
                         loc_name = l_name
                         break
             if tr.find('td').get_text() == 'Centre Point':
                 centre_point = tr.find_all('td')[1].get_text().replace('(', '').replace(')', '')
             if tr.find('td').get_text() == 'Rank':
                 loc_type = tr.find_all('td')[1].get_text()
-        if loc_info.find('table', {'id': 'address'}) is not None:
-            address_table = loc_info.find('table', {'id': 'address'})
-            print('address: OK')
-        else:
-            print('address: Fail!')
+
+        address_table = loc_info.find('table', {'id': 'address'})
+        if not address_table:
             return None
-        if address_table.find('tbody') is not None:
-            body = address_table.find('tbody')
-            print('body: OK')
-        else:
-            print('body: Fail!')
+        body = address_table.find('tbody')
+        if not body:
             return None
-        if body.find_all('tr') is not None:
-            trs = body.find_all('tr')
-            print('trs: OK')
-        else:
-            print('trs: Fail!')
+        trs = body.find_all('tr')
+        if not trs:
             return None
         for tr in trs:
             links = tr.find_all('a')
@@ -183,39 +170,28 @@ def find_loc_by_id(loc_id, tag=None):
                     parent_id = parent_link.split('place_id=')[1]
                     if parent_id != loc_id:
                         parents_list.append(parent_id)
+                        # DONT ADD TAGS TO CHILD
                         find_loc_by_id(parent_id)
             if tr['class'] == ["notused"]:
                 break
-        if (loc_name is not None) & (loc_id is not None) & (centre_point is not None):
+        if not loc_name and not loc_id and not centre_point:
+            request_dict = {
+                'place_id': loc_id,
+                'name': loc_name,
+                'location': {
+                    'latitude': centre_point.split(',')[0],
+                    'longitude': centre_point.split(',')[1]
+                },
+                'parents': parents_list,
+                'type': loc_type,
+                'level': len(parents_list)
+            }
             if tag:
-                loc_id = mongodb.location.insert_one({
-                    'place_id': loc_id,
-                    'name': loc_name,
-                    'location': {
-                        'latitude': centre_point.split(',')[0],
-                        'longitude': centre_point.split(',')[1]
-                    },
-                    'parents': parents_list,
-                    'type': loc_type,
-                    'level': len(parents_list),
-                    'tags': [tag]
-                }).inserted_id
-            else:
-                loc_id = mongodb.location.insert_one({
-                    'place_id': loc_id,
-                    'name': loc_name,
-                    'location': {
-                        'latitude': centre_point.split(',')[0],
-                        'longitude': centre_point.split(',')[1]
-                    },
-                    'parents': parents_list,
-                    'type': loc_type,
-                    'level': len(parents_list)
-                }).inserted_id
-            print('location added success')
+                request_dict['tags'] = [tag]
+
+            loc_id = mongodb.location.insert_one(request_dict).inserted_id
             return loc_id
         else:
-            print('location not added')
             return None
 
 
@@ -424,8 +400,8 @@ class MongoConnection(object):
             table_item['location'] = None
             try:
                 table_item['location'] = geo.get_geoposition({'text': table_item[field]})
-            except Exception:
-                pass
+            except Exception as ex:
+                print(ex)
             table.update_one({'_id': _id}, {'$set': table_item})
         return updated_ids
 
@@ -650,6 +626,7 @@ class MongoConnection(object):
             try:
                 entity_locations_unpacked = entity_locations[0]['locations']
             except Exception as ex:
+                print(ex)
                 entity_locations_unpacked = []
         if 'location' not in params:
             pipeline = [
@@ -685,13 +662,13 @@ class MongoConnection(object):
                 {'$project': {'_id': 1}}
             ]
 
-            pipeline2 = [
-                {'$match': {'level': loc['level'] + 1}},
-                {'$unwind': '$parents'},
-                {'$match': {'parents': place_id}},
-                {'$group': {'_id': '$_id'}},
-                {'$project': {'_id': 1}}
-            ]
+            # pipeline2 = [
+            #     {'$match': {'level': loc['level'] + 1}},
+            #     {'$unwind': '$parents'},
+            #     {'$match': {'parents': place_id}},
+            #     {'$group': {'_id': '$_id'}},
+            #     {'$project': {'_id': 1}}
+            # ]
 
             pipeline1 += [
                 {'$skip': start},
@@ -778,7 +755,15 @@ class MongoConnection(object):
         return content
 
     def fix_sources_and_add_official_field(self):
-        ans = self.source.update_many({"language": {"$exists": True},  "unofficial": {"$exists": False}}, {"$set": {"unofficial": False}})
+        ans = self.source.update_many(
+            {
+                "language": {"$exists": True},
+                "unofficial": {"$exists": False}
+            },
+            {
+                "$set": {"unofficial": False}
+            }
+        )
         source_names = self.article.distinct("source.name", {"source.language": {"$exists": False}, 'source.id': None})
         for source_name in source_names:
             if not self.source.find_one({"name": source_name}):
@@ -794,7 +779,9 @@ class MongoConnection(object):
             if source and 'unofficial' in source and source['unofficial']:
                 self.article.update_one(
                     {"_id": article_id},
-                    {"$set": {"source.id": source['id'], "source.name": source['name']}}
+                    {"$set": {
+                        "source.id": source['id'], "source.name": source['name']
+                    }}
                 )
             else:
                 articles_without_update += article_id
@@ -1248,7 +1235,7 @@ class MongoConnection(object):
 
             self.phrase.delete_one(
                 {'_id': _id},
-                #upsert=True
+                # upsert=True
             )
         return params
 
@@ -1341,10 +1328,10 @@ class MongoConnection(object):
 
     def download_old_articles_by_phrases_while_we_can(self):
         we_can_download = True
-        i = 500
-        k = self.phrase.count({'deleted': False, 'updated_all_old_article': False})
-        while we_can_download and i > 0 and k > 0:
-            i -= k
+        attempts_left = 500
+        phrase_count_to_download = self.phrase.count({'deleted': False, 'updated_all_old_article': False})
+        while we_can_download and attempts_left > 0 and phrase_count_to_download > 0:
+            attempts_left -= phrase_count_to_download
             for phrase in self.phrase.find({'deleted': False, 'updated_all_old_article': False}):
                 _id = phrase['_id']
                 q = phrase['phrase']
@@ -1360,7 +1347,7 @@ class MongoConnection(object):
                     published_at_list = sorted([article['publishedAt'] for article in articles])
                     self.phrase.update_one({'_id': _id}, {'$set': {'from': published_at_list[0]}})
 
-            k = self.phrase.count({'deleted': False, 'updated_all_old_article': False})
+            phrase_count_to_download = self.phrase.count({'deleted': False, 'updated_all_old_article': False})
     # ***************************** Train articles ******************************** #
 
     def get_location_info_by_id(self, params):
