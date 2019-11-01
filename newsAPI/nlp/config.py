@@ -7,10 +7,10 @@ LOAD_SPHINX = IN_PRODUCTION
 if LOCAL:
     STANDFORD_DIR = SOURCE_DIR
 else:
-    STANDFORD_DIR = os.path.join(SOURCE_DIR, '..')
+    STANDFORD_DIR = os.path.abspath(os.path.join(SOURCE_DIR, '..'))
 
 POLIGLOT = dict(
-    path_polyglot_data=os.path.join(SOURCE_DIR, '../polyglot_data')
+    path_polyglot_data=os.path.abspath(os.path.join(SOURCE_DIR, '../polyglot_data'))
 )
 
 STANFORD = dict(
