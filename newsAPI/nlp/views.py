@@ -273,8 +273,11 @@ def update_source_list_from_server(request):
 @api_view(['POST'])
 # task
 def get_tags_from_untrained_articles(request):
+    params = request.data
     # if not Task.objects.filter(task_name=tasks.get_tags_from_untrained_articles.name).exists():
-    tasks.get_tags_from_untrained_articles(repeat=Task.NEVER)
+    # tasks.get_tags_from_untrained_articles(repeat=Task.NEVER)
+    # tasks.get_tags_from_untrained_articles.now()  # (repeat=Task.NEVER)
+    model.get_tags_from_untrained_articles(params=params)
     return JsonResponse({}, encoder=JSONEncoderHttp)
 
 # noinspection PyUnusedLocal

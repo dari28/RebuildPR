@@ -291,16 +291,17 @@ def get_tags_from_all_articles():
     return article_ids
 
 
-def get_tags_from_untrained_articles():
-    mongodb = MongoConnection()
+def get_tags_from_untrained_articles(params):
+    retrain = False if 'retrain' not in params else params['retrain']
 
-    article_ids = [x['_id'] for x in mongodb.article.find()]
-    trained_article_ids = [x['article_id'] for x in mongodb.entity.find({'trained': True})]
-    untrained_ids = list(set(article_ids)-set(trained_article_ids))
+    with MongoConnection() as mongodb:
+        article_ids = [x['_id'] for x in mongodb.article.find()]
+        trained_article_ids = [x['article_id'] for x in mongodb.entity.find({'trained': True})]
+        untrained_ids = list(set(article_ids)-set(trained_article_ids))
 
     for article_id in untrained_ids:
         try:
-            get_tags_from_article({'article_id': article_id})
+            get_tags_from_article({'article_id': article_id, 'retrain': retrain})
         except Exception as ex:
             print(ex)
             print(article_id)
