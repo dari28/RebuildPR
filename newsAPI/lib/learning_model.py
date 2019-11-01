@@ -87,7 +87,9 @@ def union_res_with_article_id(result1, result2):
     union_dict = dict()
     union_dict2 = dict()
     tuple_tags = list(result1.items()) + list(result2.items())
+    valuta_signs = ['€','$','฿', '₵','₡', '₫', '৳', 'ƒ', '₣', '₲', '₴', '₭', '₽', '₱', '₨', '₪', '₩', '¥', '៛']
     # Union the tags
+    # TO_DO: Refactor the ode below
     for (tuple_tag_key,tuple_tag_value) in tuple_tags:
         if tuple_tag_value:
             v = tuple_tag_value
@@ -100,7 +102,7 @@ def union_res_with_article_id(result1, result2):
                 article_type = elem['article_type']
                 n_word = word
                 for l in word:
-                    if l.isalnum():
+                    if l.isalnum() or l in valuta_signs:
                         break
                     else:
                         n_word = n_word.replace(l, '', 1)
@@ -108,7 +110,7 @@ def union_res_with_article_id(result1, result2):
                         start += 1
                 word = n_word
                 for l in word[::-1]:
-                    if l.isalnum():
+                    if l.isalnum() or l in valuta_signs:
                         break
                     else:
                         n_word = n_word[::-1].replace(l, '', 1)[::-1]
