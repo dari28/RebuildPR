@@ -13,7 +13,7 @@ nltk
 lxml
 googletrans
 ijson
-numpy==1.9.2
+numpy==1.22.0
 pandas==0.16.0
 html5lib
 Django==1.11.21
